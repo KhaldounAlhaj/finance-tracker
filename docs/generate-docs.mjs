@@ -65,14 +65,18 @@ const cache = (sw.match(/CACHE\s*=\s*["']([^"']+)["']/) || [])[1] || "unknown";
 const key = (html.match(/const\s+KEY\s*=\s*["']([^"']+)["']/) || [])[1] || "unknown";
 const DEFAULTS = evalLiteral(html, /const\s+DEFAULTS\s*=\s*\{/, "{", "}") || {};
 const PHASES = evalLiteral(html, /const\s+PHASES\s*=\s*\[/, "[", "]") || [];
+const CAT_META = evalLiteral(html, /const\s+CAT_META\s*=\s*\{/, "{", "}") || {};
+const FIXED_CATS = evalLiteral(html, /const\s+FIXED_CATS\s*=\s*\[/, "[", "]") || [];
 const tabs = [...html.matchAll(/data-tab="([^"]+)"/g)].map((m) => m[1]);
 const eCat = (html.match(/<select[^>]*id="eCat"[\s\S]*?<\/select>/) || [""])[0];
 const cats = [...eCat.matchAll(/<option value="([^"]+)">/g)].map((m) => m[1]);
 
+const settings = DEFAULTS.settings || {};
+const budgets = (DEFAULTS.budgets && typeof DEFAULTS.budgets === "object" && !Array.isArray(DEFAULTS.budgets)) ? DEFAULTS.budgets : {};
 const debts = Array.isArray(DEFAULTS.debts) ? DEFAULTS.debts : [];
-const budgets = Array.isArray(DEFAULTS.budgets) ? DEFAULTS.budgets : [];
-const debtTotal = debts.reduce((a, d) => a + (+d.balance || 0), 0);
-const planned = budgets.reduce((a, b) => a + (+b.planned || 0), 0);
+const entries = Array.isArray(DEFAULTS.entries) ? DEFAULTS.entries : [];
+const plannedTotal = Object.keys(budgets).reduce((a, k) => a + (+budgets[k] || 0), 0);
+const debtTotal = debts.reduce((a, d) => a + (+d.startingBalance || 0), 0);
 
 const FILES = ["index.html", "sw.js", "manifest.json", "README.md",
   "icon-180.png", "icon-192.png", "icon-512.png",
@@ -95,19 +99,23 @@ _Synced **${today}** · app version **${cache}** · storage key \`${key}\`_
 ### Income & goal (seed defaults)
 | Field | Value |
 |---|---|
-| Salary — current | ${nf(DEFAULTS.salaryNow)} SAR |
-| Salary — from 2027-04 | ${nf(DEFAULTS.salaryNext)} SAR |
-| House target | ${nf(DEFAULTS.houseTarget)} SAR |
+| Salary — current | ${nf(settings.salaryCurrent)} SAR |
+| Salary — from ${settings.salaryFrom || "?"} | ${nf(settings.salaryFromAmount)} SAR |
+| House target | ${nf(settings.houseTarget)} SAR |
+| House saved | ${nf(settings.houseSaved)} SAR |
 
-### Debts (seed) — total **${nf(debtTotal)} SAR**
-| Debt | Bank | Balance | Original | Rate |
-|---|---|---|---|---|
-${debts.map((d) => `| ${d.name} | ${d.bank} | ${nf(d.balance)} | ${nf(d.original)} | ${(+d.rate) > 0 ? d.rate + "%/mo" : "0%"} |`).join("\n") || "| — | | | | |"}
+### Cards & loans (seed) — total starting balance **${nf(debtTotal)} SAR**
+| Name | Bank | Starting | Original | Rate | Kind | Linked |
+|---|---|---|---|---|---|---|
+${debts.map((d) => `| ${d.name} | ${d.bank || ""} | ${nf(d.startingBalance)} | ${nf(d.original)} | ${(+d.ratePerMonth) > 0 ? d.ratePerMonth + "%/mo" : "0%"} | ${d.kind || ""} | ${d.category || ""} |`).join("\n") || "| _(none in seed defaults)_ |  |  |  |  |  |  |"}
 
-### Monthly budget (seed) — planned **${nf(planned)} SAR**
+### Monthly budget (seed) — planned **${nf(plannedTotal)} SAR** · ${Object.keys(budgets).length} categories
 | Category | Planned | Type |
 |---|---|---|
-${budgets.map((b) => `| ${b.icon || ""} ${b.name} | ${nf(b.planned)} | ${b.fixed ? "fixed" : "variable"} |`).join("\n") || "| — | | |"}
+${Object.keys(budgets).map((c) => { const meta = CAT_META[c] || {}; const fixed = FIXED_CATS.indexOf(c) >= 0; return `| ${meta.icon || ""} ${meta.name || c} | ${nf(budgets[c])} | ${fixed ? "fixed" : "variable"} |`; }).join("\n") || "| — | | |"}
+
+### Entries (seed)
+_${entries.length} seed ${entries.length === 1 ? "entry" : "entries"} — your logged expenses & payments live here._
 
 ### Phase roadmap
 | # | Phase | Window | Goal |
