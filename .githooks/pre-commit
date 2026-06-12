@@ -1,0 +1,14 @@
+#!/bin/sh
+# Keep DOCUMENTATION.md in sync with the app source on every commit.
+# Fail-open: never block a commit if Node is missing or generation errors.
+if command -v node >/dev/null 2>&1; then
+  ROOT="$(git rev-parse --show-toplevel)"
+  if node "$ROOT/docs/generate-docs.mjs"; then
+    git add "$ROOT/DOCUMENTATION.md"
+  else
+    echo "[docs] generate-docs.mjs failed - committing without doc refresh" >&2
+  fi
+else
+  echo "[docs] node not found - skipping doc sync" >&2
+fi
+exit 0
