@@ -1,6 +1,6 @@
 # Finance Tracker — App Documentation
 
-<!-- VERSION --> app **finance-v4** · docs synced **2026-06-12** <!-- /VERSION -->
+<!-- VERSION --> app **finance-v5** · docs synced **2026-06-12** <!-- /VERSION -->
 
 > **Living document.** The block between the `AUTO:GENERATED` markers in **§4** is rebuilt
 > from the app's source (`index.html`, `sw.js`, `manifest.json`) every time you commit, by
@@ -53,11 +53,11 @@ A header **month switcher** (‹ ›) scopes Overview / Budget / Expenses to a c
 _Machine-generated from source on every commit — do not edit by hand._
 
 <!-- AUTO:GENERATED:START — produced by docs/generate-docs.mjs · DO NOT EDIT BY HAND -->
-_Synced **2026-06-12** · app version **finance-v4** · storage key `khaldoun_finance_v3`_
+_Synced **2026-06-12** · app version **finance-v5** · storage key `khaldoun_finance_v3`_
 
 ### Identity
 - **Finance Tracker** — Personal finance, debt and house-savings tracker
-- **Display:** standalone · **Theme:** #0d0f14
+- **Display:** standalone · **Theme:** #5458E0
 - **Tabs:** overview · budget · expenses · debts · plan · settings
 - **Expense categories:** food, transport, family, bills, health, clothing, entertainment, jordan, other
 
@@ -105,9 +105,9 @@ _Synced **2026-06-12** · app version **finance-v4** · storage key `khaldoun_fi
 ### Source file manifest (SHA-256, first 16 hex)
 | File | Bytes | Hash |
 |---|---|---|
-| `index.html` | 42,191 | `2ce67cf788709877` |
-| `sw.js` | 1,409 | `8c605228191e95df` |
-| `manifest.json` | 480 | `c13374c5b796a460` |
+| `index.html` | 45,815 | `b8ec47009d6441d7` |
+| `sw.js` | 1,409 | `550b35b8800bfb57` |
+| `manifest.json` | 480 | `fd67116f234d2295` |
 | `README.md` | 1,650 | `b67d621fc21bba5e` |
 | `icon-180.png` | 11,837 | `4f4aa4ab23cec3a9` |
 | `icon-192.png` | 13,061 | `731c75ee35bbc385` |
@@ -121,11 +121,18 @@ _Synced **2026-06-12** · app version **finance-v4** · storage key `khaldoun_fi
 | Property | State |
 |---|---|
 | Works offline | ✅ service worker caches the app (network-first for the page) |
-| Installable / standalone | ✅ home-screen app, custom icon, dark theme |
+| Installable / standalone | ✅ home-screen app, custom icon, adaptive theme |
+| Theming & design | ✅ warm token-based light & dark, auto-follows the OS + manual Light / Dark / Auto switch; one category-colour palette; tabular-num figures |
 | Privacy | ✅ data never leaves the device; no analytics, no server |
 | Backup / Restore | ✅ JSON file (manual) — the only safety net |
 | Multi-device sync | ❌ none — data is per-device, per-browser |
 | Lock / encryption | ❌ none — anyone with the unlocked device can open it |
+
+**Design system (finance-v5):** all colours, type, radii and shadows come from CSS custom properties on
+`:root`, overridden for dark via `prefers-color-scheme` and a manual `data-theme` attribute (Light / Dark /
+Auto switch in Settings, default Auto, persisted under `localStorage["finance_theme"]`, separate from the
+finance data). One shared category-colour palette feeds the chips and bars; humanist system-font stack only
+(no webfonts); tabular-nums for figures; over/under-budget is shown with a sign + icon, not colour alone.
 
 ## 6. Known limitations / review notes
 1. ~~**Budget category roll-up**~~ — **Resolved in finance-v4.** Every variable category now tracks its
@@ -154,6 +161,7 @@ _Synced **2026-06-12** · app version **finance-v4** · storage key `khaldoun_fi
 ## 8. Changelog
 | Version | Date | Changes |
 |---|---|---|
+| finance-v5 | 2026-06-12 | Visual redesign — warm "fresh fintech" light/dark design system (token-based, auto + manual Light/Dark/Auto switch), category-colour chips, humanist typography (no monospace / all-caps), restyled cards/buttons/inputs/tabs/bars, tabular-num figures, over-budget shown with sign + icon (not colour alone). No logic/data changes. SW cache → finance-v5. |
 | finance-v4 | 2026-06-12 | Budget fix — each variable category (Food, Transport, Family, Bills, Health, Clothing, Entertainment, Jordan Transfer, Other) now tracks its own Plan-vs-Actual line instead of Food absorbing six of them. New budget keys default to 0 for existing data (no wipe). SW cache → finance-v4. |
 | finance-v3 | 2026-06-12 | Privacy: neutralized seed data (zeroed salary/debts/budgets/target, removed bank & card names and header name, genericized the roadmap) and rewrote the public git history to purge the earlier personal values. |
 | finance-v2 | 2026-06-12 | Bank-SMS import: paste / clipboard / `#b64=` intake, on-device EN/AR parser, duplicate guard, iOS Shortcut path. Added this documentation system. |
