@@ -1,6 +1,6 @@
 # Finance Tracker — App Documentation
 
-<!-- VERSION --> app **finance-v3** · docs synced **2026-06-12** <!-- /VERSION -->
+<!-- VERSION --> app **finance-v4** · docs synced **2026-06-12** <!-- /VERSION -->
 
 > **Living document.** The block between the `AUTO:GENERATED` markers in **§4** is rebuilt
 > from the app's source (`index.html`, `sw.js`, `manifest.json`) every time you commit, by
@@ -53,7 +53,7 @@ A header **month switcher** (‹ ›) scopes Overview / Budget / Expenses to a c
 _Machine-generated from source on every commit — do not edit by hand._
 
 <!-- AUTO:GENERATED:START — produced by docs/generate-docs.mjs · DO NOT EDIT BY HAND -->
-_Synced **2026-06-12** · app version **finance-v3** · storage key `khaldoun_finance_v3`_
+_Synced **2026-06-12** · app version **finance-v4** · storage key `khaldoun_finance_v3`_
 
 ### Identity
 - **Finance Tracker** — Personal finance, debt and house-savings tracker
@@ -81,13 +81,18 @@ _Synced **2026-06-12** · app version **finance-v3** · storage key `khaldoun_fi
 |---|---|---|
 | 🏠 Rent | 0 | fixed |
 | 🪪 Iqama | 0 | fixed |
+| 🍽️ Food & Dining | 0 | variable |
+| 🚗 Transport / Fuel | 0 | variable |
+| 👨‍👩‍👧 Family | 0 | variable |
 | ⚡ Bills | 0 | variable |
-| 🍽️ Food & Expenses | 0 | variable |
-| 🚗 Car Loan Pmt | 0 | fixed |
+| 💊 Health | 0 | variable |
+| 👕 Clothing | 0 | variable |
+| 🎬 Entertainment | 0 | variable |
 | 🇯🇴 Jordan Transfer | 0 | variable |
+| 📦 Other | 0 | variable |
+| 🚗 Car Loan Pmt | 0 | fixed |
 | 📋 Jordan Loan | 0 | fixed |
 | 🏡 House Savings | 0 | fixed |
-| 📦 Other | 0 | variable |
 
 ### Phase roadmap
 | # | Phase | Window | Goal |
@@ -100,8 +105,8 @@ _Synced **2026-06-12** · app version **finance-v3** · storage key `khaldoun_fi
 ### Source file manifest (SHA-256, first 16 hex)
 | File | Bytes | Hash |
 |---|---|---|
-| `index.html` | 40,541 | `e02daf8439ace811` |
-| `sw.js` | 1,409 | `ed80afd64e5f0481` |
+| `index.html` | 42,191 | `2ce67cf788709877` |
+| `sw.js` | 1,409 | `8c605228191e95df` |
 | `manifest.json` | 480 | `c13374c5b796a460` |
 | `README.md` | 1,650 | `b67d621fc21bba5e` |
 | `icon-180.png` | 11,837 | `4f4aa4ab23cec3a9` |
@@ -123,10 +128,10 @@ _Synced **2026-06-12** · app version **finance-v3** · storage key `khaldoun_fi
 | Lock / encryption | ❌ none — anyone with the unlocked device can open it |
 
 ## 6. Known limitations / review notes
-1. **Budget category roll-up** — in Plan-vs-Actual only three lines accumulate real spending:
-   **Food** (which absorbs food, transport, health, family, clothing, entertainment *and* "Other"),
-   **Bills**, and **Jordan Transfer**. Fixed lines (Rent, Iqama, Car, Jordan Loan, House) are plan-only.
-   So a fuel or pharmacy expense currently counts against the Food budget.
+1. ~~**Budget category roll-up**~~ — **Resolved in finance-v4.** Every variable category now tracks its
+   own Plan-vs-Actual line — Food, Transport, Family, Bills, Health, Clothing, Entertainment, Jordan
+   Transfer, Other — and each totals only its own expenses; Food no longer absorbs the rest. New budget
+   keys default to 0 for existing data (nothing wiped).
 2. **Seed data is neutralized.** The committed defaults are all zero / blank — no personal figures, bank
    names, card names, or roadmap specifics — so your real numbers live only in your device's `localStorage`.
    The public git history was rewritten on 2026-06-12 to remove the earlier personal values. (The storage
@@ -149,6 +154,7 @@ _Synced **2026-06-12** · app version **finance-v3** · storage key `khaldoun_fi
 ## 8. Changelog
 | Version | Date | Changes |
 |---|---|---|
+| finance-v4 | 2026-06-12 | Budget fix — each variable category (Food, Transport, Family, Bills, Health, Clothing, Entertainment, Jordan Transfer, Other) now tracks its own Plan-vs-Actual line instead of Food absorbing six of them. New budget keys default to 0 for existing data (no wipe). SW cache → finance-v4. |
 | finance-v3 | 2026-06-12 | Privacy: neutralized seed data (zeroed salary/debts/budgets/target, removed bank & card names and header name, genericized the roadmap) and rewrote the public git history to purge the earlier personal values. |
 | finance-v2 | 2026-06-12 | Bank-SMS import: paste / clipboard / `#b64=` intake, on-device EN/AR parser, duplicate guard, iOS Shortcut path. Added this documentation system. |
 | finance-v1 | 2026-06-12 | Initial release — Overview, Budget, Expenses, Debts, Plan, Settings; PWA + offline + backup/restore. Deployed to GitHub Pages. |

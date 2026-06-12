@@ -205,7 +205,7 @@
     <div class="sum-row"><div><div class="sum-lab">Actual Spent</div><div class="sum-sub">Logged</div></div><div class="sum-amt red" id="acTot">0</div></div>
     <div class="sum-row"><div><div class="sum-lab">Difference</div><div class="sum-sub">Saved / over</div></div><div class="sum-amt" id="dfTot">0</div></div>
   </div>
-  <div class="note">Only variable categories (food, bills, Jordan transfer, other) total your logged expenses. Fixed lines show your plan as a reference.</div>
+  <div class="note">Each variable category (Food, Transport, Family, Bills, Health, Clothing, Entertainment, Jordan Transfer, Other) totals only its own logged expenses. Fixed lines (Rent, Iqama, Car Loan, Jordan Loan, House Savings) show your plan as a reference.</div>
 </div>
 
 <!-- EXPENSES -->
@@ -331,15 +331,20 @@ const DEFAULTS = {
     { id:"debt4",      name:"Car Loan",      bank:"",balance:0, original:0, rate:0 }
   ],
   budgets: [
-    { id:"rent",   name:"Rent",            icon:"🏠", color:"#5c8ee0", planned:0, fixed:true },
-    { id:"iqama",  name:"Iqama",  icon:"🪪", color:"#5c8ee0", planned:0,  fixed:true },
-    { id:"bills",  name:"Bills",           icon:"⚡", color:"#e0c45c", planned:0,  fixed:false },
-    { id:"food",   name:"Food & Expenses", icon:"🍽️", color:"#e08a5c", planned:0, fixed:false },
-    { id:"car_pmt",name:"Car Loan Pmt",    icon:"🚗", color:"#e05c5c", planned:0, fixed:true },
-    { id:"jordan", name:"Jordan Transfer", icon:"🇯🇴", color:"#4caf7d", planned:0, fixed:false },
-    { id:"jloan",  name:"Jordan Loan",     icon:"📋", color:"#9c7ce0", planned:0, fixed:true },
-    { id:"house",  name:"House Savings",   icon:"🏡", color:"#4caf7d", planned:0, fixed:true },
-    { id:"other",  name:"Other",           icon:"📦", color:"#6b7280", planned:0,  fixed:false }
+    { id:"rent",          name:"Rent",            icon:"🏠", color:"#5c8ee0", planned:0, fixed:true },
+    { id:"iqama",         name:"Iqama",           icon:"🪪", color:"#5c8ee0", planned:0, fixed:true },
+    { id:"food",          name:"Food & Dining",   icon:"🍽️", color:"#e08a5c", planned:0, fixed:false },
+    { id:"transport",     name:"Transport / Fuel",icon:"🚗", color:"#5c8ee0", planned:0, fixed:false },
+    { id:"family",        name:"Family",          icon:"👨‍👩‍👧", color:"#9c7ce0", planned:0, fixed:false },
+    { id:"bills",         name:"Bills",           icon:"⚡", color:"#e0c45c", planned:0, fixed:false },
+    { id:"health",        name:"Health",          icon:"💊", color:"#4caf7d", planned:0, fixed:false },
+    { id:"clothing",      name:"Clothing",        icon:"👕", color:"#5c8ee0", planned:0, fixed:false },
+    { id:"entertainment", name:"Entertainment",   icon:"🎬", color:"#9c7ce0", planned:0, fixed:false },
+    { id:"jordan",        name:"Jordan Transfer", icon:"🇯🇴", color:"#4caf7d", planned:0, fixed:false },
+    { id:"other",         name:"Other",           icon:"📦", color:"#6b7280", planned:0, fixed:false },
+    { id:"car_pmt",       name:"Car Loan Pmt",    icon:"🚗", color:"#e05c5c", planned:0, fixed:true },
+    { id:"jloan",         name:"Jordan Loan",     icon:"📋", color:"#9c7ce0", planned:0, fixed:true },
+    { id:"house",         name:"House Savings",   icon:"🏡", color:"#4caf7d", planned:0, fixed:true }
   ],
   expenses: []
 };
@@ -355,8 +360,8 @@ const PHASES = [
     goal:"Shift to a high savings rate and invest steadily toward the house goal." }
 ];
 
-// variable categories that count toward "actual spent"
-const VAR_CATS = { food:"food", family:"food", entertainment:"food", clothing:"food", health:"food", transport:"food", other:"food", bills:"bills", jordan:"jordan" };
+// each variable expense category maps 1:1 to its own budget line (budget id === category)
+const VAR_CATS = { food:"food", transport:"transport", family:"family", bills:"bills", health:"health", clothing:"clothing", entertainment:"entertainment", jordan:"jordan", other:"other" };
 
 let state = load();
 
@@ -369,9 +374,29 @@ function migrate(s){
   const d = JSON.parse(JSON.stringify(DEFAULTS));
   return Object.assign({}, d, s, {
     debts: s.debts || d.debts,
-    budgets: s.budgets || d.budgets,
+    budgets: mergeBudgets(s.budgets, d.budgets),
     expenses: s.expenses || []
   });
+}
+// Merge saved budget lines onto the current default set: keep each line's saved planned
+// amount, add any newly-introduced default lines at 0, coerce bad values to 0 — never NaN,
+// never drop an existing line.
+function mergeBudgets(saved, defaults){
+  if(!Array.isArray(saved)) return defaults;
+  const savedById = {};
+  saved.forEach(b=>{ if(b && b.id) savedById[b.id]=b; });
+  const out = defaults.map(def=>{
+    const s = savedById[def.id];
+    const planned = s && Number.isFinite(+s.planned) ? +s.planned : 0;
+    return Object.assign({}, def, { planned });
+  });
+  saved.forEach(b=>{
+    if(b && b.id && !defaults.some(d=>d.id===b.id)){
+      out.push({ id:b.id, name:b.name||b.id, icon:b.icon||"📦", color:b.color||"#6b7280",
+                 planned: Number.isFinite(+b.planned)?+b.planned:0, fixed:!!b.fixed });
+    }
+  });
+  return out;
 }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
 
