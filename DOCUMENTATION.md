@@ -1,6 +1,6 @@
 # Finance Tracker — App Documentation
 
-<!-- VERSION --> app **finance-v6** · docs synced **2026-06-12** <!-- /VERSION -->
+<!-- VERSION --> app **finance-v8** · docs synced **2026-07-17** <!-- /VERSION -->
 
 > **Living document.** The block between the `AUTO:GENERATED` markers in **§4** is rebuilt
 > from the app's source (`index.html`, `sw.js`, `manifest.json`) every time you commit, by
@@ -19,93 +19,116 @@ browser, stores all data locally in `localStorage`, and has **no backend and no 
 - **Currency:** SAR · **Users:** single (no multi-user / no auth)
 - **Stack:** one self-contained `index.html` (no frameworks) + service worker + manifest + icons
 
-## 2. Modules (UI tabs) — 5 tabs (Phase 1)
+## 2. Modules — 5 tabs on a bottom bar (v8)
 | Tab | Purpose |
 |---|---|
-| **Dashboard** | This month at a glance — Income, Spent, Remaining, House Saved, and Total Debt with % paid. _Placeholder; charts arrive in Phase 2._ |
-| **Log** | The single entry point for money out: an **Expense / Card-or-Loan-payment** toggle, the bank-SMS import (expense side), and a recent-entries list with edit + delete. |
-| **Budget** | Plan vs Actual per category for the month + a Planned / Actual / Difference summary. _Built out in Phase 2._ |
-| **Goals** | House-savings goal progress, the four-phase roadmap, and "Update House Savings". |
-| **Settings** | Per-category budgets; salary (current, step-up date + amount, single-month override) and house target; an editable **Cards & Loans** list; Backup / Restore (JSON); Reset. |
+| **Dashboard** | The daily glance, always anchored to the real current month — **Safe to spend today** hero, Spent / Left tiles, a Committed · Flexible · Set-aside strip, house fund with verdict badge, total debt with a payoff note, and **Upcoming this week** (auto-posts, with ends-soon hints). Browsing back shows a calm closed-month summary. |
+| **Log** | One page for all money — **Expense / Card·loan / Income** toggle, the bank-SMS box (paste → auto-fill), a **"Repeats monthly" + "until"** switch that creates the auto-posting rule inline (add the gym once; it ends itself), and recent entries with edit / delete / **Skip** (for auto-posts) / **↻ make recurring**. |
+| **Budget** | Grouped envelopes (Home · Family · Jordan · Living · Obligations) with kind badges (AUTO / GOAL), **↻ rollover** carry, a **today pacing line** on every bar, over-by warnings in words, and a header with Planned / Actual / Difference + Committed / Flexible / **Safe-per-day**. |
+| **Goals** | Where you stand **today**: house fund with needed-vs-pace and an on-track / short-by verdict, **Commitments** (school fees, trips, insurance — funded %, monthly set-aside, on-pace badges), **Debt payoff** (per-account projected close date + interest ahead), and the **editable roadmap**. |
+| **Settings** | Theme (Light / Dark / Auto); overlays for **Salary & house goal** (payday, target month, saved-start), **Recurring items** (pause / end dates / **renew**), **Budgets**, **Categories** (rename / icon / group / kind / rollover / archive), **Cards & loans**; backup with an **age nudge**, restore, reset. |
 
-A header **month switcher** (‹ ›) scopes the figures to a chosen month. _(The old Overview / Expenses / Debts tabs are folded into Dashboard / Log / Settings.)_
+A bottom tab bar (thumb reach on large phones) replaces the old top tabs; a first-run screen welcomes a fresh install and offers backup restore.
 
 ## 3. Features
-### 3.1 Core (re-architected in finance-v6)
-- **Unified Log** — one form records every "money out": an **expense** (description, amount, date, category)
-  or a **card / loan payment** (account, amount, date — the category comes from the account). A payment both
-  reduces that account's balance and counts as spending. Recent entries list supports edit + delete.
-- **Automatic calculations** — nothing recomputable is stored. A debt's current balance = starting balance −
-  its logged payments (editing/deleting a payment re-derives it — no manual "update balance"); month income =
-  single-month override → step-up amount (on/after `salaryFrom`) → current salary; month spent = all entries;
-  remaining, total debt and % paid all derive live.
-- **Per-category budgets** — one planned amount per category (5 fixed: rent, iqama, carLoan, jordanLoan,
-  houseSavings; 9 variable), each tracking its own actual.
-- **Goals** — house-savings progress vs target + the four-phase roadmap.
-- **Cards & Loans** — editable in Settings (name, bank, original, starting balance, rate, kind, linked
-  category); paid down from the Log.
-- **Backup / Restore** — round-trips the new data shape; **Reset** to defaults. **PWA** — installable, offline.
+### 3.1 Core (v6 re-architecture → v7 configurability → v8 planner + design)
+- **Safe to spend today** — income − committed bills − goal set-asides, spread over the days left in the
+  month; the Dashboard hero and the per-day figure on Budget. Answers the daily question in one number.
+- **Category kinds** — every category is **committed** (posts itself), **flexible** (day-to-day choices) or
+  **goal** (money being set aside); the split powers the safe-to-spend math. **Rollover** categories carry
+  unspent budget into the next month.
+- **Unified Log** — expense / card-loan payment / income in one form; payments reduce the linked account AND
+  count as spending; the **"Repeats monthly" + "until"** switch creates the auto-posting rule inline.
+- **Recurring lifecycle** — each item posts on its day (salary on payday), can pause/resume, carries an end
+  month, shows **ENDED** with one-tap **Renew**, and single months are skippable via a gentle sheet.
+  Idempotent — never double-posts, never backfills before its start month.
+- **Commitments** — known future costs (school fees, trip home, insurance): target + due month → required
+  monthly set-aside, funded % (entries in the linked category count automatically), on-pace verdicts.
+- **Debt payoff projections** — from each account's linked recurring installment: projected close date and
+  interest ahead (monthly-rate amortization); the Dashboard states the projected debt-free date.
+- **House goal** — target + target month; saved = starting amount + everything logged to House savings;
+  needed-per-month vs your recent pace → an honest **on-track / short-by** verdict.
+- **Editable everything** — categories, budgets, roadmap phases, accounts, recurring, commitments: all data
+  in the app, never code.
+- **Backup / Restore** — round-trips the full v8 shape; a **backup-age nudge** appears after 30 days; the
+  first-run screen offers restore. **Reset** to defaults. **PWA** — installable, offline.
 
 ### 3.2 Bank-SMS import (since finance-v2 — now feeds the Log expense form)
 - **Intake (3 ways):** paste into the Log, the **📋 Paste** (clipboard) button, or a `#b64=` deep link from an
   iOS Shortcut. **On-device parser** — amount, merchant, date, category guess; English + Arabic; skips incoming
   money; 100% client-side (the `#b64=` fragment never leaves the device).
 
-### 3.3 Data model — `localStorage["khaldoun_finance_v3"]` (migrated in place, zero loss)
-- `settings { salaryCurrent, salaryFrom, salaryFromAmount, houseTarget, houseSaved, salaryOverrides }`
-- `budgets { <category>: plannedAmount }` · `debts [ { id, name, bank, startingBalance, original, ratePerMonth, kind, category } ]`
-- `entries [ { id, date, amount, category, type:"expense"|"payment", debtId, description } ]`
-- The legacy v1–v5 shape (`salaryNow/Next`, `debts[].balance`, `budgets[]`, `expenses[]`) upgrades automatically:
-  budget keys remap (car_pmt→carLoan, jloan→jordanLoan, house→houseSavings, jordan→jordanTransfer), debt
-  balances become `startingBalance`, and old expenses become `expense` entries.
+### 3.3 Data model — `localStorage["khaldoun_finance_v3"]` (modelVersion 8; migrated in place, zero loss)
+- `settings { salaryCurrent, salaryFrom, salaryFromAmount, payday, houseTarget, houseTargetMonth,
+  houseSavedStart, houseAccrueFrom, lastBackupAt, salaryOverrides }`
+- `categories [ { id, name, icon, group, kind:"committed"|"flexible"|"goal", rollover, archived } ]`
+  · `budgets { <categoryId>: plannedAmount }`
+- `commitments [ { id, name, target, dueMonth, categoryId, fundedStart, createdFrom } ]`
+- `debts [ { id, name, bank, startingBalance, original, ratePerMonth, kind, category } ]`
+- `recurring [ { id, name, amount, type, categoryId, debtId, dayOfMonth, startMonth, endMonth, active, isSalary } ]`
+  · `skips [ "recurringId:YYYY-MM" ]`
+- `entries [ { id, date, amount, category, type:"expense"|"payment"|"income", debtId, description, recurringId } ]`
+- `phases [ { name, title, start, end, goal } ]` — the editable roadmap
+- **House saved is derived**: `houseSavedStart` + every entry logged to the House savings category since
+  `houseAccrueFrom` (v7's manual `houseSaved` migrates into `houseSavedStart`; nothing recomputable is stored).
+- Every older shape upgrades in place: v7 gains kinds, rollover flags and `commitments`; v6 and legacy v1–v5
+  chain through the earlier migrations first. Income sources (salary/bonus/gift/other) live on income entries'
+  `category` field, separate from spending categories.
 
 ## 4. Generated reference
 _Machine-generated from source on every commit — do not edit by hand._
 
 <!-- AUTO:GENERATED:START — produced by docs/generate-docs.mjs · DO NOT EDIT BY HAND -->
-_Synced **2026-06-12** · app version **finance-v6** · storage key `khaldoun_finance_v3`_
+_Synced **2026-07-17** · app version **finance-v8** · storage key `khaldoun_finance_v3`_
 
 ### Identity
 - **Finance Tracker** — Personal finance, debt and house-savings tracker
-- **Display:** standalone · **Theme:** #5458E0
+- **Display:** standalone · **Theme:** #1f7a63
 - **Tabs:** dashboard · log · budget · goals · settings
-- **Expense categories:** food, transport, family, bills, health, clothing, entertainment, jordanTransfer, other
+- **Categories:** 20 seed, fully editable in-app (rename / icon / group / kind / rollover / archive / add)
 
 ### Income & goal (seed defaults)
 | Field | Value |
 |---|---|
 | Salary — current | 0 SAR |
 | Salary — from 2027-04 | 0 SAR |
-| House target | 0 SAR |
-| House saved | 0 SAR |
+| Payday (day of month) | 1 |
+| House target | 0 SAR by 2029-12 |
+| House saved before tracking | 0 SAR (entries to House savings add on top) |
 
 ### Cards & loans (seed) — total starting balance **0 SAR**
 | Name | Bank | Starting | Original | Rate | Kind | Linked |
 |---|---|---|---|---|---|---|
 | _(none in seed defaults)_ |  |  |  |  |  |  |
 
-### Monthly budget (seed) — planned **0 SAR** · 14 categories
-| Category | Planned | Type |
-|---|---|---|
-| 🏠 Rent | 0 | fixed |
-| 🪪 Iqama | 0 | fixed |
-| 🚗 Car Loan | 0 | fixed |
-| 📋 Jordan Loan | 0 | fixed |
-| 🏡 House Savings | 0 | fixed |
-| ⚡ Bills | 0 | variable |
-| 🍽️ Food & Dining | 0 | variable |
-| 🚗 Transport / Fuel | 0 | variable |
-| 👨‍👩‍👧 Family | 0 | variable |
-| 💊 Health | 0 | variable |
-| 👕 Clothing | 0 | variable |
-| 🎬 Entertainment | 0 | variable |
-| 🇯🇴 Jordan Transfer | 0 | variable |
-| 📦 Other | 0 | variable |
+### Categories & budgets (seed) — planned **0 SAR** · 20 categories
+| Category | Planned | Group | Kind |
+|---|---|---|---|
+| 🏠 Rent | 0 | Home | committed |
+| ⚡ Bills & utilities | 0 | Home | committed |
+| 🛒 Groceries & household | 0 | Home | flexible |
+| 💑 Wife & personal | 0 | Family | flexible |
+| 👶 Baby girl | 0 | Family | flexible ↻ |
+| 🎓 School fund | 0 | Family | goal ↻ |
+| 💊 Health | 0 | Family | flexible |
+| 🏘️ Parents' rent support | 0 | Jordan | committed |
+| 🇯🇴 Family support & gifts | 0 | Jordan | flexible |
+| ✈️ Travel | 0 | Jordan | goal ↻ |
+| 🚗 Transport / fuel | 0 | Living | flexible |
+| 🍽️ Dining & entertainment | 0 | Living | flexible |
+| 👕 Clothing | 0 | Living | flexible |
+| 🎁 Gifts & occasions | 0 | Living | flexible |
+| 🤲 Charity | 0 | Living | flexible |
+| 📦 Other | 0 | Living | flexible |
+| 🪪 Iqama & gov fees | 0 | Obligations | committed |
+| 🚙 Car loan | 0 | Obligations | committed |
+| 📋 Jordan loan | 0 | Obligations | committed |
+| 🏡 House savings | 0 | Obligations | goal |
 
-### Entries (seed)
-_0 seed entries — your logged expenses & payments live here._
+### Recurring, commitments & entries (seed)
+_0 seed recurring items (salary auto-creates on first run) · 0 seed commitments · 0 seed entries — your income, expenses & payments live here._
 
-### Phase roadmap
+### Seed roadmap (copied into your data on first run — edit it in Goals)
 | # | Phase | Window | Goal |
 |---|---|---|---|
 | 1 | Phase 1 — Clear Jordan Obligations | 2026-06 → 2026-10 | Pay Jordan loan (closes Oct), clear Jordan credit card. Pay minimums on KSA cards. |
@@ -116,14 +139,14 @@ _0 seed entries — your logged expenses & payments live here._
 ### Source file manifest (SHA-256, first 16 hex)
 | File | Bytes | Hash |
 |---|---|---|
-| `index.html` | 52,748 | `ac03489bd8bc70a4` |
-| `sw.js` | 1,409 | `2233bc41bea72c55` |
-| `manifest.json` | 480 | `fd67116f234d2295` |
+| `index.html` | 119,548 | `aadc0cfa887bff5e` |
+| `sw.js` | 1,409 | `d1612c09a15951d7` |
+| `manifest.json` | 480 | `667075e74e294a37` |
 | `README.md` | 1,650 | `b67d621fc21bba5e` |
 | `icon-180.png` | 11,837 | `4f4aa4ab23cec3a9` |
 | `icon-192.png` | 13,061 | `731c75ee35bbc385` |
 | `icon-512.png` | 21,751 | `fa0dd4a4cf91109f` |
-| `docs/generate-docs.mjs` | 6,945 | `500ab2491116065d` |
+| `docs/generate-docs.mjs` | 7,327 | `5676471b784e86fc` |
 | `.githooks/pre-commit` | 483 | `4ce5d3c8a0750470` |
 | `.gitattributes` | 134 | `aa3e3144fa6a086d` |
 <!-- AUTO:GENERATED:END -->
@@ -139,11 +162,12 @@ _0 seed entries — your logged expenses & payments live here._
 | Multi-device sync | ❌ none — data is per-device, per-browser |
 | Lock / encryption | ❌ none — anyone with the unlocked device can open it |
 
-**Design system (finance-v5):** all colours, type, radii and shadows come from CSS custom properties on
-`:root`, overridden for dark via `prefers-color-scheme` and a manual `data-theme` attribute (Light / Dark /
-Auto switch in Settings, default Auto, persisted under `localStorage["finance_theme"]`, separate from the
-finance data). One shared category-colour palette feeds the chips and bars; humanist system-font stack only
-(no webfonts); tabular-nums for figures; over/under-budget is shown with a sign + icon, not colour alone.
+**Design system (finance-v8):** the warm cream-and-green "companion" palette from the Claude Design pass,
+implemented as CSS custom properties with full light + dark themes — **every text/surface pair measured
+≥ 4.5:1 in both** (light-mode inks were darkened from the design draft to pass WCAG). Manual Light / Dark /
+Auto (persisted at `localStorage["finance_theme"]`, separate from finance data) plus a header quick-toggle.
+Bottom tab bar for one-handed reach; ≥ 44px touch targets; `dir="auto"` on user text for Arabic fragments;
+tabular numerals everywhere; `prefers-reduced-motion` respected; system fonts only — no webfonts, no CDNs.
 
 ## 6. Known limitations / review notes
 1. ~~**Budget category roll-up**~~ — **Resolved in finance-v4.** Every variable category now tracks its
@@ -157,8 +181,8 @@ finance data). One shared category-colour palette feeds the chips and bars; huma
 3. **SMS parser tuning** — pending a real sample message to lock onto the bank's exact format.
 4. **iOS Shortcut storage test** — pending (Safari vs home-screen PWA storage).
 5. **Backup is the only safety net** — clearing Safari data wipes everything.
-6. **Phases are hardcoded** — salary/budgets/debts are editable in Settings, but the four phase
-   dates/goals live in `index.html` (`PHASES`).
+6. ~~**Phases are hardcoded**~~ — **Resolved in finance-v7.** The roadmap is editable in Goals (add / edit /
+   delete phases); the in-code `PHASES` is only a first-run seed. Update your house deadline (e.g. 2030) there.
 
 ## 7. Keeping this in sync (version control)
 - **Automatic:** a `pre-commit` hook runs `docs/generate-docs.mjs`, which rewrites the §4 block from
@@ -172,6 +196,8 @@ finance data). One shared category-colour palette feeds the chips and bars; huma
 ## 8. Changelog
 | Version | Date | Changes |
 |---|---|---|
+| finance-v8 | 2026-07-17 | **The ideal-app release** — Claude-Design port: warm light/dark "companion" palette (WCAG-verified ≥4.5:1 both themes), bottom tab bar, first-run onboarding with restore. Planner: category kinds (committed / flexible / goal), **Safe-to-spend-today**, rollover envelopes, **Commitments** with set-aside math, per-debt **payoff projections** with interest, house verdict vs an editable target month. Recurring created inline from the Log ("Repeats monthly" + "until"), skip-a-month sheet, ENDED + Renew. Backup-age nudge; dashboard anchored to the current month with closed-month look-backs. In-place migration v1–v7 → v8 (`houseSaved` → `houseSavedStart` + logged accrual). Fixed multi-month date arithmetic in projections. SW cache → finance-v8. _Deferred to v8.1: avalanche-vs-snowball simulator, payoff-order timeline, auto-snapshots._ |
+| finance-v7 | 2026-07-17 | **Configure-everything release** — full income tracking (salary auto-posts on payday; bonuses/gifts/one-offs logged via an Income toggle in the Log; Remaining = actual income − spent); recurring engine (rent, parents' rent, iqama, loan installments post themselves; recurring payments also pay down the linked account; skip-a-month by deleting that copy; pause/resume); categories became editable data with a life-based 20-category seed grouped Home/Family/Jordan/Living/Obligations (baby girl, school fund, parents' rent support, charity…); roadmap/phases editable in Goals; SMS parser learns baby & remittance merchants. In-place zero-loss migration from v6 and v1–v5. SW cache → finance-v7. |
 | finance-v6 | 2026-06-12 | **Phase 1 re-architecture** — new data model (settings / per-category budgets / debts / entries) with in-place, zero-loss migration; five tabs (Dashboard · Log · Budget · Goals · Settings); a single unified **Log** (expense / card-or-loan-payment toggle) as the only money-out entry point; **automatic calculations** (debt balance from payments, month income with step-up + single-month override, all totals derived); editable Cards & Loans in Settings; SMS import now feeds the Log. Carries the v5 design system. SW cache → finance-v6. |
 | finance-v5 | 2026-06-12 | Visual redesign — warm "fresh fintech" light/dark design system (token-based, auto + manual Light/Dark/Auto switch), category-colour chips, humanist typography (no monospace / all-caps), restyled cards/buttons/inputs/tabs/bars, tabular-num figures, over-budget shown with sign + icon (not colour alone). No logic/data changes. SW cache → finance-v5. |
 | finance-v4 | 2026-06-12 | Budget fix — each variable category (Food, Transport, Family, Bills, Health, Clothing, Entertainment, Jordan Transfer, Other) now tracks its own Plan-vs-Actual line instead of Food absorbing six of them. New budget keys default to 0 for existing data (no wipe). SW cache → finance-v4. |

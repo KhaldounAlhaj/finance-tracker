@@ -65,14 +65,13 @@ const cache = (sw.match(/CACHE\s*=\s*["']([^"']+)["']/) || [])[1] || "unknown";
 const key = (html.match(/const\s+KEY\s*=\s*["']([^"']+)["']/) || [])[1] || "unknown";
 const DEFAULTS = evalLiteral(html, /const\s+DEFAULTS\s*=\s*\{/, "{", "}") || {};
 const PHASES = evalLiteral(html, /const\s+PHASES\s*=\s*\[/, "[", "]") || [];
-const CAT_META = evalLiteral(html, /const\s+CAT_META\s*=\s*\{/, "{", "}") || {};
-const FIXED_CATS = evalLiteral(html, /const\s+FIXED_CATS\s*=\s*\[/, "[", "]") || [];
 const tabs = [...html.matchAll(/data-tab="([^"]+)"/g)].map((m) => m[1]);
-const eCat = (html.match(/<select[^>]*id="eCat"[\s\S]*?<\/select>/) || [""])[0];
-const cats = [...eCat.matchAll(/<option value="([^"]+)">/g)].map((m) => m[1]);
 
 const settings = DEFAULTS.settings || {};
 const budgets = (DEFAULTS.budgets && typeof DEFAULTS.budgets === "object" && !Array.isArray(DEFAULTS.budgets)) ? DEFAULTS.budgets : {};
+const categories = Array.isArray(DEFAULTS.categories) ? DEFAULTS.categories : [];
+const recurring = Array.isArray(DEFAULTS.recurring) ? DEFAULTS.recurring : [];
+const commitments = Array.isArray(DEFAULTS.commitments) ? DEFAULTS.commitments : [];
 const debts = Array.isArray(DEFAULTS.debts) ? DEFAULTS.debts : [];
 const entries = Array.isArray(DEFAULTS.entries) ? DEFAULTS.entries : [];
 const plannedTotal = Object.keys(budgets).reduce((a, k) => a + (+budgets[k] || 0), 0);
@@ -94,30 +93,31 @@ _Synced **${today}** · app version **${cache}** · storage key \`${key}\`_
 - **${manifest.name || "Finance Tracker"}** — ${manifest.description || ""}
 - **Display:** ${manifest.display || "?"} · **Theme:** ${manifest.theme_color || "?"}
 - **Tabs:** ${tabs.join(" · ") || "—"}
-- **Expense categories:** ${cats.join(", ") || "—"}
+- **Categories:** ${categories.length} seed, fully editable in-app (rename / icon / group / kind / rollover / archive / add)
 
 ### Income & goal (seed defaults)
 | Field | Value |
 |---|---|
 | Salary — current | ${nf(settings.salaryCurrent)} SAR |
 | Salary — from ${settings.salaryFrom || "?"} | ${nf(settings.salaryFromAmount)} SAR |
-| House target | ${nf(settings.houseTarget)} SAR |
-| House saved | ${nf(settings.houseSaved)} SAR |
+| Payday (day of month) | ${nf(settings.payday)} |
+| House target | ${nf(settings.houseTarget)} SAR by ${settings.houseTargetMonth || "?"} |
+| House saved before tracking | ${nf(settings.houseSavedStart)} SAR (entries to House savings add on top) |
 
 ### Cards & loans (seed) — total starting balance **${nf(debtTotal)} SAR**
 | Name | Bank | Starting | Original | Rate | Kind | Linked |
 |---|---|---|---|---|---|---|
 ${debts.map((d) => `| ${d.name} | ${d.bank || ""} | ${nf(d.startingBalance)} | ${nf(d.original)} | ${(+d.ratePerMonth) > 0 ? d.ratePerMonth + "%/mo" : "0%"} | ${d.kind || ""} | ${d.category || ""} |`).join("\n") || "| _(none in seed defaults)_ |  |  |  |  |  |  |"}
 
-### Monthly budget (seed) — planned **${nf(plannedTotal)} SAR** · ${Object.keys(budgets).length} categories
-| Category | Planned | Type |
-|---|---|---|
-${Object.keys(budgets).map((c) => { const meta = CAT_META[c] || {}; const fixed = FIXED_CATS.indexOf(c) >= 0; return `| ${meta.icon || ""} ${meta.name || c} | ${nf(budgets[c])} | ${fixed ? "fixed" : "variable"} |`; }).join("\n") || "| — | | |"}
+### Categories & budgets (seed) — planned **${nf(plannedTotal)} SAR** · ${categories.length} categories
+| Category | Planned | Group | Kind |
+|---|---|---|---|
+${categories.map((c) => `| ${c.icon || ""} ${c.name || c.id} | ${nf(budgets[c.id])} | ${c.group || ""} | ${c.kind || "flexible"}${c.rollover ? " ↻" : ""} |`).join("\n") || "| — | | | |"}
 
-### Entries (seed)
-_${entries.length} seed ${entries.length === 1 ? "entry" : "entries"} — your logged expenses & payments live here._
+### Recurring, commitments & entries (seed)
+_${recurring.length} seed recurring ${recurring.length === 1 ? "item" : "items"} (salary auto-creates on first run) · ${commitments.length} seed ${commitments.length === 1 ? "commitment" : "commitments"} · ${entries.length} seed ${entries.length === 1 ? "entry" : "entries"} — your income, expenses & payments live here._
 
-### Phase roadmap
+### Seed roadmap (copied into your data on first run — edit it in Goals)
 | # | Phase | Window | Goal |
 |---|---|---|---|
 ${PHASES.map((p, i) => `| ${i + 1} | ${p.name} — ${p.title} | ${p.start} → ${p.end} | ${p.goal} |`).join("\n") || "| — | | | |"}
