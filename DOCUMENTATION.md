@@ -26,7 +26,7 @@ browser, stores all data locally in `localStorage`, and has **no backend and no 
 | **Log** | One page for all money — **Expense / Card·loan / Income** toggle, the bank-SMS box (paste → auto-fill), a **"Paid with"** choice (SAR/JOD cash · debit · any of your credit cards — a card purchase raises that card's balance), a **"Repeats" switch (monthly · every 3 or 6 months · yearly) with an optional "until"** — forever by default — that creates the auto-posting rule inline (add the gym once; it ends itself), and recent entries with edit / delete / **Skip** (for auto-posts) / **↻ make recurring**. |
 | **Budget** | Grouped envelopes (Home · Family · Jordan · Living · Obligations) with kind badges (AUTO / GOAL), **↻ rollover** carry, a **today pacing line** on every bar, over-by warnings in words, and a header with Planned / Actual / Difference + Committed / Flexible / **Safe-per-day**. |
 | **Goals** | Where you stand **today**: house fund with needed-vs-pace and an on-track / short-by verdict, **Commitments** (school fees, trips, insurance — funded %, monthly set-aside, on-pace badges), **Debt payoff** (per-account projected close date + interest ahead), and the **editable roadmap**. |
-| **Settings** | Theme (Light / Dark / Auto); overlays for **Salary & house goal** (salary steps with an effective month, payday, target month, saved-start), **Recurring items** (pause / end dates / **renew**), **Budgets**, **Categories** (rename / icon / group / kind / rollover / archive), **Cards & loans**; backup with an **age nudge**, restore, reset. |
+| **Settings** | Theme (Light / Dark / Auto); overlays for **Salary & house goal** (salary + the month it starts, payday, target month, saved-start), **Recurring items** (pause / end dates / **renew**), **Budgets**, **Categories** (rename / icon / group / kind / rollover / archive), **Cards & loans**; backup with an **age nudge**, restore, reset. |
 
 A bottom tab bar (thumb reach on large phones) replaces the old top tabs; a first-run screen welcomes a fresh install and offers backup restore.
 
@@ -153,7 +153,7 @@ _0 seed recurring items (salary auto-creates on first run) · 0 seed commitments
 ### Source file manifest (SHA-256, first 16 hex)
 | File | Bytes | Hash |
 |---|---|---|
-| `index.html` | 128,552 | `a0b46fdf6a73c76a` |
+| `index.html` | 128,741 | `457486bcdcaa862f` |
 | `sw.js` | 1,411 | `609aac5b973aca81` |
 | `manifest.json` | 480 | `667075e74e294a37` |
 | `README.md` | 1,650 | `b67d621fc21bba5e` |
