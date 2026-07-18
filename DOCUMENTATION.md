@@ -1,6 +1,6 @@
 # Finance Tracker — App Documentation
 
-<!-- VERSION --> app **finance-v8.1** · docs synced **2026-07-18** <!-- /VERSION -->
+<!-- VERSION --> app **finance-v8.2** · docs synced **2026-07-18** <!-- /VERSION -->
 
 > **Living document.** The block between the `AUTO:GENERATED` markers in **§4** is rebuilt
 > from the app's source (`index.html`, `sw.js`, `manifest.json`) every time you commit, by
@@ -23,7 +23,7 @@ browser, stores all data locally in `localStorage`, and has **no backend and no 
 | Tab | Purpose |
 |---|---|
 | **Dashboard** | The daily glance, always anchored to the real current month — **Safe to spend today** hero, Spent / Left tiles, a Committed · Flexible · Set-aside strip, house fund with verdict badge, total debt with a payoff note, and **Upcoming this week** (auto-posts, with ends-soon hints). Browsing back shows a calm closed-month summary. |
-| **Log** | One page for all money — **Expense / Card·loan / Income** toggle, the bank-SMS box (paste → auto-fill), a **"Repeats" switch (monthly · every 3 or 6 months · yearly) with an optional "until"** — forever by default — that creates the auto-posting rule inline (add the gym once; it ends itself), and recent entries with edit / delete / **Skip** (for auto-posts) / **↻ make recurring**. |
+| **Log** | One page for all money — **Expense / Card·loan / Income** toggle, the bank-SMS box (paste → auto-fill), a **"Paid with"** choice (SAR/JOD cash · debit · any of your credit cards — a card purchase raises that card's balance), a **"Repeats" switch (monthly · every 3 or 6 months · yearly) with an optional "until"** — forever by default — that creates the auto-posting rule inline (add the gym once; it ends itself), and recent entries with edit / delete / **Skip** (for auto-posts) / **↻ make recurring**. |
 | **Budget** | Grouped envelopes (Home · Family · Jordan · Living · Obligations) with kind badges (AUTO / GOAL), **↻ rollover** carry, a **today pacing line** on every bar, over-by warnings in words, and a header with Planned / Actual / Difference + Committed / Flexible / **Safe-per-day**. |
 | **Goals** | Where you stand **today**: house fund with needed-vs-pace and an on-track / short-by verdict, **Commitments** (school fees, trips, insurance — funded %, monthly set-aside, on-pace badges), **Debt payoff** (per-account projected close date + interest ahead), and the **editable roadmap**. |
 | **Settings** | Theme (Light / Dark / Auto); overlays for **Salary & house goal** (payday, target month, saved-start), **Recurring items** (pause / end dates / **renew**), **Budgets**, **Categories** (rename / icon / group / kind / rollover / archive), **Cards & loans**; backup with an **age nudge**, restore, reset. |
@@ -39,9 +39,13 @@ A bottom tab bar (thumb reach on large phones) replaces the old top tabs; a firs
 - **Category kinds** — every category is **committed** (posts itself), **flexible** (day-to-day choices) or
   **goal** (money being set aside); the split powers the safe-to-spend math. **Rollover** categories carry
   unspent budget into the next month.
-- **Unified Log** — expense / card-loan payment / income in one form; payments reduce the linked account AND
-  count as spending; the **"Repeats"** switch (monthly / every 3 or 6 months / yearly, optional "until" —
-  forever by default) creates the auto-posting rule inline.
+- **Unified Log** — expense / card-loan payment / income in one form; the **"Repeats"** switch (monthly /
+  every 3 or 6 months / yearly, optional "until" — forever by default) creates the auto-posting rule inline.
+- **Paid with & revolving cards** — every expense records how it was paid: SAR cash/bank, JOD cash, debit,
+  or one of your **credit cards**. A card purchase raises that card's balance; paying a card lowers it and is
+  treated as a balance transfer, **not** new spending (the spend was the purchase — no double counting).
+  Loan payments remain spending. Debt setup is minimal — name + amount owed + card/loan; bank, original,
+  rate and budget link are optional "More details".
 - **Recurring lifecycle** — each item posts on its day **at its own cadence** — monthly, quarterly,
   semi-annual or yearly, anchored to a first-payment month (iqama every March stays every March). Salary
   posts on payday; items pause/resume, may carry an end month, show **ENDED** with one-tap **Renew**, and
@@ -72,7 +76,8 @@ A bottom tab bar (thumb reach on large phones) replaces the old top tabs; a firs
 - `recurring [ { id, name, amount, type, categoryId, debtId, dayOfMonth, everyMonths, startMonth, endMonth, active, isSalary } ]`
   — `everyMonths` (1 / 3 / 6 / 12) sets the cadence; `startMonth` anchors which months it fires
   · `skips [ "recurringId:YYYY-MM" ]`
-- `entries [ { id, date, amount, category, type:"expense"|"payment"|"income", debtId, description, recurringId } ]`
+- `entries [ { id, date, amount, category, type:"expense"|"payment"|"income", debtId, paidWith, description, recurringId } ]`
+  — `paidWith`: null (SAR cash/bank) · "cashJOD" · "debit" · "otherPay" · a card's debt id (raises its balance)
 - `phases [ { name, title, start, end, goal } ]` — the editable roadmap
 - **House saved is derived**: `houseSavedStart` + every entry logged to the House savings category since
   `houseAccrueFrom` (v7's manual `houseSaved` migrates into `houseSavedStart`; nothing recomputable is stored).
@@ -84,7 +89,7 @@ A bottom tab bar (thumb reach on large phones) replaces the old top tabs; a firs
 _Machine-generated from source on every commit — do not edit by hand._
 
 <!-- AUTO:GENERATED:START — produced by docs/generate-docs.mjs · DO NOT EDIT BY HAND -->
-_Synced **2026-07-18** · app version **finance-v8.1** · storage key `khaldoun_finance_v3`_
+_Synced **2026-07-18** · app version **finance-v8.2** · storage key `khaldoun_finance_v3`_
 
 ### Identity
 - **Finance Tracker** — Personal finance, debt and house-savings tracker
@@ -144,8 +149,8 @@ _0 seed recurring items (salary auto-creates on first run) · 0 seed commitments
 ### Source file manifest (SHA-256, first 16 hex)
 | File | Bytes | Hash |
 |---|---|---|
-| `index.html` | 122,545 | `0d7c1bc6455527a3` |
-| `sw.js` | 1,411 | `0818e437bd8451dc` |
+| `index.html` | 125,296 | `3375ab1807bbc1a3` |
+| `sw.js` | 1,411 | `1f49c0ef58cc132c` |
 | `manifest.json` | 480 | `667075e74e294a37` |
 | `README.md` | 1,650 | `b67d621fc21bba5e` |
 | `icon-180.png` | 11,837 | `4f4aa4ab23cec3a9` |
@@ -201,6 +206,7 @@ tabular numerals everywhere; `prefers-reduced-motion` respected; system fonts on
 ## 8. Changelog
 | Version | Date | Changes |
 |---|---|---|
+| finance-v8.2 | 2026-07-18 | **Paid-with & revolving cards** (use-first feedback #2) — every expense records its payment method (SAR cash/bank · JOD cash · debit · any credit-card account · other); card purchases **raise** that card's balance, card payments lower it and no longer count as spending (balance transfer — the spend was the purchase; loans unchanged). Entry rows show a "via …" tag. Cards & loans setup simplified to name + amount owed + kind, with bank/original/rate/budget-link folded into optional "More details" (original defaults to amount owed). SW cache → finance-v8.2. |
 | finance-v8.1 | 2026-07-18 | **Cadence release** (first use-first friction fix) — recurring items get a frequency: monthly / every 3 / every 6 / **yearly**, anchored to a "first payment" month (Saudi-style annual or semi-annual rent and yearly iqama now model correctly); "until" is optional everywhere — **forever by default**. Committed & safe-to-spend switch to the **monthly equivalent** of recurring items (amount ÷ interval), so an annual payment weighs 1/12 on every month instead of shocking one; recurring manager shows cadence + next posting and ≈/month totals; Upcoming respects cadence. Existing items migrate as monthly. SW cache → finance-v8.1. |
 | finance-v8 | 2026-07-17 | **The ideal-app release** — Claude-Design port: warm light/dark "companion" palette (WCAG-verified ≥4.5:1 both themes), bottom tab bar, first-run onboarding with restore. Planner: category kinds (committed / flexible / goal), **Safe-to-spend-today**, rollover envelopes, **Commitments** with set-aside math, per-debt **payoff projections** with interest, house verdict vs an editable target month. Recurring created inline from the Log ("Repeats monthly" + "until"), skip-a-month sheet, ENDED + Renew. Backup-age nudge; dashboard anchored to the current month with closed-month look-backs. In-place migration v1–v7 → v8 (`houseSaved` → `houseSavedStart` + logged accrual). Fixed multi-month date arithmetic in projections. SW cache → finance-v8. _Deferred to v8.1: avalanche-vs-snowball simulator, payoff-order timeline, auto-snapshots._ |
 | finance-v7 | 2026-07-17 | **Configure-everything release** — full income tracking (salary auto-posts on payday; bonuses/gifts/one-offs logged via an Income toggle in the Log; Remaining = actual income − spent); recurring engine (rent, parents' rent, iqama, loan installments post themselves; recurring payments also pay down the linked account; skip-a-month by deleting that copy; pause/resume); categories became editable data with a life-based 20-category seed grouped Home/Family/Jordan/Living/Obligations (baby girl, school fund, parents' rent support, charity…); roadmap/phases editable in Goals; SMS parser learns baby & remittance merchants. In-place zero-loss migration from v6 and v1–v5. SW cache → finance-v7. |

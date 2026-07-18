@@ -346,6 +346,10 @@
         <div class="fg" id="fCat"><label class="fl">Category</label>
           <div class="selwrap"><select class="sel" id="eCat"></select></div></div>
 
+        <div class="fg" id="fPayWith"><label class="fl">Paid with</label>
+          <div class="selwrap"><select class="sel" id="ePayWith"></select></div>
+          <div class="hint" id="payWithHint" style="display:none;color:var(--g-oblig);margin-top:7px">↑ Goes on that card's balance until you pay it off.</div></div>
+
         <div class="fg" id="fPay" style="display:none"><label class="fl">Pay towards</label>
           <div class="selwrap"><select class="sel" id="ePay"></select></div>
           <div class="hint" style="color:var(--g-oblig);margin-top:7px">↓ This lowers that account's balance automatically.</div></div>
@@ -562,7 +566,7 @@
     <div class="ovhead"><button class="iconbtn" onclick="closeOverlay()" aria-label="Back">‹</button><div class="t">Cards &amp; loans</div><button class="iconbtn" onclick="addDebt()" aria-label="Add account">＋</button></div>
     <div class="ovbody"><div id="setDebts" style="display:flex;flex-direction:column;gap:12px"></div>
       <button class="btn" onclick="saveDebts()">Save accounts</button>
-      <div class="hint">Balances are computed from your logged payments — no manual edits. "Starting balance" is the balance the day you began tracking.</div>
+      <div class="hint">"Amount owed" is the balance when you add the account — after that it moves by itself: payments lower it, and credit-card purchases (Log → "Paid with") raise it.</div>
       <div class="hint" id="debtsMsg" style="min-height:16px;color:var(--positive-ink)"></div></div>
   </div>
 
@@ -766,7 +770,8 @@ function normDebt(d){ d=d||{}; return { id:d.id||uid(), name:d.name||"Debt", ban
 function normEntry(e){ if(!e||typeof e!=="object") return null;
   const type=e.type==="payment"?"payment":(e.type==="income"?"income":"expense");
   return { id:e.id||uid(), date:e.date||today(), amount:num(e.amount), category:e.category||"other", type,
-    debtId:type==="payment"?(e.debtId||null):null, description:e.description||e.desc||"", recurringId:e.recurringId||null }; }
+    debtId:type==="payment"?(e.debtId||null):null, paidWith:type==="expense"?(e.paidWith||null):null,
+    description:e.description||e.desc||"", recurringId:e.recurringId||null }; }
 function normRec(r){ r=r||{}; return { id:r.id||uid(), name:r.name||"Recurring", amount:num(r.amount),
   type:(r.type==="income"||r.type==="payment")?r.type:"expense", categoryId:r.categoryId||"other",
   debtId:r.debtId||null, dayOfMonth:Math.min(28,Math.max(1,num(r.dayOfMonth)||1)),
@@ -820,13 +825,16 @@ function expectedSalary(m){ const ov=state.settings.salaryOverrides||{}; if(ov[m
   if(state.settings.salaryFrom&&m>=state.settings.salaryFrom) return num(state.settings.salaryFromAmount);
   return num(state.settings.salaryCurrent); }
 function debtCurrent(d){ const paid=state.entries.filter(e=>e.type==="payment"&&e.debtId===d.id).reduce((a,e)=>a+num(e.amount),0);
-  return Math.max(0,num(d.startingBalance)-paid); }
+  const charged=d.kind==="card"?state.entries.filter(e=>e.type==="expense"&&e.paidWith===d.id).reduce((a,e)=>a+num(e.amount),0):0;
+  return Math.max(0,num(d.startingBalance)+charged-paid); }
+// Paying a CARD is a balance transfer, not new spending (the spend was the purchase). Loan payments ARE spending.
+function isCardPayment(e){ if(e.type!=="payment") return false; const d=state.debts.find(x=>x.id===e.debtId); return !!(d&&d.kind==="card"); }
 function totalDebt(){ return state.debts.reduce((a,d)=>a+debtCurrent(d),0); }
 function totalOriginal(){ return state.debts.reduce((a,d)=>a+num(d.original),0); }
 function monthEntries(m){ return state.entries.filter(e=>monthOf(e.date)===m); }
-function monthSpent(m){ return monthEntries(m).filter(e=>e.type!=="income").reduce((a,e)=>a+num(e.amount),0); }
+function monthSpent(m){ return monthEntries(m).filter(e=>e.type!=="income"&&!isCardPayment(e)).reduce((a,e)=>a+num(e.amount),0); }
 function monthIncomeActual(m){ return monthEntries(m).filter(e=>e.type==="income").reduce((a,e)=>a+num(e.amount),0); }
-function catActual(cat,m){ return monthEntries(m).filter(e=>e.type!=="income"&&e.category===cat).reduce((a,e)=>a+num(e.amount),0); }
+function catActual(cat,m){ return monthEntries(m).filter(e=>e.type!=="income"&&!isCardPayment(e)&&e.category===cat).reduce((a,e)=>a+num(e.amount),0); }
 function kindPlanned(kind){ return liveCats().filter(c=>c.kind===kind).reduce((a,c)=>a+num(state.budgets[c.id]),0); }
 // Monthly-equivalent of everything that posts itself (annual rent weighs 1/12 per month).
 // Goal-category recurring (e.g. the house-fund transfer) is excluded — it's counted in kindPlanned("goal").
@@ -1163,11 +1171,12 @@ function renderEntries(){
     const income=e.type==="income", payment=e.type==="payment";
     const label=e.description||(payment?("Payment · "+debtName(e.debtId)):catName(e.category));
     const tag=e.recurringId?"auto":(payment?"payment":null);
+    const pwLab=e.paidWith?(e.paidWith==="cashJOD"?"JOD cash":e.paidWith==="debit"?"debit":e.paidWith==="otherPay"?"other":((state.debts.find(x=>x.id===e.paidWith)||{}).name||null)):null;
     return `<div class="row">
       <div class="rowico" style="font-size:18px">${income?catIcon(e.category):(payment?"💳":catIcon(e.category))}</div>
       <div class="rowbody"><div class="rowname" dir="auto">${esc(label)}</div>
         <div class="rowsub"><span>${catName(e.category)} · ${d.getDate()} ${MS[d.getMonth()]}</span>
-        ${tag?`<span class="tag">${tag}</span>`:''}</div></div>
+        ${tag?`<span class="tag">${tag}</span>`:''}${pwLab?`<span class="tag" style="color:var(--g-oblig)">via ${esc(pwLab)}</span>`:''}</div></div>
       <div style="text-align:right;flex:none">
         <div class="amt ${income?'pos':'neg'}">${income?'+ ':'− '}${sar(e.amount)}</div>
         <div class="rowactions">
@@ -1191,12 +1200,25 @@ function fillLogSelects(){
     pSel.innerHTML=state.debts.length?state.debts.map(d=>`<option value="${d.id}">${esc(d.name)} — ${fmt(debtCurrent(d))} SAR left</option>`).join("")
       :`<option value="">No accounts — add one in Settings</option>`;
     if(cur&&state.debts.some(d=>d.id===cur)) pSel.value=cur; }
+  const pw=el("ePayWith"); if(pw){ const cur=pw.value;
+    let h=`<option value="">💵 Cash / bank transfer (SAR)</option><option value="cashJOD">💵 Cash (JOD)</option><option value="debit">💳 Debit card</option>`;
+    h+=state.debts.filter(d=>d.kind==="card").map(d=>`<option value="${d.id}">💳 ${esc(d.name)} — credit</option>`).join("");
+    h+=`<option value="otherPay">Other</option>`;
+    pw.innerHTML=h;
+    if(cur&&(["cashJOD","debit","otherPay"].includes(cur)||state.debts.some(d=>d.id===cur))) pw.value=cur;
+    payWithChanged();
+    pw.onchange=payWithChanged;
+  }
 }
+function payWithChanged(){ const v=el("ePayWith")?el("ePayWith").value:"";
+  const isCard=state.debts.some(d=>d.id===v&&d.kind==="card");
+  const h=el("payWithHint"); if(h) h.style.display=isCard?"":"none"; }
 function setLogType(t){ logType=t;
   document.querySelectorAll("#logSeg button").forEach(b=>b.classList.toggle("on",b.dataset.lt===t));
   el("logSms").style.display=t==="expense"?"":"none";
   el("fDesc").style.display=t==="income"?"none":"";
   el("fCat").style.display=t==="expense"?"":"none";
+  el("fPayWith").style.display=t==="expense"?"":"none";
   el("fPay").style.display=t==="payment"?"":"none";
   el("fSrc").style.display=t==="income"?"":"none";
   setText("amtLabel",t==="income"?"Amount received":"Amount");
@@ -1209,6 +1231,7 @@ function logResetForm(){
   editingId=null; repeatOn=false;
   ["eDesc","eAmt","eSms","eUntil"].forEach(id=>{ const x=el(id); if(x) x.value=""; });
   const ef=el("eFreq"); if(ef) ef.value="1";
+  const pw=el("ePayWith"); if(pw){ pw.value=""; payWithChanged(); }
   el("eDate").value=today();
   el("repRow").setAttribute("aria-checked","false"); el("fUntil").style.display="none";
   el("repRow").style.display="";
@@ -1221,7 +1244,7 @@ function submitEntry(){
   let entry;
   if(logType==="expense"){
     const cat=el("eCat").value||(liveCats()[0]&&liveCats()[0].id)||"other";
-    entry={ date, amount:amt, category:cat, type:"expense", debtId:null, description:el("eDesc").value.trim() };
+    entry={ date, amount:amt, category:cat, type:"expense", debtId:null, paidWith:el("ePayWith").value||null, description:el("eDesc").value.trim() };
   } else if(logType==="payment"){
     const debt=state.debts.find(d=>d.id===el("ePay").value);
     if(!debt){ msg("logMsg","Choose an account — add one in Settings"); return; }
@@ -1256,7 +1279,8 @@ function editEntry(id){
   setTab("log"); editingId=id; setLogType(e.type);
   el("eAmt").value=e.amount; el("eDate").value=e.date;
   el("repRow").style.display="none"; el("fUntil").style.display="none";
-  if(e.type==="expense"){ el("eDesc").value=e.description||""; fillLogSelects(); el("eCat").value=e.category; }
+  if(e.type==="expense"){ el("eDesc").value=e.description||""; fillLogSelects(); el("eCat").value=e.category;
+    el("ePayWith").value=e.paidWith||""; payWithChanged(); }
   else if(e.type==="payment"){ fillLogSelects(); el("ePay").value=e.debtId||""; el("eDesc").value=e.description||""; }
   else { el("eIncSrc").value=INCOME_META[e.category]?e.category:"incomeOther"; }
   el("logBtn").textContent="Update entry";
@@ -1529,14 +1553,20 @@ function renderDebtEditor(){
         <button class="linkbtn" style="color:var(--negative)" onclick="delDebt('${d.id}')">Delete</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="fg"><label class="fl">Name</label><input class="in" data-f="name" dir="auto" value="${esc(d.name||"")}" style="height:44px"></div>
-        <div class="fg"><label class="fl">Bank</label><input class="in" data-f="bank" dir="auto" value="${esc(d.bank||"")}" style="height:44px"></div>
-        <div class="fg"><label class="fl">Original (SAR)</label><input class="in" type="number" inputmode="decimal" data-f="original" value="${num(d.original)||''}" style="height:44px"></div>
-        <div class="fg"><label class="fl">Starting balance</label><input class="in" type="number" inputmode="decimal" data-f="startingBalance" value="${num(d.startingBalance)||''}" style="height:44px"></div>
-        <div class="fg"><label class="fl">Rate %/mo</label><input class="in" type="number" inputmode="decimal" data-f="ratePerMonth" value="${num(d.ratePerMonth)||''}" style="height:44px"></div>
-        <div class="fg"><label class="fl">Kind</label><div class="selwrap"><select class="sel" data-f="kind" style="height:44px"><option value="card"${d.kind==="card"?" selected":""}>Card</option><option value="loan"${d.kind==="loan"?" selected":""}>Loan</option></select></div></div>
+        <div class="fg" style="grid-column:1 / -1"><label class="fl">Name</label><input class="in" data-f="name" dir="auto" value="${esc(d.name||"")}" style="height:44px"></div>
+        <div class="fg"><label class="fl">Amount owed (SAR)</label><input class="in" type="number" inputmode="decimal" data-f="startingBalance" value="${num(d.startingBalance)||''}" style="height:44px"></div>
+        <div class="fg"><label class="fl">Kind</label><div class="selwrap"><select class="sel" data-f="kind" style="height:44px"><option value="card"${d.kind==="card"?" selected":""}>Credit card</option><option value="loan"${d.kind==="loan"?" selected":""}>Loan</option></select></div></div>
       </div>
-      <div class="fg" style="margin-top:10px"><label class="fl">Linked budget category</label><div class="selwrap"><select class="sel" data-f="category" style="height:44px">${catOpts}</select></div></div>
+      ${d.kind==="card"?'<div class="hint" style="margin-top:8px">Buying with this card (Log → "Paid with") raises the balance; payments lower it.</div>':''}
+      <details style="margin-top:10px">
+        <summary style="font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;min-height:44px;display:flex;align-items:center">More details (optional — % paid, interest, budget link)</summary>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px">
+          <div class="fg"><label class="fl">Bank</label><input class="in" data-f="bank" dir="auto" value="${esc(d.bank||"")}" style="height:44px"></div>
+          <div class="fg"><label class="fl">Original debt (SAR)</label><input class="in" type="number" inputmode="decimal" data-f="original" value="${num(d.original)||''}" style="height:44px"></div>
+          <div class="fg"><label class="fl">Rate %/mo</label><input class="in" type="number" inputmode="decimal" data-f="ratePerMonth" value="${num(d.ratePerMonth)||''}" style="height:44px"></div>
+          <div class="fg"><label class="fl">Linked budget category</label><div class="selwrap"><select class="sel" data-f="category" style="height:44px">${catOpts}</select></div></div>
+        </div>
+      </details>
       <div class="hint" style="margin-top:8px">${rp?("↻ "+esc(rp.name)+" pays "+sar(rp.amount)+" on the "+ordinal(rp.dayOfMonth)+" automatically"):"No recurring payment linked yet — add one in Recurring items to get a payoff date"}</div>
     </div>`;
   }).join("") : `<div class="empty"><div style="font-size:26px;margin-bottom:6px">💳</div><div class="hint">No cards or loans yet.</div></div>`;
@@ -1548,6 +1578,7 @@ function saveDebts(){
       const f=inp.dataset.f;
       if(f==="original"||f==="startingBalance"||f==="ratePerMonth") d[f]=num(parseFloat(inp.value)); else d[f]=inp.value;
     });
+    if(!num(d.original)) d.original=num(d.startingBalance);
   });
   save(); render(); renderDebtEditor(); msg("debtsMsg","Accounts saved ✓");
 }
