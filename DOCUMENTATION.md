@@ -1,6 +1,6 @@
 # Finance Tracker — App Documentation
 
-<!-- VERSION --> app **finance-v8.2** · docs synced **2026-07-18** <!-- /VERSION -->
+<!-- VERSION --> app **finance-v8.3** · docs synced **2026-07-18** <!-- /VERSION -->
 
 > **Living document.** The block between the `AUTO:GENERATED` markers in **§4** is rebuilt
 > from the app's source (`index.html`, `sw.js`, `manifest.json`) every time you commit, by
@@ -89,7 +89,7 @@ A bottom tab bar (thumb reach on large phones) replaces the old top tabs; a firs
 _Machine-generated from source on every commit — do not edit by hand._
 
 <!-- AUTO:GENERATED:START — produced by docs/generate-docs.mjs · DO NOT EDIT BY HAND -->
-_Synced **2026-07-18** · app version **finance-v8.2** · storage key `khaldoun_finance_v3`_
+_Synced **2026-07-18** · app version **finance-v8.3** · storage key `khaldoun_finance_v3`_
 
 ### Identity
 - **Finance Tracker** — Personal finance, debt and house-savings tracker
@@ -150,12 +150,12 @@ _0 seed recurring items (salary auto-creates on first run) · 0 seed commitments
 | File | Bytes | Hash |
 |---|---|---|
 | `index.html` | 125,296 | `3375ab1807bbc1a3` |
-| `sw.js` | 1,411 | `1f49c0ef58cc132c` |
+| `sw.js` | 1,411 | `a380175f2e6293d8` |
 | `manifest.json` | 480 | `667075e74e294a37` |
 | `README.md` | 1,650 | `b67d621fc21bba5e` |
-| `icon-180.png` | 11,837 | `4f4aa4ab23cec3a9` |
-| `icon-192.png` | 13,061 | `731c75ee35bbc385` |
-| `icon-512.png` | 21,751 | `fa0dd4a4cf91109f` |
+| `icon-180.png` | 23,893 | `de63b104b43ca1d0` |
+| `icon-192.png` | 26,915 | `0cb0b374422b11ee` |
+| `icon-512.png` | 148,189 | `d68c4eae11e7ba8f` |
 | `docs/generate-docs.mjs` | 7,327 | `5676471b784e86fc` |
 | `.githooks/pre-commit` | 483 | `4ce5d3c8a0750470` |
 | `.gitattributes` | 134 | `aa3e3144fa6a086d` |
@@ -206,6 +206,7 @@ tabular numerals everywhere; `prefers-reduced-motion` respected; system fonts on
 ## 8. Changelog
 | Version | Date | Changes |
 |---|---|---|
+| finance-v8.3 | 2026-07-18 | **New app icon** — gold monogram on dark, supplied by Khaldoun; regenerated at 512/192/180 from a 1024² source. SW cache → finance-v8.3 so installed devices refetch the icons. (iOS note: the home-screen icon is snapshotted at add-time — updating it needs backup → remove icon → re-add → restore, since deleting an installed web app clears its local storage.) |
 | finance-v8.2 | 2026-07-18 | **Paid-with & revolving cards** (use-first feedback #2) — every expense records its payment method (SAR cash/bank · JOD cash · debit · any credit-card account · other); card purchases **raise** that card's balance, card payments lower it and no longer count as spending (balance transfer — the spend was the purchase; loans unchanged). Entry rows show a "via …" tag. Cards & loans setup simplified to name + amount owed + kind, with bank/original/rate/budget-link folded into optional "More details" (original defaults to amount owed). SW cache → finance-v8.2. |
 | finance-v8.1 | 2026-07-18 | **Cadence release** (first use-first friction fix) — recurring items get a frequency: monthly / every 3 / every 6 / **yearly**, anchored to a "first payment" month (Saudi-style annual or semi-annual rent and yearly iqama now model correctly); "until" is optional everywhere — **forever by default**. Committed & safe-to-spend switch to the **monthly equivalent** of recurring items (amount ÷ interval), so an annual payment weighs 1/12 on every month instead of shocking one; recurring manager shows cadence + next posting and ≈/month totals; Upcoming respects cadence. Existing items migrate as monthly. SW cache → finance-v8.1. |
 | finance-v8 | 2026-07-17 | **The ideal-app release** — Claude-Design port: warm light/dark "companion" palette (WCAG-verified ≥4.5:1 both themes), bottom tab bar, first-run onboarding with restore. Planner: category kinds (committed / flexible / goal), **Safe-to-spend-today**, rollover envelopes, **Commitments** with set-aside math, per-debt **payoff projections** with interest, house verdict vs an editable target month. Recurring created inline from the Log ("Repeats monthly" + "until"), skip-a-month sheet, ENDED + Renew. Backup-age nudge; dashboard anchored to the current month with closed-month look-backs. In-place migration v1–v7 → v8 (`houseSaved` → `houseSavedStart` + logged accrual). Fixed multi-month date arithmetic in projections. SW cache → finance-v8. _Deferred to v8.1: avalanche-vs-snowball simulator, payoff-order timeline, auto-snapshots._ |
