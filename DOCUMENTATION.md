@@ -1,6 +1,6 @@
 # Finance Tracker — App Documentation
 
-<!-- VERSION --> app **finance-v8.3** · docs synced **2026-07-18** <!-- /VERSION -->
+<!-- VERSION --> app **finance-v8.4** · docs synced **2026-07-18** <!-- /VERSION -->
 
 > **Living document.** The block between the `AUTO:GENERATED` markers in **§4** is rebuilt
 > from the app's source (`index.html`, `sw.js`, `manifest.json`) every time you commit, by
@@ -26,7 +26,7 @@ browser, stores all data locally in `localStorage`, and has **no backend and no 
 | **Log** | One page for all money — **Expense / Card·loan / Income** toggle, the bank-SMS box (paste → auto-fill), a **"Paid with"** choice (SAR/JOD cash · debit · any of your credit cards — a card purchase raises that card's balance), a **"Repeats" switch (monthly · every 3 or 6 months · yearly) with an optional "until"** — forever by default — that creates the auto-posting rule inline (add the gym once; it ends itself), and recent entries with edit / delete / **Skip** (for auto-posts) / **↻ make recurring**. |
 | **Budget** | Grouped envelopes (Home · Family · Jordan · Living · Obligations) with kind badges (AUTO / GOAL), **↻ rollover** carry, a **today pacing line** on every bar, over-by warnings in words, and a header with Planned / Actual / Difference + Committed / Flexible / **Safe-per-day**. |
 | **Goals** | Where you stand **today**: house fund with needed-vs-pace and an on-track / short-by verdict, **Commitments** (school fees, trips, insurance — funded %, monthly set-aside, on-pace badges), **Debt payoff** (per-account projected close date + interest ahead), and the **editable roadmap**. |
-| **Settings** | Theme (Light / Dark / Auto); overlays for **Salary & house goal** (payday, target month, saved-start), **Recurring items** (pause / end dates / **renew**), **Budgets**, **Categories** (rename / icon / group / kind / rollover / archive), **Cards & loans**; backup with an **age nudge**, restore, reset. |
+| **Settings** | Theme (Light / Dark / Auto); overlays for **Salary & house goal** (salary steps with an effective month, payday, target month, saved-start), **Recurring items** (pause / end dates / **renew**), **Budgets**, **Categories** (rename / icon / group / kind / rollover / archive), **Cards & loans**; backup with an **age nudge**, restore, reset. |
 
 A bottom tab bar (thumb reach on large phones) replaces the old top tabs; a first-run screen welcomes a fresh install and offers backup restore.
 
@@ -48,7 +48,9 @@ A bottom tab bar (thumb reach on large phones) replaces the old top tabs; a firs
   rate and budget link are optional "More details".
 - **Recurring lifecycle** — each item posts on its day **at its own cadence** — monthly, quarterly,
   semi-annual or yearly, anchored to a first-payment month (iqama every March stays every March). Salary
-  posts on payday; items pause/resume, may carry an end month, show **ENDED** with one-tap **Renew**, and
+  posts on payday from its first effective month — earlier months stay empty (start the app in August and
+  July is skipped); each salary change is a **step** effective from the month you pick, carried forward
+  until the next step. Items pause/resume, may carry an end month, show **ENDED** with one-tap **Renew**, and
   single months are skippable via a gentle sheet. Idempotent — never double-posts, never fires off-cadence.
 - **Commitments** — known future costs (school fees, trip home, insurance): target + due month → required
   monthly set-aside, funded % (entries in the linked category count automatically), on-pace verdicts.
@@ -67,8 +69,11 @@ A bottom tab bar (thumb reach on large phones) replaces the old top tabs; a firs
   money; 100% client-side (the `#b64=` fragment never leaves the device).
 
 ### 3.3 Data model — `localStorage["khaldoun_finance_v3"]` (modelVersion 8; migrated in place, zero loss)
-- `settings { salaryCurrent, salaryFrom, salaryFromAmount, payday, houseTarget, houseTargetMonth,
+- `settings { salarySteps:{ "YYYY-MM": amount }, payday, houseTarget, houseTargetMonth,
   houseSavedStart, houseAccrueFrom, lastBackupAt, salaryOverrides }`
+  — `salarySteps`: each amount takes effect from its month and carries forward until the next step;
+  months before the first step have no salary. `salaryOverrides` still corrects a single month.
+  (Old `salaryCurrent` / `salaryFrom` / `salaryFromAmount` migrate into steps automatically.)
 - `categories [ { id, name, icon, group, kind:"committed"|"flexible"|"goal", rollover, archived } ]`
   · `budgets { <categoryId>: plannedAmount }`
 - `commitments [ { id, name, target, dueMonth, categoryId, fundedStart, createdFrom } ]`
@@ -89,7 +94,7 @@ A bottom tab bar (thumb reach on large phones) replaces the old top tabs; a firs
 _Machine-generated from source on every commit — do not edit by hand._
 
 <!-- AUTO:GENERATED:START — produced by docs/generate-docs.mjs · DO NOT EDIT BY HAND -->
-_Synced **2026-07-18** · app version **finance-v8.3** · storage key `khaldoun_finance_v3`_
+_Synced **2026-07-18** · app version **finance-v8.4** · storage key `khaldoun_finance_v3`_
 
 ### Identity
 - **Finance Tracker** — Personal finance, debt and house-savings tracker
@@ -100,8 +105,7 @@ _Synced **2026-07-18** · app version **finance-v8.3** · storage key `khaldoun_
 ### Income & goal (seed defaults)
 | Field | Value |
 |---|---|
-| Salary — current | 0 SAR |
-| Salary — from 2027-04 | 0 SAR |
+| Salary steps | none seeded — set in-app; each change takes effect from the month you pick and carries forward |
 | Payday (day of month) | 1 |
 | House target | 0 SAR by 2029-12 |
 | House saved before tracking | 0 SAR (entries to House savings add on top) |
@@ -149,14 +153,14 @@ _0 seed recurring items (salary auto-creates on first run) · 0 seed commitments
 ### Source file manifest (SHA-256, first 16 hex)
 | File | Bytes | Hash |
 |---|---|---|
-| `index.html` | 125,296 | `3375ab1807bbc1a3` |
-| `sw.js` | 1,411 | `a380175f2e6293d8` |
+| `index.html` | 128,552 | `a0b46fdf6a73c76a` |
+| `sw.js` | 1,411 | `609aac5b973aca81` |
 | `manifest.json` | 480 | `667075e74e294a37` |
 | `README.md` | 1,650 | `b67d621fc21bba5e` |
 | `icon-180.png` | 23,893 | `de63b104b43ca1d0` |
 | `icon-192.png` | 26,915 | `0cb0b374422b11ee` |
 | `icon-512.png` | 148,189 | `d68c4eae11e7ba8f` |
-| `docs/generate-docs.mjs` | 7,327 | `5676471b784e86fc` |
+| `docs/generate-docs.mjs` | 7,401 | `c0c70a6456014c81` |
 | `.githooks/pre-commit` | 483 | `4ce5d3c8a0750470` |
 | `.gitattributes` | 134 | `aa3e3144fa6a086d` |
 <!-- AUTO:GENERATED:END -->

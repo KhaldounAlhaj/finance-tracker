@@ -98,8 +98,7 @@ _Synced **${today}** · app version **${cache}** · storage key \`${key}\`_
 ### Income & goal (seed defaults)
 | Field | Value |
 |---|---|
-| Salary — current | ${nf(settings.salaryCurrent)} SAR |
-| Salary — from ${settings.salaryFrom || "?"} | ${nf(settings.salaryFromAmount)} SAR |
+| Salary steps | ${Object.entries(settings.salarySteps || {}).map(([m, a]) => `${nf(a)} SAR from ${m}`).join(" · ") || "none seeded — set in-app; each change takes effect from the month you pick and carries forward"} |
 | Payday (day of month) | ${nf(settings.payday)} |
 | House target | ${nf(settings.houseTarget)} SAR by ${settings.houseTargetMonth || "?"} |
 | House saved before tracking | ${nf(settings.houseSavedStart)} SAR (entries to House savings add on top) |

@@ -528,12 +528,12 @@
     <div class="ovhead"><button class="iconbtn" onclick="closeOverlay()" aria-label="Back">‹</button><div class="t">Salary &amp; payday</div></div>
     <div class="ovbody">
       <div class="card" style="display:flex;flex-direction:column;gap:14px">
-        <div class="fg"><label class="fl">Salary now (every month)</label><input class="in" type="number" inputmode="decimal" id="sCur"></div>
-        <div style="display:flex;gap:12px"><div class="fg" style="flex:1"><label class="fl">Steps up from</label><input class="in" type="month" id="sFrom"></div>
-        <div class="fg" style="flex:1"><label class="fl">…to this amount</label><input class="in" type="number" inputmode="decimal" id="sFromAmt"></div></div>
+        <div id="salStepList" style="display:flex;flex-direction:column"></div>
+        <div style="display:flex;gap:12px"><div class="fg" style="flex:1.2"><label class="fl">Salary (SAR, every month)</label><input class="in" type="number" inputmode="decimal" id="sAmt"></div>
+        <div class="fg" style="flex:1"><label class="fl">Starting from</label><input class="in" type="month" id="sEff"></div></div>
         <div class="fg"><label class="fl">Payday (day of month, 1–28)</label><input class="in" type="number" inputmode="numeric" min="1" max="28" id="sPayday"></div>
         <button class="btn" onclick="saveSalary()">Save salary</button>
-        <div class="hint">Salary posts itself into the Log each month on payday. A bonus month? Log it as Income. Correct one month? Edit that month's salary entry.</div>
+        <div class="hint">Salary posts itself into the Log on payday, from its starting month onward — months before it stay empty. Got a raise? Save the new amount from the month it kicks in; every month until then keeps the current amount. A bonus month? Log it as Income. Correct one month? Edit that month's salary entry.</div>
         <div class="hint" id="salMsg" style="min-height:16px;color:var(--positive-ink)"></div>
       </div>
       <div class="card" style="display:flex;flex-direction:column;gap:14px">
@@ -664,7 +664,7 @@ const KINDS = { committed:{label:"AUTO"}, flexible:{label:""}, goal:{label:"GOAL
 const DEFAULTS = {
   currentMonth: "2026-07",
   modelVersion: 8,
-  settings: { salaryCurrent:0, salaryFrom:"2027-04", salaryFromAmount:0, payday:1,
+  settings: { salarySteps:{}, payday:1,
               houseTarget:0, houseTargetMonth:"2029-12", houseSavedStart:0, houseAccrueFrom:"2026-07",
               lastBackupAt:null, salaryOverrides:{} },
   categories: [
@@ -797,7 +797,19 @@ function normalize8(s){
   out.currentMonth=s.currentMonth||realMonth();
   out.settings=Object.assign({},d.settings,s.settings||{});
   out.settings.salaryOverrides=Object.assign({},(s.settings&&s.settings.salaryOverrides)||{});
-  ["salaryCurrent","salaryFromAmount","houseTarget","houseSavedStart"].forEach(k=>out.settings[k]=num(out.settings[k]));
+  // salarySteps: effective month → amount; each amount carries forward until the next step.
+  const stIn=(s.settings&&s.settings.salarySteps)||null, steps={};
+  if(stIn&&typeof stIn==="object"&&!Array.isArray(stIn)){
+    Object.keys(stIn).forEach(m=>{ if(/^\d{4}-\d{2}$/.test(m)&&num(stIn[m])>0) steps[m]=num(stIn[m]); });
+  }else{ // old single-step model: salaryCurrent (+ optional salaryFrom/salaryFromAmount)
+    const oldRec=(Array.isArray(s.recurring)?s.recurring:[]).find(r=>r&&r.isSalary);
+    if(num(s.settings&&s.settings.salaryCurrent)>0) steps[(oldRec&&oldRec.startMonth)||realMonth()]=num(s.settings.salaryCurrent);
+    const sf=(s.settings&&s.settings.salaryFrom)||"";
+    if(num(s.settings&&s.settings.salaryFromAmount)>0&&/^\d{4}-\d{2}$/.test(sf)) steps[sf]=num(s.settings.salaryFromAmount);
+  }
+  out.settings.salarySteps=steps;
+  delete out.settings.salaryCurrent; delete out.settings.salaryFrom; delete out.settings.salaryFromAmount;
+  ["houseTarget","houseSavedStart"].forEach(k=>out.settings[k]=num(out.settings[k]));
   out.settings.payday=Math.min(28,Math.max(1,num(out.settings.payday)||1));
   if(!/^\d{4}-\d{2}$/.test(out.settings.houseTargetMonth||"")) out.settings.houseTargetMonth="2029-12";
   if(!/^\d{4}-\d{2}$/.test(out.settings.houseAccrueFrom||"")) out.settings.houseAccrueFrom=realMonth();
@@ -812,6 +824,8 @@ function normalize8(s){
     name:(p&&p.name)||"Phase", title:(p&&p.title)||"", start:(p&&p.start)||"2026-01", end:(p&&p.end)||"2026-12", goal:(p&&p.goal)||"" }));
   if(!out.recurring.some(r=>r.isSalary)) out.recurring.push({ id:"salary", name:"Salary", amount:0, type:"income",
     categoryId:"salary", debtId:null, dayOfMonth:out.settings.payday, startMonth:realMonth(), endMonth:null, active:true, isSalary:true });
+  const salR=out.recurring.find(r=>r.isSalary), stepMs=Object.keys(out.settings.salarySteps).sort();
+  if(salR&&stepMs.length) salR.startMonth=stepMs[0]; // salary only exists from the first step's month
   return out;
 }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
@@ -822,8 +836,9 @@ function catName(id){ const c=getCat(id); if(c) return c.name; const i=INCOME_ME
 function catIcon(id){ const c=getCat(id); if(c) return c.icon; const i=INCOME_META[id]; return i?i.icon:"📦"; }
 function liveCats(){ return state.categories.filter(c=>!c.archived); }
 function expectedSalary(m){ const ov=state.settings.salaryOverrides||{}; if(ov[m]!=null&&ov[m]!=="") return num(ov[m]);
-  if(state.settings.salaryFrom&&m>=state.settings.salaryFrom) return num(state.settings.salaryFromAmount);
-  return num(state.settings.salaryCurrent); }
+  const steps=state.settings.salarySteps||{}; let best=null;
+  for(const k in steps){ if(k<=m&&(best==null||k>best)) best=k; } // latest step at or before m carries forward
+  return best?num(steps[best]):0; }
 function debtCurrent(d){ const paid=state.entries.filter(e=>e.type==="payment"&&e.debtId===d.id).reduce((a,e)=>a+num(e.amount),0);
   const charged=d.kind==="card"?state.entries.filter(e=>e.type==="expense"&&e.paidWith===d.id).reduce((a,e)=>a+num(e.amount),0):0;
   return Math.max(0,num(d.startingBalance)+charged-paid); }
@@ -1443,7 +1458,7 @@ function renderSettingsList(){
   const td=totalDebt();
   const planned=liveCats().reduce((a,c)=>a+num(state.budgets[c.id]),0);
   const rows=[
-    {icon:"💵",title:"Salary & house goal",sub:(num(state.settings.salaryCurrent)>0?fmt(state.settings.salaryCurrent)+" SAR · paid on the "+ordinal(num(state.settings.payday)):"Set your salary and payday"),ov:"salary"},
+    {icon:"💵",title:"Salary & house goal",sub:salarySub(),ov:"salary"},
     {icon:"🔁",title:"Recurring items",sub:"Auto-posts · pause, end dates, renew",ov:"recurring"},
     {icon:"📊",title:"Budgets",sub:fmt(planned)+" SAR planned across "+liveCats().length+" categories",ov:"budgets"},
     {icon:"🏷️",title:"Categories",sub:"Rename, re-icon, kind, rollover, archive",ov:"cats"},
@@ -1461,22 +1476,57 @@ function renderSettingsList(){
     setText("backupNudgeT", lb==null?"No backup yet":"Last backup "+days+" days ago"); }
   else nudge.style.display="none";
 }
+function salarySub(){
+  const cur=expectedSalary(realMonth());
+  if(cur>0) return fmt(cur)+" SAR · paid on the "+ordinal(num(state.settings.payday));
+  const steps=state.settings.salarySteps||{}, next=Object.keys(steps).sort().find(m=>m>realMonth());
+  if(next) return fmt(steps[next])+" SAR from "+fmtMonth(next)+" · paid on the "+ordinal(num(state.settings.payday));
+  return "Set your salary and payday";
+}
 function fillSalary(){
-  el("sCur").value=num(state.settings.salaryCurrent)||"";
-  el("sFrom").value=state.settings.salaryFrom||"";
-  el("sFromAmt").value=num(state.settings.salaryFromAmount)||"";
+  renderSalarySteps();
+  const steps=state.settings.salarySteps||{}, ms=Object.keys(steps).sort(), last=ms[ms.length-1]||null;
+  el("sAmt").value=last?num(steps[last]):"";
+  el("sEff").value=last||realMonth();
   el("sPayday").value=num(state.settings.payday)||1;
   el("hTgt").value=num(state.settings.houseTarget)||"";
   el("hTgtM").value=state.settings.houseTargetMonth||"";
   el("hStart").value=num(state.settings.houseSavedStart)||"";
 }
+function renderSalarySteps(){
+  const steps=state.settings.salarySteps||{}, ms=Object.keys(steps).sort(), rm=realMonth();
+  el("salStepList").innerHTML = ms.length ? ms.map((m,i)=>{
+    const nxt=ms[i+1]||null;
+    const range=nxt?fmtMonth(m)+" – "+fmtMonth(shift(nxt,-1)):fmtMonth(m)+" onward";
+    const now=m<=rm&&(!nxt||rm<nxt);
+    return `<div class="row" style="border:none;padding:8px 0">
+      <div class="rowbody"><div class="rowname" style="font-size:13.5px">${fmt(steps[m])} SAR / month ${now?'<span class="tag" style="color:var(--positive-ink)">NOW</span>':(m>rm?'<span class="tag">UPCOMING</span>':'')}</div>
+        <div class="rowsub"><span>${range}</span></div></div>
+      <button class="linkbtn" style="color:var(--negative)" onclick="delSalaryStep('${m}')">Remove</button></div>`;
+  }).join("") : `<div class="hint">No salary yet — enter the amount and the month it starts. Starting next month? Pick it below and this month stays empty.</div>`;
+}
+function syncSalaryRec(){
+  const r=state.recurring.find(x=>x.isSalary); if(!r) return;
+  r.dayOfMonth=num(state.settings.payday)||1;
+  const ms=Object.keys(state.settings.salarySteps||{}).sort();
+  if(ms.length){ r.startMonth=ms[0];
+    // fresh start: nothing logged yet → budgets & rollovers also begin with the first salary month
+    if(!state.entries.length&&state.settings.houseAccrueFrom<ms[0]) state.settings.houseAccrueFrom=ms[0];
+  }
+}
 function saveSalary(){
-  state.settings.salaryCurrent=num(parseFloat(el("sCur").value));
-  const from=el("sFrom").value; if(/^\d{4}-\d{2}$/.test(from)) state.settings.salaryFrom=from;
-  state.settings.salaryFromAmount=num(parseFloat(el("sFromAmt").value));
+  const amt=num(parseFloat(el("sAmt").value)), from=el("sEff").value;
+  if(!/^\d{4}-\d{2}$/.test(from)){ msg("salMsg","Pick the month it starts ✗"); return; }
+  if(amt<=0){ msg("salMsg","Enter the monthly salary amount ✗"); return; }
+  state.settings.salarySteps[from]=amt;
   state.settings.payday=Math.min(28,Math.max(1,parseInt(el("sPayday").value)||1));
-  const salRec=state.recurring.find(r=>r.isSalary); if(salRec) salRec.dayOfMonth=state.settings.payday;
-  save(); materializeRecurring(); render(); msg("salMsg","Salary saved ✓");
+  syncSalaryRec();
+  save(); materializeRecurring(); render(); fillSalary(); msg("salMsg","Saved ✓ — "+fmt(amt)+" SAR from "+fmtMonth(from));
+}
+function delSalaryStep(m){
+  if(!confirm("Remove the salary change starting "+fmtMonth(m)+"? Salary entries already posted in the Log stay."))return;
+  delete state.settings.salarySteps[m];
+  syncSalaryRec(); save(); render(); fillSalary(); msg("salMsg","Salary change removed ✓");
 }
 function saveHouse(){
   state.settings.houseTarget=num(parseFloat(el("hTgt").value));
