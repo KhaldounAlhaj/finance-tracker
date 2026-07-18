@@ -528,12 +528,12 @@
     <div class="ovhead"><button class="iconbtn" onclick="closeOverlay()" aria-label="Back">‹</button><div class="t">Salary &amp; payday</div></div>
     <div class="ovbody">
       <div class="card" style="display:flex;flex-direction:column;gap:14px">
-        <div id="salStepList" style="display:flex;flex-direction:column"></div>
+        <div id="salNow"></div>
         <div style="display:flex;gap:12px"><div class="fg" style="flex:1.2"><label class="fl">Salary (SAR, every month)</label><input class="in" type="number" inputmode="decimal" id="sAmt"></div>
         <div class="fg" style="flex:1"><label class="fl">Starting from</label><input class="in" type="month" id="sEff"></div></div>
         <div class="fg"><label class="fl">Payday (day of month, 1–28)</label><input class="in" type="number" inputmode="numeric" min="1" max="28" id="sPayday"></div>
         <button class="btn" onclick="saveSalary()">Save salary</button>
-        <div class="hint">Salary posts itself into the Log on payday, from its starting month onward — months before it stay empty. Got a raise? Save the new amount from the month it kicks in; every month until then keeps the current amount. A bonus month? Log it as Income. Correct one month? Edit that month's salary entry.</div>
+        <div class="hint">Salary posts itself into the Log on payday, from its starting month onward — months before it stay empty. When it changes, save the new amount from the month it kicks in; until then every month keeps the same salary. A bonus month? Log it as Income. Correct one month? Edit that month's salary entry.</div>
         <div class="hint" id="salMsg" style="min-height:16px;color:var(--positive-ink)"></div>
       </div>
       <div class="card" style="display:flex;flex-direction:column;gap:14px">
@@ -1484,26 +1484,24 @@ function salarySub(){
   return "Set your salary and payday";
 }
 function fillSalary(){
-  renderSalarySteps();
+  renderSalaryNow();
   const steps=state.settings.salarySteps||{}, ms=Object.keys(steps).sort(), last=ms[ms.length-1]||null;
   el("sAmt").value=last?num(steps[last]):"";
-  el("sEff").value=last||realMonth();
+  el("sEff").value=(last&&last>realMonth())?last:realMonth();
   el("sPayday").value=num(state.settings.payday)||1;
   el("hTgt").value=num(state.settings.houseTarget)||"";
   el("hTgtM").value=state.settings.houseTargetMonth||"";
   el("hStart").value=num(state.settings.houseSavedStart)||"";
 }
-function renderSalarySteps(){
+function renderSalaryNow(){
   const steps=state.settings.salarySteps||{}, ms=Object.keys(steps).sort(), rm=realMonth();
-  el("salStepList").innerHTML = ms.length ? ms.map((m,i)=>{
-    const nxt=ms[i+1]||null;
-    const range=nxt?fmtMonth(m)+" – "+fmtMonth(shift(nxt,-1)):fmtMonth(m)+" onward";
-    const now=m<=rm&&(!nxt||rm<nxt);
-    return `<div class="row" style="border:none;padding:8px 0">
-      <div class="rowbody"><div class="rowname" style="font-size:13.5px">${fmt(steps[m])} SAR / month ${now?'<span class="tag" style="color:var(--positive-ink)">NOW</span>':(m>rm?'<span class="tag">UPCOMING</span>':'')}</div>
-        <div class="rowsub"><span>${range}</span></div></div>
-      <button class="linkbtn" style="color:var(--negative)" onclick="delSalaryStep('${m}')">Remove</button></div>`;
-  }).join("") : `<div class="hint">No salary yet — enter the amount and the month it starts. Starting next month? Pick it below and this month stays empty.</div>`;
+  if(!ms.length){ el("salNow").innerHTML=`<div class="hint">No salary yet — enter the amount and the month it starts. Starting next month? Pick it below and this month stays empty.</div>`; return; }
+  const cur=ms.filter(m=>m<=rm).pop()||null;
+  let h=cur?`<div style="font-weight:600;font-size:14px">${fmt(steps[cur])} SAR / month <span class="hint" style="font-weight:400">since ${fmtMonth(cur)}</span></div>`:"";
+  ms.filter(m=>m>rm).forEach(m=>{
+    h+=`<div class="hint" style="display:flex;align-items:center;gap:8px;margin-top:4px"><span>${cur?"Changes to":"Starts at"} ${fmt(steps[m])} SAR from ${fmtMonth(m)}</span><button class="linkbtn" style="color:var(--negative)" onclick="delSalaryStep('${m}')">Undo</button></div>`;
+  });
+  el("salNow").innerHTML=h;
 }
 function syncSalaryRec(){
   const r=state.recurring.find(x=>x.isSalary); if(!r) return;
@@ -1519,6 +1517,11 @@ function saveSalary(){
   if(!/^\d{4}-\d{2}$/.test(from)){ msg("salMsg","Pick the month it starts ✗"); return; }
   if(amt<=0){ msg("salMsg","Enter the monthly salary amount ✗"); return; }
   state.settings.salarySteps[from]=amt;
+  // drop entries that don't actually change the amount (e.g. re-saving the same salary)
+  let prev=null; Object.keys(state.settings.salarySteps).sort().forEach(m=>{
+    const v=state.settings.salarySteps[m];
+    if(prev!=null&&v===prev) delete state.settings.salarySteps[m]; else prev=v;
+  });
   state.settings.payday=Math.min(28,Math.max(1,parseInt(el("sPayday").value)||1));
   syncSalaryRec();
   save(); materializeRecurring(); render(); fillSalary(); msg("salMsg","Saved ✓ — "+fmt(amt)+" SAR from "+fmtMonth(from));
