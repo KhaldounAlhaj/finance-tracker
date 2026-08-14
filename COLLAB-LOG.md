@@ -27,7 +27,7 @@ _Uncommitted work sitting in the local working tree, waiting for Codex to commit
 
 | Date | From | Handoff |
 |---|---|---|
-| 2026-08-14 | Codex → Claude | **finance-v10 final QA.** The complete candidate is intentionally uncommitted on `v10-wip`; protected checkpoint tip `892337e` is retained at local branch `v10-wip-safety`. Review every changed/new file against the v10 spec, plan and external design references. Automated suite: 66/66; diff check clean; isolated live QA: no console errors or horizontal overflow at 390×844, 640×400 zoom-equivalent or 1280×800. Claude must write its verdict here, may edit only certain corrections, and must not commit or push. |
+_None. The owner explicitly chose to publish finance-v10 before Claude's optional post-release QA._
 
 ## Open questions
 
@@ -41,6 +41,9 @@ _Anything an agent wasn't sure about. Answer or delete once resolved._
 ## History
 
 _Newest first. One entry per unit of work, not per file._
+
+### 2026-08-14 · Codex · finance-v10 release committed (`1d373e6`)
+Committed the complete Direction 1d Warm Modern Finance redesign after 66/66 tests, clean diff check, dependency/privacy scans and isolated responsive/theme browser QA. The owner explicitly approved publishing before Claude's final review; Claude may perform post-release QA later. No formula, storage-key, migration or model-version change. Release cache: `finance-v10`.
 
 ### 2026-08-14 · Codex · v10 Task 10 release candidate verified (WIP checkpoint)
 Bumped the offline cache to `finance-v10`, added the v10 changelog, regenerated documentation and redrew the `index.html` map. Complete automated verification passes 66/66; `git diff --check` is clean; runtime dependency scan is empty; focused privacy scan found no listed personal names, banks, former card digits or known real figures; finance-core fixture outputs remain protected by all 23 finance tests. Live isolated-origin QA found no console warnings/errors, phone/laptop/zoom-equivalent overflow, shell-width or theme-token defects. Task 9 checkpoint: `f5236fc`.
