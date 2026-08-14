@@ -1,6 +1,6 @@
 # Finance Tracker — App Documentation
 
-<!-- VERSION --> app **finance-v10.1** · docs synced **2026-08-14** <!-- /VERSION -->
+<!-- VERSION --> app **finance-v10.2** · docs synced **2026-08-14** <!-- /VERSION -->
 
 > **Living document.** The block between the `AUTO:GENERATED` markers in **§4** is rebuilt
 > from the app's source (`index.html`, `sw.js`, `manifest.json`) every time you commit, by
@@ -31,7 +31,8 @@ A three-zone bottom bar keeps logging, reviewing, and configuration separate. Pl
 ## 3. Features
 ### 3.1 Core (v9 Financial Control Center)
 - **Available within plan** = expense-category budgets − actual cash/card spending + refunds − open expense reminders. Card and loan payments are excluded because they are balance movements, not new spending.
-- **Cash after commitments** = confirmed income − cash paid − open cash obligations − remaining goal reservations. Goal contributions release reservations and do not count as ordinary spending.
+- **Spent this month** = all expense purchases from every payment source − refunds returned to those sources. The Overview breaks this down by Cash/bank, Debit, JOD cash, Other and each configured credit card. Debt payments and goal contributions remain separate so card activity is never double-counted.
+- **Cash left now** = confirmed income − confirmed immediate-liquidity outflows + refunds returned to immediate-liquidity sources. **After upcoming commitments** then subtracts open cash obligations and remaining goal reservations. These are monthly flows, not reconciled bank balances.
 - **Category kinds** separate expense budgets from goal reservations; debt-linked categories are excluded from the spending-plan total. **Rollover** categories still carry unused budget.
 - **Unified Log** supports expense, refund, card/loan payment, income, and goal contribution with editable local date/time. Creating a repeating item creates a reminder template only.
 - **Paid with & revolving cards** — every expense records how it was paid: SAR cash/bank, JOD cash, debit,
@@ -86,7 +87,7 @@ CSV account fields are review hints only. The preview requires explicit in-app s
 _Machine-generated from source on every commit — do not edit by hand._
 
 <!-- AUTO:GENERATED:START — produced by docs/generate-docs.mjs · DO NOT EDIT BY HAND -->
-_Synced **2026-08-14** · app version **finance-v10.1** · storage key `khaldoun_finance_v3`_
+_Synced **2026-08-14** · app version **finance-v10.2** · storage key `khaldoun_finance_v3`_
 
 ### Identity
 - **Finance Tracker** — Personal finance, debt and house-savings tracker
@@ -145,8 +146,8 @@ _0 seed reminder templates (salary planning is added on first run; nothing auto-
 ### Source file manifest (SHA-256, first 16 hex)
 | File | Bytes | Hash |
 |---|---|---|
-| `index.html` | 181,544 | `e770b09f11a65d8c` |
-| `sw.js` | 1,507 | `16f915de0e4435a0` |
+| `index.html` | 186,299 | `19449dfb3981c849` |
+| `sw.js` | 1,507 | `206564e0641f9e55` |
 | `manifest.json` | 480 | `667075e74e294a37` |
 | `README.md` | 3,094 | `de851fd3d670ae60` |
 | `icon-180.png` | 23,893 | `de63b104b43ca1d0` |
@@ -202,6 +203,7 @@ tabular numerals everywhere; `prefers-reduced-motion` respected; system fonts on
 ## 8. Changelog
 | Version | Date | Changes |
 |---|---|---|
+| finance-v10.2 | 2026-08-14 | **Monthly spending and liquidity clarity** — Overview now separates Cash left now from After upcoming commitments, shows net purchases across every payment source, and keeps debt payments and goal contributions visible but outside spending to prevent double counting. Source, debt and goal rows drill into a clearable selected-month activity view. No migration or stored-data rewrite. SW cache → finance-v10.2. |
 | finance-v10.1 | 2026-08-14 | **Budget status badge fix** — the On track badge now uses a dedicated status class instead of inheriting the 6px progress-track style. This restores the full pill, border and text without changing budget calculations or stored data. SW cache → finance-v10.1. |
 | finance-v10 | 2026-08-14 | **Warm Modern Finance redesign** — Direction 1d with hero 2a, accessible warm light and dark themes, one dependency-free inline SVG icon family, decision-first Overview, amount-first Unified Log, clearer planned-payment actions, four-state Budget Health, complete debt ledgers, seven-route Manage hub, and semantic CSV review. Responsive hardening covers iPhone and centered laptop usability without changing formulas, storage, migrations, or offline privacy. SW cache → finance-v10. |
 | finance-v9.2 | 2026-08-14 | **Reminder occurrence integrity** — deleting a reminder-linked entry now reopens the planned occurrence instead of silently skipping it. A shared resolver keeps dashboard metrics and planned-payment views aligned, and load-time repair safely fixes dangling logged occurrence records while preserving legacy fulfilled entries. Explicit Skip remains a confirmed action and writes only the current occurrence model. Example import card digits are now obviously fake. SW cache → finance-v9.2. |

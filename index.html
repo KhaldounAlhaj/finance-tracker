@@ -275,6 +275,8 @@
   .budget-status.on-track,.budget-status.refund{color:var(--pos-ink);background:var(--pos-soft)}
   .budget-status.close{color:var(--warn-ink);background:var(--warn-soft)}
   .budget-status.over{color:var(--bad-ink);background:var(--bad-soft)}
+  .money-source-row{width:100%;min-height:44px;border:0;border-top:1px solid var(--border);background:transparent;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;font:inherit;cursor:pointer;text-align:left}
+  .money-source-row:first-child{border-top:0}.money-source-row strong{font-size:14px}.money-source-row span{font-size:13.5px;font-weight:600;white-space:nowrap}
   #p-budget .listcard,#p-goals .listcard{box-shadow:none;border-radius:16px}
   #p-budget .catline{padding:16px;border-top:1px solid var(--border)}
   #p-goals{gap:24px!important}
@@ -351,11 +353,18 @@
         </section>
 
         <section class="wm-section overview-cash" id="overview-cash">
-          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
-            <div><div class="lbl">Cash after commitments</div><div class="hint">Income left after paid and planned cash movements</div></div>
-            <div style="font-size:22px;font-weight:700;white-space:nowrap" id="dCashAfter">0 SAR</div>
+          <div class="grid2">
+            <div><div class="lbl">Cash left now</div><div class="hint">Income minus confirmed liquidity outflows</div><div style="font-size:22px;font-weight:700;margin-top:6px" id="dCashNow">0 SAR</div></div>
+            <div><div class="lbl">After upcoming commitments</div><div class="hint">Forecast after planned payments and goals</div><div style="font-size:22px;font-weight:700;margin-top:6px" id="dCashAfter">0 SAR</div></div>
           </div>
           <div id="dCashBreakdown" class="hint" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)"></div>
+        </section>
+
+        <section class="wm-section overview-money" id="overview-money">
+          <div class="section-head"><div><div class="section-title">Spent this month</div><div class="hint">Net purchases across every payment source</div></div><div style="font-size:23px;font-weight:700" id="dSpendTotal">0 SAR</div></div>
+          <div id="dSpendSources" style="margin-top:8px"></div>
+          <button class="money-source-row" type="button" onclick="openActivityDrill('payment','')"><strong>Debt payments</strong><span id="dDebtPayments">0 SAR</span></button>
+          <button class="money-source-row" type="button" onclick="openActivityDrill('goal','')"><strong>Moved to goals</strong><span id="dGoalMoves">0 SAR</span></button>
         </section>
 
         <section class="wm-section overview-attention" id="overview-attention">
@@ -501,6 +510,7 @@
 
       <div class="activity-section">
         <div class="section-title">Recent activity</div>
+        <div id="logDrillFilter" class="note" style="display:none;align-items:center;justify-content:space-between;gap:12px;margin-top:10px"><span id="logDrillLabel"></span><button class="linkbtn" type="button" onclick="clearActivityDrill()">Clear</button></div>
         <div class="activity-filters">
           <input class="in" id="logSearch" placeholder="Search" oninput="renderEntries()" style="grid-column:1/-1">
           <select class="sel" id="logTypeFilter" onchange="renderEntries()"><option value="">All types</option><option value="expense">Expenses</option><option value="refund">Refunds</option><option value="payment">Payments</option><option value="income">Income</option><option value="goal">Goals</option></select>
@@ -832,6 +842,24 @@ function entryDeltas(entry,cardId){
   if(e.type==="payment") return {spending:0,cash:amount,card:isCard?-amount:0,loan:isCard?0:-amount,income:0,goal:0};
   if(e.type==="goal") return {spending:0,cash:amount,card:0,loan:0,income:0,goal:amount};
   return {spending:amount,cash:isCard?0:amount,card:e.paidWith===cardId?amount:0,loan:0,income:0,goal:0};
+}
+function monthlyMoneySummary(state,month){
+  const entries=(state.entries||[]).filter(e=>coreMonth(e.date||e.occurredAt)===month);
+  const debts=state.debts||[],cards=new Set(debts.filter(d=>d.kind==="card").map(d=>d.id));
+  const goalCats=new Set((state.categories||[]).filter(c=>c.kind==="goal").map(c=>c.id));
+  const bySource={};let spent=0,debtPayments=0,movedToGoals=0,cashLeftNow=0;
+  const sourceOf=e=>{const p=e.paidWith||"cash";return p==="cash"||p==="debit"||p==="cashJOD"||p==="otherPay"||cards.has(p)?p:"otherPay";};
+  for(const e of entries){
+    const amount=coreNum(e.amount),legacyGoal=e.type==="expense"&&goalCats.has(e.category);
+    if(e.type==="income"){cashLeftNow+=amount;continue;}
+    if(e.type==="goal"||legacyGoal){movedToGoals+=amount;cashLeftNow-=amount;continue;}
+    if(e.type==="payment"){debtPayments+=amount;cashLeftNow-=amount;continue;}
+    if(e.type!=="expense"&&e.type!=="refund")continue;
+    const sign=e.type==="refund"?-1:1,source=sourceOf(e),net=sign*amount;
+    spent+=net;bySource[source]=(bySource[source]||0)+net;
+    if(!cards.has(source))cashLeftNow-=net;
+  }
+  return {spent,bySource,debtPayments,movedToGoals,cashLeftNow};
 }
 function migrateV9(input){
   const out=coreClone(input||{}); out.modelVersion=9;
@@ -1249,6 +1277,13 @@ function isCardPayment(e){ if(e.type!=="payment") return false; const d=state.de
 function totalDebt(){ return state.debts.reduce((a,d)=>a+debtCurrent(d),0); }
 function totalOriginal(){ return state.debts.reduce((a,d)=>a+num(d.original),0); }
 function monthEntries(m){ return state.entries.filter(e=>monthOf(e.date)===m); }
+function paymentSourceLabel(id){
+  if(id==="cash")return "Cash / bank";if(id==="debit")return "Debit card";if(id==="cashJOD")return "JOD cash";if(id==="otherPay")return "Other";
+  const d=state.debts.find(x=>x.id===id);return d&&d.kind==="card"?d.name:"Other";
+}
+function paymentSourceKey(e){
+  const p=e&&e.paidWith||"cash";return p==="cash"||p==="debit"||p==="cashJOD"||p==="otherPay"||state.debts.some(d=>d.kind==="card"&&d.id===p)?p:"otherPay";
+}
 function monthSpent(m){ return monthMetrics(state,m).actualSpending; }
 function monthIncomeActual(m){ return monthEntries(m).filter(e=>e.type==="income").reduce((a,e)=>a+num(e.amount),0); }
 function catActual(cat,m){ return monthEntries(m).filter(e=>e.category===cat).reduce((a,e)=>a+(["expense","goal"].includes(e.type)?num(e.amount):(e.type==="refund"?-num(e.amount):0)),0); }
@@ -1392,8 +1427,13 @@ function renderDashboard(m,rm){
   setText("dSafeSub",sar(metrics.spendingPlan)+" plan − "+sar(metrics.actualSpending)+" actual − "+sar(metrics.plannedSpendingRemaining)+" still planned.");
   setText("dSafeChip",available>=0?"Available without exceeding the monthly plan":"Plan exceeded once all planned expenses are paid");
   el("dPlanW").style.width=(metrics.spendingPlan>0?Math.min(100,Math.max(0,Math.round(metrics.actualSpending/metrics.spendingPlan*100))):0)+"%";
+  const money=monthlyMoneySummary(state,m);
+  setText("dCashNow",sar(money.cashLeftNow));el("dCashNow").style.color=money.cashLeftNow<0?"var(--negative)":"var(--text)";
   setText("dCashAfter",sar(metrics.cashAfterCommitments)); el("dCashAfter").style.color=metrics.cashAfterCommitments<0?"var(--negative)":"var(--text)";
-  setText("dCashBreakdown",sar(metrics.incomeReceived)+" income − "+sar(metrics.cashPaidSoFar)+" paid − "+sar(metrics.cashObligationsLeft)+" obligations − "+sar(metrics.reservedForGoals)+" goals");
+  setText("dCashBreakdown",sar(money.cashLeftNow)+" now − "+sar(metrics.cashObligationsLeft)+" obligations − "+sar(metrics.reservedForGoals)+" goals");
+  setText("dSpendTotal",sar(money.spent));setText("dDebtPayments",sar(money.debtPayments));setText("dGoalMoves",sar(money.movedToGoals));
+  const sources=Object.entries(money.bySource).filter(([,amount])=>Math.abs(amount)>=.005);
+  el("dSpendSources").innerHTML=sources.length?sources.map(([source,amount])=>`<button class="money-source-row" type="button" data-source="${esc(source)}" onclick="openActivityDrill('spending',this.dataset.source)"><strong>${esc(paymentSourceLabel(source))}</strong><span style="color:${amount<0?'var(--positive-ink)':'var(--text)'}">${amount<0?'+ refund ':''}${sar(Math.abs(amount))}</span></button>`).join(""):`<div class="hint" style="padding:8px 0 12px">No purchases or refunds logged this month.</div>`;
   const income=metrics.incomeReceived, spent=metrics.actualSpending, planned=metrics.spendingPlan;
   setText("dSpent",sar(spent)); setText("dSpentSub","of "+sar(planned)+" expense plan");
   el("dSpentW").style.width=(planned>0?Math.min(100,Math.max(0,Math.round(spent/planned*100))):0)+"%";
@@ -1637,10 +1677,16 @@ function reconcileDebt(id){
   state.entries.push(normEntry({id:uid(),date:today(),occurredAt:localDateTime(),type:"balance_adjustment",amount,debtId:id,category:d.category,description:"Statement reconciliation"}));
   save();render();
 }
+let activityDrill=null;
+function openActivityDrill(type,source){activityDrill={month:state.currentMonth,type,source:source||""};setTab("log");}
+function clearActivityDrill(){activityDrill=null;renderEntries();}
 function renderEntries(){
   const list=el("entryList");
   const q=(el("logSearch")&&el("logSearch").value||"").trim().toLowerCase(),tf=el("logTypeFilter")&&el("logTypeFilter").value||"",af=el("logAccountFilter")&&el("logAccountFilter").value||"";
-  const es=[...state.entries].filter(e=>(!tf||e.type===tf)&&(!q||[e.description,catName(e.category)].join(" ").toLowerCase().includes(q))&&
+  const drill=activityDrill,drillBox=el("logDrillFilter"),drillLabel=el("logDrillLabel");
+  if(drillBox){drillBox.style.display=drill?"flex":"none";if(drill)drillLabel.textContent=fmtMonth(drill.month)+" · "+(drill.type==="spending"?paymentSourceLabel(drill.source):(drill.type==="payment"?"Debt payments":"Moved to goals"));}
+  const drillMatch=e=>!drill||(monthOf(e.date)===drill.month&&(drill.type==="spending"?(["expense","refund"].includes(e.type)&&paymentSourceKey(e)===drill.source):e.type===drill.type));
+  const es=[...state.entries].filter(e=>drillMatch(e)&&(!tf||e.type===tf)&&(!q||[e.description,catName(e.category)].join(" ").toLowerCase().includes(q))&&
     (!af||(af==="card"&&state.debts.some(d=>d.kind==="card"&&(e.paidWith===d.id||e.debtId===d.id)))||(af==="cash"&&!e.paidWith))).sort((a,b)=>(b.date===a.date?(b.id>a.id?1:-1):b.date.localeCompare(a.date)));
   if(!es.length){ list.innerHTML=`<div class="empty"><div style="font-size:30px;margin-bottom:8px">🧾</div>
     <div style="font-weight:600;font-size:15px;margin-bottom:4px">No entries yet</div>

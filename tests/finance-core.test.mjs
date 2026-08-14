@@ -8,8 +8,32 @@ const match = html.match(/\/\* CORE_V9_START \*\/([\s\S]*?)\/\* CORE_V9_END \*\/
 assert.ok(match, "production core-v9 block exists");
 const context = { console, structuredClone: globalThis.structuredClone };
 vm.createContext(context);
-vm.runInContext(`${match[1]};globalThis.coreV9={entryDeltas,monthMetrics,migrateV9,debtMovement,occurrenceKey,entryFulfillsOccurrence,resolveOccurrence,repairOccurrenceState,reopenOccurrenceForDeletedEntry};`, context);
-const { entryDeltas, monthMetrics, migrateV9, debtMovement, occurrenceKey, entryFulfillsOccurrence, resolveOccurrence, repairOccurrenceState, reopenOccurrenceForDeletedEntry } = context.coreV9;
+vm.runInContext(`${match[1]};globalThis.coreV9={entryDeltas,monthMetrics,monthlyMoneySummary,migrateV9,debtMovement,occurrenceKey,entryFulfillsOccurrence,resolveOccurrence,repairOccurrenceState,reopenOccurrenceForDeletedEntry};`, context);
+const { entryDeltas, monthMetrics, monthlyMoneySummary, migrateV9, debtMovement, occurrenceKey, entryFulfillsOccurrence, resolveOccurrence, repairOccurrenceState, reopenOccurrenceForDeletedEntry } = context.coreV9;
+
+test("monthly money summary separates spending sources from debt and goal movements",()=>{
+  const state={debts:[{id:"card-a",kind:"card"},{id:"card-b",kind:"card"},{id:"loan-a",kind:"loan"}],entries:[
+    {type:"income",amount:5000,date:"2026-08-01"},
+    {type:"expense",amount:400,date:"2026-08-02",paidWith:null},
+    {type:"expense",amount:300,date:"2026-08-03",paidWith:"debit"},
+    {type:"expense",amount:250,date:"2026-08-04",paidWith:"card-a"},
+    {type:"expense",amount:100,date:"2026-08-05",paidWith:"card-b"},
+    {type:"expense",amount:80,date:"2026-08-06",paidWith:"cashJOD"},
+    {type:"expense",amount:70,date:"2026-08-07",paidWith:"unknown-source"},
+    {type:"refund",amount:50,date:"2026-08-08",paidWith:"debit"},
+    {type:"refund",amount:300,date:"2026-08-09",paidWith:"card-a"},
+    {type:"payment",amount:600,date:"2026-08-10",debtId:"card-a"},
+    {type:"payment",amount:500,date:"2026-08-11",debtId:"loan-a"},
+    {type:"goal",amount:350,date:"2026-08-12",category:"house"},
+    {type:"expense",amount:999,date:"2026-07-31",paidWith:"cash"}
+  ]};
+  const result=monthlyMoneySummary(state,"2026-08");
+  assert.equal(result.spent,850);
+  assert.deepEqual({...result.bySource},{cash:400,debit:250,"card-a":-50,"card-b":100,cashJOD:80,otherPay:70});
+  assert.equal(result.debtPayments,1100);
+  assert.equal(result.movedToGoals,350);
+  assert.equal(result.cashLeftNow,2750);
+});
 
 test("entry deltas never double-count card purchases and payments", () => {
   assert.deepEqual({ ...entryDeltas({ type:"expense", amount:200, paidWith:"card-1" }, "card-1") },

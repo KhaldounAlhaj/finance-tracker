@@ -86,6 +86,22 @@ test("Overview hero 2a carries explanation and spent-versus-plan progress",()=>{
   assert.match(rule,/background:\s*var\(--surface-warm\)/);
 });
 
+test("Overview separates current liquidity, forecast liquidity, spending sources, debt and goals",()=>{
+  for(const id of ["dCashNow","dCashAfter","dSpendTotal","dSpendSources","dDebtPayments","dGoalMoves"]){
+    assert.match(html,new RegExp(`id="${id}"`));
+  }
+  assert.match(html,/>Cash left now</);
+  assert.match(html,/>After upcoming commitments</);
+  assert.doesNotMatch(html,/>Cash after commitments</);
+});
+
+test("Overview money rows drill into a clearable selected-month activity filter",()=>{
+  assert.match(html,/function openActivityDrill\(type,source\)/);
+  assert.match(html,/function clearActivityDrill\(\)/);
+  assert.match(html,/id="logDrillFilter"/);
+  assert.match(html,/monthOf\(e\.date\)===drill\.month/);
+});
+
 test("Unified Log preserves every managed entry path and one save action",()=>{
   const view=html.match(/<!-- LOG -->([\s\S]*?)<!-- BUDGET -->/)?.[1]||"";
   assert.deepEqual([...view.matchAll(/data-lt="([^"]+)"/g)].map(m=>m[1]),["expense","refund","payment","income","goal"]);
