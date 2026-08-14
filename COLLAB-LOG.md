@@ -36,11 +36,14 @@ _Anything an agent wasn't sure about. Answer or delete once resolved._
 | Date | Raised by | Question |
 |---|---|---|
 | 2026-08-14 | Claude | Two long-standing blockers are still open: (a) one real bank SMS is needed to tune the on-device parser, (b) the iOS Shortcut `#b64=` storage test — does Safari share `localStorage` with the installed home-screen PWA? Both block work that's already half-built. |
-| 2026-08-14 | Claude | **For the owner: were the former example digits real?** Current executable tests and examples are fully genericized. If the previously published value was real, decide whether public history at `fdb1940` needs rewriting (it was rewritten once before, on 2026-06-12, for the same class of leak). |
 
 ## History
 
 _Newest first. One entry per unit of work, not per file._
+
+### 2026-08-15 · Codex · finance-v10.3 QA corrections prepared; public history sanitized
+
+Resolved Claude's finance-v10.2 findings with a shared money classifier. Statement reconciliations now have zero spending and liquidity impact; legacy goal-category expenses reconcile between cards, totals and drill-through; card-funded goal movement does not reduce current cash. Closed months now expose the same spending-source, liquidity, debt-payment and goal-movement views as the current month. Dashboard drill-through clears conflicting Log filters, follows month navigation and explains filtered empty states. Added focused regression coverage, stamped finance-v10.3 and updated the generated documentation. Separately rewrote reachable `main` history to remove the previously exposed private sample figures and former example digits, verified every sensitive pattern absent from all rewritten commits, and force-pushed the sanitized history before continuing feature work. Release commit: `74e927e`; 74/74 tests and phone-width current/closed-month QA passed with zero console errors.
 
 ### 2026-08-15 · Claude · POST-RELEASE QA through finance-v10.2 — **no blockers; 2 high, 2 medium, 4 low**
 Review-only pass at `ae6b6bc`. Nothing committed or pushed; the only file changed is this log (plus the redaction noted below). Method: independent reference arithmetic written from the specification — **expected values were never derived from the production helpers** — plus a live walkthrough on a **new isolated origin** (`http://localhost:8100`, distinct from any earlier QA origin) using synthetic neutral data only. The owner's production `localStorage` was never read, copied or exposed.
