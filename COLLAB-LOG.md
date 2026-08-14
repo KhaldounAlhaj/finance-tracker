@@ -25,7 +25,9 @@ Owner: Khaldoun. Nothing is pushed without his say-so.
 
 _Uncommitted work sitting in the local working tree, waiting for Codex to commit._
 
-_None. Claude's documentation/copy handoffs and Codex's finance-v9.2 implementation were committed in `9c2bda6`._
+| Date | From | Handoff |
+|---|---|---|
+| 2026-08-14 | Codex → Claude | **finance-v10 final QA.** The complete candidate is intentionally uncommitted on `v10-wip`; protected checkpoint tip `892337e` is retained at local branch `v10-wip-safety`. Review every changed/new file against the v10 spec, plan and external design references. Automated suite: 66/66; diff check clean; isolated live QA: no console errors or horizontal overflow at 390×844, 640×400 zoom-equivalent or 1280×800. Claude must write its verdict here, may edit only certain corrections, and must not commit or push. |
 
 ## Open questions
 
@@ -39,6 +41,112 @@ _Anything an agent wasn't sure about. Answer or delete once resolved._
 ## History
 
 _Newest first. One entry per unit of work, not per file._
+
+### 2026-08-14 · Codex · v10 Task 10 release candidate verified (WIP checkpoint)
+Bumped the offline cache to `finance-v10`, added the v10 changelog, regenerated documentation and redrew the `index.html` map. Complete automated verification passes 66/66; `git diff --check` is clean; runtime dependency scan is empty; focused privacy scan found no listed personal names, banks, former card digits or known real figures; finance-core fixture outputs remain protected by all 23 finance tests. Live isolated-origin QA found no console warnings/errors, phone/laptop/zoom-equivalent overflow, shell-width or theme-token defects. Task 9 checkpoint: `f5236fc`.
+
+### 2026-08-14 · Codex · v10 Task 9 responsive/accessibility GREEN (WIP checkpoint)
+Completed responsive/theme/accessibility hardening. Live local checks used isolated test origins: 390×844 showed 390px shell alignment, no horizontal overflow and no sub-44px visible targets; 1280×800 showed one centered 760px shell; a 640×400 zoom-equivalent viewport had no overflow. Explicit light/dark audits returned the approved backgrounds, accents and dark `--on-accent`. Added laptop breathing room without a bespoke desktop layout. Full automated suite passes 66/66 and `git diff --check` is clean. Task 8 checkpoint: `db0d49c`.
+
+### 2026-08-14 · Codex · v10 Task 8 Manage/CSV/data safety GREEN (WIP checkpoint)
+Restyled Manage as exactly seven direct plan routes with local SVG icons and kept backup/restore/reset in a distinct data-safety section. CSV rows now communicate ready, review, duplicate and blocked states with semantic borders and actionable AA error text; native disabled confirmation and account-hint-only semantics remain intact. Import/design/release tests pass at 42/42. Task 7 checkpoint: `df6d407`.
+
+### 2026-08-14 · Codex · v10 Task 7 Budget/Goals/debt GREEN (WIP checkpoint)
+Unified Budget Health, Goals, commitments and debt details with the warm-modern sections and rows. Budget now displays explicit On track, Close, Over and Net refund states; negative actuals use an empty bar and returned amount. Debt keeps the complete opening/purchases/refunds/payments/reconciliation/closing equation and payoff projection. Design/finance tests pass at 39/39. Task 6 checkpoint: `5855f20`.
+
+### 2026-08-14 · Codex · v10 Task 6 planned payments GREEN (WIP checkpoint)
+Added one `refreshPlannedViews` path for dashboard and an already-open View-all overlay, removing the stale-list behavior after reminder mutations. Restyled occurrence rows/actions with explicit 44px Log, Reschedule and Skip targets. Skip confirmation and finance-v9.2 occurrence semantics remain unchanged. Design and reminder/finance tests pass at 37/37. Task 5 checkpoint: `202d74a`.
+
+### 2026-08-14 · Codex · v10 Task 5 Unified Log GREEN (WIP checkpoint)
+Restyled the five-type Unified Log as an amount-first form with larger managed fields, a stable primary save action, semantic effect area, clearer offline SMS/CSV intake and scan-friendly activity filters. All existing IDs, handlers, selectors and entry behavior remain intact. The finance/design/release subset passes at 42/42. Task 4 checkpoint: `af540c7`.
+
+### 2026-08-14 · Codex · v10 Task 4 Overview GREEN (WIP checkpoint)
+Recomposed Overview around the approved Direction 1d / hero 2a decision order: month, Available within plan, Cash after commitments, planned-payment attention, Budget health, spending mix, debt/goals and activity. Added the spent-versus-plan bar without the rejected elapsed-time alarm. Design contracts and finance-core tests pass; no formulas or stored data changed. Task 3 checkpoint: `9b21817`.
+
+### 2026-08-14 · Codex · v10 Task 3 icons/onboarding GREEN (WIP checkpoint)
+Added one dependency-free inline SVG icon registry for structural actions, removed structural emoji from first run, and corrected onboarding to describe reminders as manual log/reschedule/skip actions. The new contracts pass; the complete suite remains green at 55/55. Task 2 checkpoint: `73a598e`.
+
+### 2026-08-14 · Codex · v10 Task 2 tokens/shell GREEN (uncommitted checkpoint candidate)
+Replaced the legacy visual variables with the approved Direction 1d light/dark system while retaining compatibility aliases for existing markup. Added `--on-accent`, disabled ink, corrected warning/chart tokens, one `--app-max` across all four shells, 44px amount input, shared component primitives, focus/disabled/reduced-motion behavior and laptop usability widening. The six design contracts now pass alongside release checks. Task 1 RED contract checkpoint: `d779b97`.
+
+### 2026-08-14 · Codex · pre-execution v10 review addressed (uncommitted)
+Moved the raw design-reference package out of the public repo to `C:\Users\USER\Downloads\finance-tracker-design-reference\` and repointed the spec/plan. Locked three decisions: production uses the native system stack rather than bundling Manrope; the false-positive straight-line pace status is deliberately dropped; Overview and Log have direct design references while the other surfaces are rule-governed extrapolations. Revised execution to a local unpushed `v10-wip` branch with one tested checkpoint commit per task, followed by restoration of one uncommitted aggregate diff for Claude QA. Clarified that CSV blocking reasons use actionable AA text, not disabled ink. No production code changed.
+
+### 2026-08-14 · Codex · finance-v10 implementation plan prepared (uncommitted)
+Added `docs/superpowers/plans/2026-08-14-warm-modern-finance-v10-implementation.md`. The plan uses test-first vertical slices for contracts/tokens, icons/onboarding/navigation, Overview, Log/activity/SMS, planned payments, Budget/Goals/debts, Manage/CSV/data safety, responsive/accessibility hardening and release verification. It includes the complete final Claude QA prompt and explicitly prohibits staging, commit or push until QA and owner review.
+
+### 2026-08-14 · Claude · v10 plan review + design-fidelity check — **inline execution endorsed; 2 must-fix, 3 owner decisions**
+Reviewed `docs/superpowers/plans/2026-08-14-warm-modern-finance-v10-implementation.md`, the revised spec, and — now that they exist locally — `docs/design-reference/HANDOFF.md`, `DECISIONS.md` and the Direction 1d board. This closes checks 1, 6, 7 and 15 that were unverifiable in the previous review.
+
+**Spec revisions verified by recomputation:** `--on-accent` `#ffffff` / `#0d2226`, `--text-3 #666057`, `--accent-3 #5f9199`, `--text-disabled` both themes, `--app-max` consumed by `#app`/`.nav`/`.overlay`/`.sheetwrap`, first-run and SMS intake in scope, embedded contrast table, observable acceptance criteria, decimal-size boundary. All of H1, M1–M6 and L1–L3 addressed.
+
+**Design fidelity — the spec is faithful to Direction 1d where it matters.** Hero 2a matches the package exactly (light warm surface, 4px accent top edge, teal figure, spent-versus-planned bar). The Overview order matches the package's composition line including "two budget rows then View all". The type scale is reproduced exactly (42/28/23/17.5/16/14.5/14.5/13.5), and the −0.03em hero tracking is precisely what the package prescribes when the system fallback is used. Petrol-teal identity retained; neither 1b's green nor 1c's indigo survives, and the five-tint spending bar is correctly cut to three teals plus ochre. Laptop deferral matches: the package's 1180px two-column, top-bar, 52px-hero design is held for v10.1. Token divergences from the package (`#a4620c`→`#9c5d0b`, `#6d675e`→`#666057`, `#7aa9b0`→`#5f9199`) are all the accessibility corrections from the previous review, not drift.
+
+**MF1 · must-fix before implementation · privacy — the plan makes a folder of real financial data a repo baseline.** Global Constraint line 13 names all three files in `docs/design-reference/` as the design baseline, and line 22 protects only *screenshots*. Those three files carry **92 money figures**, including `incomeReceived [REDACTED PRIVATE FIGURE]`, `actualSpending [REDACTED PRIVATE FIGURE]`, `cashPaidSoFar [REDACTED PRIVATE FIGURE]`, `cashObligationsLeft [REDACTED PRIVATE FIGURE]` and "[REDACTED PRIVATE FIGURE] carried over from August" — irregular decimals that read as the owner's real August position, not samples. The folder is currently untracked but sits *inside* the repo, so any `git add -A` captures it, and Task 10 Step 5 only scans at the very end. *Recommend:* resolve now — either move `docs/design-reference/` outside the repo and repoint Global Constraint 13 at the external path, or scrub every figure to neutral placeholders before Task 1 begins.
+
+**MF2 · must-fix before implementation · no checkpoints across ten tasks in one 2,200-line file.** Global Constraint line 23 forbids committing during Tasks 1–10, so the entire redesign accumulates as a single uncommitted blob in `index.html`. If Task 7 breaks something introduced in Task 3 there is nothing to bisect against, and the plan's own goal of "reviewable units" has no unit boundary in version control. *Recommend:* work on a `v10-wip` branch with one WIP commit per completed task, squashed into the release commit at the end — the owner still reviews one final diff, and nothing is pushed. Minimum alternative: a copy of `index.html` per completed task, stored outside the repo.
+
+**D1 · owner decision · the approved typography is Manrope; the spec ships the fallback.** HANDOFF.md §"Production font" recommends bundling Manrope as a self-hosted woff2 Latin subset (~22 KB across 400/600/700/800), precached by the service worker, with the system stack as the explicit zero-dependency fallback. The spec mandates the fallback. Self-hosting would **not** breach the no-CDN/no-remote rule — it is same-origin and precacheable, like the existing icons and CSV template — but it does add a binary asset to a self-contained app. This is the difference between the design as approved and a near-neighbour, and typography is much of what makes the direction read as "modern". *Recommend:* the owner chooses explicitly, and the choice is recorded in the spec so QA does not read it as drift.
+
+**D2 · owner decision · the package treats spent-versus-elapsed pacing as approved; the plan drops it.** DECISIONS item 1 specifies a "today" rule at elapsed position with the hero status word derived from spent-versus-elapsed — "more than ten points ahead → Spending fast". Paying rent on day 1 puts every month far ahead of elapsed time, so that hero would read "Spending fast" on the 2nd of every month. Spec §7.1 and plan Task 4 Step 3 correctly refuse to implement it. *Recommend:* the owner confirms this approved decision is being dropped, so it is a decision rather than an omission discovered at QA.
+
+**D3 · owner decision / expectation · only 1 of 13 screens is actually designed.** HANDOFF.md line 4: "Screen 1 of 13 (Unified Log form) is ready for implementation handoff. The remaining twelve follow the priority order in §7." So for twelve of thirteen screens there is no pixel-level design — Codex will extrapolate from the token and component rules. That is workable, but at the QA gate I can only verify *rule compliance* for those twelve, not design fidelity, and the risk of "this isn't what I approved" lands at the end. *Recommend:* either accept rule-based extrapolation explicitly, or have the package's remaining screens designed for the highest-value surfaces (Overview first) before Task 4.
+
+**Low findings:** (a) the package sets headline decimals at 62% opacity while the spec correctly forbids opacity and uses a token — the spec is right, but record it as a deliberate override; (b) the package's primary actions are 48–50px while the spec sets only a 44px floor — consider stating 48px as the target for primary actions; (c) plan task line references (`index.html:19-216`, `241-329`, …) will drift as earlier tasks change line counts — treat them as symbol anchors; (d) the spec's dark `--on-accent` table under-reports: measured against `#0d2226` the positive/warning/exceeded values are **7.45 / 7.68 / 6.44**, not 7.12/7.34/6.15 (those were the figures for the `#10262a` candidate); (e) Task 8 Step 3 applies `--text-disabled` to the CSV confirmation area — the *blocking reason* text is information the user must act on and measures only 3.35:1 on `--surface-3`, so it should use `--text-2`, with `--text-disabled` reserved for the control label itself.
+
+**Execution mode: inline is correct.** Ten tasks all mutating one 2,200-line file cannot be parallelised without collisions; subagents would need a merge strategy no plan here defines. Endorse option 1.
+
+### 2026-08-14 · Codex · Claude v10 spec review addressed; design baseline imported (uncommitted)
+Addressed H1, M1–M6 and L1–L3 in the v10 specification: added accessible filled-control ink, corrected tertiary and chart tokens, explicit disabled ink, mandatory soft-surface borders and chart separators, the measured contrast table, first-run and SMS intake scope, one `--app-max` shell token, a decimal-size boundary and observable acceptance criteria. Imported the final public-safe `HANDOFF.md`, `DECISIONS.md` and Direction 1d HTML board into `docs/design-reference/` so implementation QA can verify actual design fidelity. No production code changed.
+
+### 2026-08-14 · Codex · finance-v10 Direction 1d specification written (uncommitted)
+Added `docs/superpowers/specs/2026-08-14-warm-modern-finance-v10-design.md` for owner and Claude review. It codifies the approved Warm Modern Finance direction, corrected warning color, complete light/dark token systems, typography, spacing, icon inventory, mobile-first component and screen rules, 1280px laptop-usability boundary, accessibility, privacy, regression matrix and pre-commit Claude QA gate. No production code or finance behavior changed. An implementation plan will be written only after the specification is approved.
+
+### 2026-08-14 · Claude · v10 "Warm Modern Finance" spec review — **1 high, 6 medium, 3 low; 4 checks unverifiable**
+Reviewed `docs/superpowers/specs/2026-08-14-warm-modern-finance-v10-design.md` (uncommitted). Specification review only; no files edited — every finding needs a Codex decision, and the spec is Codex's document. Contrast computed independently from the token values, not taken on trust.
+
+**Confirmed good:** warning correction verified at 4.84:1 on `--bg` and 5.27:1 on white · L2/L3 explicitly protected (§9, §19) rather than silently changed · no formula, migration, storage-key or model change anywhere in scope (§2, §16, §17 financial-regression matrix) · all five Log types and managed-only selectors (§8) · Budget Health covers On track / Close / Over / Net refund (§10) · the stale View-all overlay from the v9.2 QA is now an explicit requirement (§9 line 222) · CSV account-safe flow preserved as restyle-only (§12) · laptop correctly limited to usability with bespoke desktop deferred to v10.1 (§3 line 48, §14) — and the two target widths match the owner's actual hardware (1280×800 primary, 1920×1080 secondary) · privacy constraints present (§2 lines 25–26, §16 line 361) · mobile 390×844, 16px gutter, 44px floor.
+
+**CANNOT VERIFY — checks 1, 6, 7 and 15.** `HANDOFF.md`, `DECISIONS.md` and the Direction 1d design package **do not exist anywhere on this machine** (searched `Downloads` to depth 3; only the old v8 `finance-tracker-design\` package is present). So fidelity to Direction 1d versus drift back toward 1b/1c, hero 2a fidelity, the approved type/spacing/radii rhythm and the icon inventory's completeness **were not verified — only internal consistency was**. This is the unmet condition raised earlier: the design package must land in `docs/superpowers/specs/` for the QA gate to mean anything.
+
+**H1 · high · §4.2 (dark tokens, lines 82–104) — the dark theme has no ink for filled controls, and both obvious choices fail.** `--accent` in dark is `#73b3bd`, a *light* colour. White on it is **2.36:1** and the theme's own `--text #f5f1ea` is **2.09:1**; `--accent-hi #91c8d0` is worse at 1.85. `--accent-ink` is defined only as "text on accent-soft", so the dark primary button's label colour is simply undefined. Same for `--pos` / `--warn` / `--bad` fills (white = 2.15:1). *Why it matters:* the primary action on every screen fails AA in dark mode, and it is not a value anyone can eyeball. *Recommended wording:* add a per-theme token — `--on-accent: #ffffff` in light (8.98:1) and `--on-accent: #0d2226` in dark, which measures **7.00:1 on `--accent`, 8.93:1 on `--accent-hi`, 7.12 on `--pos`, 7.34 on `--warn`, 6.15 on `--bad`** — one token covers all four fills. State that no filled control may use `--text` or `#ffffff` as its label colour in dark.
+
+**M1 · medium · §4.1 line 65 + line 60 — `--text-3` on `--surface-3` is 4.42:1, below AA.** Tertiary text is defined as "Hints; never opacity-reduced" and `--surface-3` as "Disabled and pressed surfaces". Disabled is exempt, but pressed states and group backgrounds are not. *Recommended:* darken `--text-3` to `#666057` — **4.91:1 on `--surface-3`**, 5.72 on `--bg`, 6.22 on white — or forbid `--text-3` on `--surface-3` in the spec.
+
+**M2 · medium · §4.1 lines 68–75 — the four "soft" status surfaces are invisible against the page.** `--accent-soft` 1.08:1, `--pos-soft` 1.05, `--warn-soft` 1.05, `--bad-soft` 1.08 versus `--bg` (dark: 1.33–1.49). *Why it matters:* the spec's status model puts warning and exceeded panels on these surfaces, so the *region* is identified by its ink colour alone — the same trap §10 and §15 forbid for status. *Recommended:* extend the rule already written for `--surface-warm` ("border remains required") to every soft surface: a 1px border in the matching ink family is mandatory on any soft-surface region.
+
+**M3 · medium · §4.1 line 76 + §7.2 line 190 — the spending-mix tints are not distinguishable.** `--accent-3 #7aa9b0` is **2.58:1** against white, below the 3:1 for meaningful graphics, and adjacent pairs are worse: `--accent-2` vs `--accent-3` **1.76:1**, `--accent` vs `--accent-2` **1.98:1**. Widening the ramp cannot fix this — three steps at 3:1 apart need roughly a 9:1 spread, which one teal family on white cannot hold. *Recommended:* (a) require a 1–2px page-coloured gap between adjacent segments, which satisfies 1.4.11 by separation rather than colour, and (b) darken `--accent-3` to `#5f9199` (**3.50:1** vs white) so a lone segment still reads. Keep the existing always-show-labels rule.
+
+**M4 · medium · §4.2 line 105 vs §20.3 line 423 — an acceptance criterion that points at a document that does not exist.** The spec defers its own contrast verification ("a documented contrast table must verify all combinations") while §20.3 makes "meet documented contrast requirements" a gate. *Recommended:* paste the measured table below into §4 and have §20.3 cite it, so the gate is checkable.
+
+**M5 · medium · §3 lines 32–46, §14, §17 — two live production surfaces are missing from scope.** (a) The **first-run / onboarding screen** (`index.html` ~220–240, which also carries the restore path) — it is a full screen, not an overlay, so §3 item 14 does not cover it; a fresh install's first impression would keep the old styling. (b) The **bank-SMS intake** — paste field, clipboard button and `#b64=` deep-link handling (~2063–2149) — §3 item 9 names CSV only, yet SMS is a primary intake path. *Recommended:* add both to §3, to §14's mobile checks and to §17's manual matrix.
+
+**M6 · medium · §14 line 338 — "no fixed 430px limitation" understates the coupling and invites a broken shell.** Production carries `max-width:430px` on **four** rules: `#app`, `.nav`, `.overlay` and `.sheetwrap`. Changing only `#app` leaves the fixed bottom navigation, overlays and bottom sheets pinned at 430px while content widens — they visually desync at 1280px. *Recommended:* name all four and require a single `--app-max` custom property that every one of them consumes, so the shell can never drift.
+
+**L1 · low · §20.2 line 422 — untestable acceptance criterion.** "The app feels warm, personal and professional rather than robotic or institutional" cannot pass or fail a gate. *Recommended:* move it to §1 as the objective, and replace it in §20 with observable criteria — no structural emoji remain, every surface consumes tokens, no more than three consecutive carded regions, system font stack only.
+
+**L2 · low · §4.1/§4.2 — no disabled *text* token.** `--surface-3` is named as the disabled surface and §4.2 exempts disabled from 4.5:1, but no disabled ink exists, so implementation will improvise. *Recommended:* add `--text-disabled` per theme and require a non-colour affordance (reduced control, explicit label, or `aria-disabled` plus a visible cue).
+
+**L3 · low · §5 line 139 — "0.64× the integer size" needs a floor.** At the 42px hero it yields ~27px and at the 28px secondary figure ~18px, both fine — but applied to a 16px row amount it would breach the 13.5px minimum. *Recommended:* state that the reduced decimal applies only to hero and secondary figures, never to row amounts.
+
+**Measured contrast table — for pasting into §4** (computed from the spec's own token values; ✗ marks the values the findings above address):
+
+| Pair | Light | Dark |
+|---|---|---|
+| `--text` on bg / surface / warm / s2 / s3 | 14.76 / 16.06 / 15.65 / 13.88 / 12.67 | 15.85 / 14.09 / 13.42 / 12.20 / 10.59 |
+| `--text-2` on bg / surface / s3 | 6.68 / 7.27 / 5.74 | 10.19 / 9.06 / 6.81 |
+| `--text-3` on bg / surface / s3 | 5.14 / 5.60 / **4.42 ✗** | 7.21 / 6.41 / 4.82 |
+| `--accent` as text on bg / surface | 8.25 / 8.98 | 7.57 / 6.73 |
+| `--pos` / `--warn` / `--bad` as text on bg | 5.24 / 4.84 / 5.54 | 8.06 / 8.31 / 6.97 |
+| each `*-ink` on its own `*-soft` | 9.46 / 6.87 / 7.10 / 7.50 | 8.49 / 8.49 / 8.17 / 7.52 |
+| `#ffffff` on `--accent` / `--accent-hi` | 8.98 / 11.64 | **2.36 ✗ / 1.85 ✗** |
+| soft status surface vs bg | **1.05–1.08 ✗** | **1.33–1.49 ✗** |
+| `--border` vs surface (card definition) | 1.30 | 1.50 |
+| focus ring `--accent` vs bg / accent-soft | 8.25 / 7.61 | 7.57 / 5.09 |
+| chart `--accent-2` / `--accent-3` vs white | 4.54 / **2.58 ✗** | — |
+| adjacent chart tints (accent↔a2, a2↔a3) | **1.98 ✗ / 1.76 ✗** | — |
+
+**Verdict: approve the specification once H1 and M1–M6 are addressed.** No blockers — nothing here threatens finance correctness, and the release-scope discipline is right. H1 must be fixed in the spec, not discovered during implementation. The design package (checks 1/6/7/15) still needs to land before the implementation QA gate can verify design fidelity.
 
 ### 2026-08-14 · Codex · finance-v9.2 committed — `9c2bda6`
 Committed the QA-approved reminder occurrence integrity release, including Claude's pending copy/documentation handoff, the rebuilt agent source map, shared collaboration log, specs/plans, fixture and regression coverage. The release passed 47/47 tests, live phone-width QA by Claude, and final post-QA verification. This commit is local only; nothing has been pushed.

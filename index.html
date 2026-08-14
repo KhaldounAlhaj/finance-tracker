@@ -7,8 +7,8 @@
 
 <!-- PWA / iOS home-screen -->
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#f4f1ea" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#13110d" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f7f5f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#161817" media="(prefers-color-scheme: dark)">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -17,43 +17,49 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 
 <style>
-  /* ── Design tokens — warm "companion" palette (light) ─────────────────
-     Light small-text inks darkened vs the design draft to clear WCAG 4.5:1. */
+  /* ── Finance v10 · Warm Modern Finance ─────────────────────────────── */
   :root{
-    --canvas:#f4f1ea; --surface:#ffffff; --surface-2:#faf7f1; --surface-3:#efeae0;
-    --border:#e7e1d6; --border-strong:#d8d0c1;
-    --text:#241f19; --text-2:#4c463d; --muted:#6b6152;
-    --primary:#1f7a63; --primary-ink:#ffffff; --primary-weak:#e2f0ea; --primary-strong:#155a48;
-    --positive:#2f8f5b; --positive-ink:#1e6f45; --positive-weak:#e4f2e8;
-    --negative:#c04d34; --negative-weak:#f7e6e0;
-    --warning:#b7791f; --warning-ink:#8a5c10; --warning-weak:#f8ecd6;
+    --app-max:430px;
+    --bg:#f7f5f2; --surface:#ffffff; --surface-warm:#fdfcf9; --surface-2:#f1eee9; --surface-3:#e8e4dd;
+    --border:#e6e1d9; --border-2:#d3ccc2;
+    --text:#23211e; --text-2:#5b564f; --text-3:#666057; --text-disabled:#817a70;
+    --accent:#17505c; --accent-hi:#103e48; --accent-soft:#e4eef0; --accent-ink:#10414b; --on-accent:#ffffff;
+    --accent-2:#3f7f8c; --accent-3:#5f9199; --ochre:#c08a4a;
+    --pos:#2b7355; --pos-soft:#e8f2ec; --pos-ink:#1f5c43;
+    --warn:#9c5d0b; --warn-soft:#fbeedb; --warn-ink:#754405;
+    --bad:#b03a2b; --bad-soft:#fae9e5; --bad-ink:#872a1e;
+    --canvas:var(--bg); --border-strong:var(--border-2); --muted:var(--text-3);
+    --primary:var(--accent); --primary-ink:var(--on-accent); --primary-weak:var(--accent-soft); --primary-strong:var(--accent-hi);
+    --positive:var(--pos); --positive-ink:var(--pos-ink); --positive-weak:var(--pos-soft);
+    --negative:var(--bad); --negative-weak:var(--bad-soft);
+    --warning:var(--warn); --warning-ink:var(--warn-ink); --warning-weak:var(--warn-soft);
     --g-home:#4f6bd6; --g-family:#c85f8b; --g-jordan:#1596a2; --g-jordan-ink:#0e6e78; --g-living:#c07f22; --g-oblig:#7a5bd6;
     --shadow:0 1px 2px rgba(40,32,20,.05),0 6px 20px rgba(40,32,20,.05);
     --shadow-lg:0 2px 6px rgba(40,32,20,.06),0 16px 40px rgba(40,32,20,.10);
-    --radius:20px; --radius-sm:14px;
-    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --radius:20px; --radius-sm:14px; --radius-compact:10px;
+    --font:-apple-system,"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;
   }
   [data-theme="dark"], :root[data-theme="dark"]{
-    --canvas:#13110d; --surface:#1d1a15; --surface-2:#252017; --surface-3:#2f291e;
-    --border:#332d23; --border-strong:#453d2f;
-    --text:#f3eee4; --text-2:#d8d0c2; --muted:#a99e8d;
-    --primary:#4dbd9c; --primary-ink:#0c211b; --primary-weak:#173a30; --primary-strong:#6fd3b4;
-    --positive:#54c187; --positive-ink:#54c187; --positive-weak:#173323;
-    --negative:#e8785c; --negative-weak:#3a201a;
-    --warning:#e0ac52; --warning-ink:#e0ac52; --warning-weak:#3a2e18;
+    --bg:#161817; --surface:#202321; --surface-warm:#242723; --surface-2:#2b2e2b; --surface-3:#343834;
+    --border:#3b403c; --border-2:#505650;
+    --text:#f5f1ea; --text-2:#c9c3b9; --text-3:#aaa49a; --text-disabled:#7f847e;
+    --accent:#73b3bd; --accent-hi:#91c8d0; --accent-soft:#243a3e; --accent-ink:#b9e0e5; --on-accent:#0d2226;
+    --pos:#75bd98; --pos-soft:#22372d; --pos-ink:#a9dfc2;
+    --warn:#e1a654; --warn-soft:#402f1c; --warn-ink:#f0c987;
+    --bad:#e98778; --bad-soft:#452723; --bad-ink:#f4b2a8;
     --g-home:#7d94ec; --g-family:#e585ab; --g-jordan:#3fc0cc; --g-jordan-ink:#3fc0cc; --g-living:#e0a94b; --g-oblig:#a385ee;
     --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.35);
     --shadow-lg:0 2px 6px rgba(0,0,0,.4),0 16px 40px rgba(0,0,0,.5);
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
-      --canvas:#13110d; --surface:#1d1a15; --surface-2:#252017; --surface-3:#2f291e;
-      --border:#332d23; --border-strong:#453d2f;
-      --text:#f3eee4; --text-2:#d8d0c2; --muted:#a99e8d;
-      --primary:#4dbd9c; --primary-ink:#0c211b; --primary-weak:#173a30; --primary-strong:#6fd3b4;
-      --positive:#54c187; --positive-ink:#54c187; --positive-weak:#173323;
-      --negative:#e8785c; --negative-weak:#3a201a;
-      --warning:#e0ac52; --warning-ink:#e0ac52; --warning-weak:#3a2e18;
+      --bg:#161817; --surface:#202321; --surface-warm:#242723; --surface-2:#2b2e2b; --surface-3:#343834;
+      --border:#3b403c; --border-2:#505650;
+      --text:#f5f1ea; --text-2:#c9c3b9; --text-3:#aaa49a; --text-disabled:#7f847e;
+      --accent:#73b3bd; --accent-hi:#91c8d0; --accent-soft:#243a3e; --accent-ink:#b9e0e5; --on-accent:#0d2226;
+      --pos:#75bd98; --pos-soft:#22372d; --pos-ink:#a9dfc2;
+      --warn:#e1a654; --warn-soft:#402f1c; --warn-ink:#f0c987;
+      --bad:#e98778; --bad-soft:#452723; --bad-ink:#f4b2a8;
       --g-home:#7d94ec; --g-family:#e585ab; --g-jordan:#3fc0cc; --g-jordan-ink:#3fc0cc; --g-living:#e0a94b; --g-oblig:#a385ee;
       --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.35);
       --shadow-lg:0 2px 6px rgba(0,0,0,.4),0 16px 40px rgba(0,0,0,.5);
@@ -63,14 +69,14 @@
   html{background:var(--canvas)}
   body{background:var(--canvas);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.45;
     -webkit-font-smoothing:antialiased;min-height:100vh;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
-  #app{max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative}
+  #app{max-width:var(--app-max);margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative}
   .csv-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px;min-width:0}
   @media (max-width:370px){.csv-grid{grid-template-columns:1fr}.csv-grid>*{grid-column:1!important}}
   @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
   @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
   @keyframes sheetup{from{transform:translateY(100%)}to{transform:none}}
   @keyframes fadein{from{opacity:0}to{opacity:1}}
-  :focus-visible{outline:2.5px solid var(--primary);outline-offset:2px;border-radius:6px}
+  :focus-visible{outline:2.5px solid var(--accent);outline-offset:3px;border-radius:6px}
 
   .header{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--canvas) 86%,transparent);
     backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--border);
@@ -141,7 +147,7 @@
   .selwrap::after{content:'▾';position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;font-size:13px}
   .selwrap .sel{padding-right:34px}
   .amtwrap{display:flex;align-items:center;border:1px solid var(--border);border-radius:12px;background:var(--surface-2);padding:0 14px;height:56px}
-  .amtwrap input{flex:1;border:none;background:none;color:var(--text);font-size:26px;font-weight:600;min-width:0;outline:none;font-family:var(--font);font-variant-numeric:tabular-nums}
+  .amtwrap input{flex:1;border:none;background:none;color:var(--text);font-size:26px;font-weight:700;min-width:0;min-height:44px;outline:none;font-family:var(--font);font-variant-numeric:tabular-nums}
   .amtwrap span{color:var(--muted);font-weight:600;font-size:15px}
   .fg{display:flex;flex-direction:column}
 
@@ -182,7 +188,7 @@
   .catstatus{display:flex;align-items:center;gap:5px;margin-top:6px;font-size:11.5px;color:var(--muted)}
   .catstatus.over{color:var(--negative)}
 
-  .nav{position:fixed;bottom:0;left:0;right:0;z-index:30;margin:0 auto;max-width:430px;
+  .nav{position:fixed;bottom:0;left:0;right:0;z-index:30;margin:0 auto;max-width:var(--app-max);
     background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
     border-top:1px solid var(--border);display:flex;padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
   .nav button{flex:1;min-height:52px;border:none;background:none;cursor:pointer;display:flex;flex-direction:column;
@@ -190,7 +196,7 @@
   .nav button.on{color:var(--primary)}
   .nav span{font-size:11px;font-weight:600}
 
-  .overlay{display:none;position:fixed;inset:0;z-index:40;margin:0 auto;max-width:430px;background:var(--canvas);
+  .overlay{display:none;position:fixed;inset:0;z-index:40;margin:0 auto;max-width:var(--app-max);background:var(--canvas);
     flex-direction:column;animation:fadein .2s ease}
   .overlay.open{display:flex}
   .ovhead{flex:none;background:var(--canvas);border-bottom:1px solid var(--border);
@@ -198,7 +204,7 @@
   .ovhead .t{flex:1;font-size:18px;font-weight:600}
   .ovbody{flex:1;overflow-y:auto;padding:18px 16px calc(30px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px}
 
-  .sheetwrap{display:none;position:fixed;inset:0;z-index:50;margin:0 auto;max-width:430px;background:rgba(0,0,0,.4);
+  .sheetwrap{display:none;position:fixed;inset:0;z-index:50;margin:0 auto;max-width:var(--app-max);background:rgba(0,0,0,.4);
     align-items:flex-end;animation:fadein .2s ease}
   .sheetwrap.open{display:flex}
   .sheet{width:100%;background:var(--surface);border-radius:22px 22px 0 0;padding:20px 20px calc(24px + env(safe-area-inset-bottom));
@@ -211,6 +217,84 @@
   .sechead{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.04em;margin:6px 4px 0}
   .empty{background:var(--surface);border:1px dashed var(--border-strong);border-radius:var(--radius);padding:34px 20px;text-align:center}
   .note{font-size:12px;color:var(--muted);text-align:center;line-height:1.5}
+  .wm-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow);padding:18px}
+  .wm-section{display:flex;flex-direction:column;gap:0}
+  .wm-row{display:flex;align-items:center;gap:14px;min-height:52px;padding:12px 2px;border-bottom:1px solid var(--border)}
+  .wm-status{display:inline-flex;align-items:center;gap:6px;min-height:28px;padding:4px 10px;border-radius:999px;font-size:13.5px;font-weight:600;border:1px solid currentColor}
+  .wm-progress{display:flex;gap:2px;height:12px;border-radius:999px;overflow:hidden;background:var(--surface-3)}
+  .wm-progress>*{min-width:0;border-right:2px solid var(--bg)}
+  .wm-progress>*:last-child{border-right:0}
+  .wm-btn-primary,.wm-btn-secondary,.wm-btn-tertiary,.wm-btn-danger{min-height:44px;border-radius:14px;font:600 14.5px var(--font);cursor:pointer;padding:0 16px}
+  .wm-btn-primary{border:1px solid var(--accent);background:var(--accent);color:var(--on-accent)}
+  .wm-btn-secondary{border:1px solid var(--border-2);background:var(--surface);color:var(--text)}
+  .wm-btn-tertiary{border:1px solid transparent;background:transparent;color:var(--accent)}
+  .wm-btn-danger{border:1px solid var(--bad);background:var(--bad);color:var(--on-accent)}
+  .wm-field{min-height:44px;border:1px solid var(--border-2);border-radius:14px;background:var(--surface-2);color:var(--text)}
+  .wm-sheet{background:var(--surface);border:1px solid var(--border);border-radius:20px 20px 0 0;box-shadow:var(--shadow-lg)}
+  .month-switcher{display:flex;align-items:center;justify-content:center;gap:16px}
+  .overview-stack{display:flex;flex-direction:column;gap:24px}
+  .overview-hero{background:var(--surface-warm);border:1px solid var(--warm-border);border-top:4px solid var(--accent);box-shadow:none;padding:22px}
+  .overview-hero .big{font-size:42px;line-height:1.05;letter-spacing:-.03em;font-variant-numeric:tabular-nums;margin:9px 0 8px}
+  .overview-plan-track{margin-top:18px;height:10px;background:var(--surface-3)}
+  .overview-plan-track i{background:var(--accent)}
+  .section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:10px}
+  .section-title{font-size:17.5px;line-height:1.25;font-weight:700;letter-spacing:-.01em}
+  .overview-cash{padding:2px 0 18px;border-bottom:1px solid var(--border)}
+  .overview-attention,.overview-budget,.overview-spending,.overview-debt-goals,.overview-activity{padding-top:2px}
+  .budget-preview{gap:0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+  .budget-preview .tile{border:0;border-radius:0;box-shadow:none;background:transparent;padding:15px 0}
+  .budget-preview .tile+ .tile{padding-left:18px;border-left:1px solid var(--border)}
+  .spending-bar{display:flex;gap:2px;height:12px;margin:15px 0 18px;border-radius:999px;overflow:hidden;background:var(--surface-3)}
+  .spending-bar i{flex:3;background:var(--accent);border-right:2px solid var(--bg)}
+  .spending-bar i:nth-child(2){flex:2;background:var(--accent-2)}
+  .spending-bar i:nth-child(3){flex:1.5;background:var(--accent-3)}
+  .spending-bar i:nth-child(4){flex:1;background:var(--warning);border-right:0}
+  .overview-debt-goals{border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+  .overview-row{padding:18px 0}
+  .overview-row+.overview-row{border-top:1px solid var(--border)}
+  .log-type-picker{background:var(--surface-2);border:1px solid var(--border);padding:4px;overflow-x:auto;justify-content:flex-start}
+  .log-type-picker button{min-width:max-content;min-height:44px;padding:0 13px;border-radius:11px}
+  .log-type-picker button.on{background:var(--surface);color:var(--accent-ink);box-shadow:var(--shadow);font-weight:700}
+  .log-form{display:flex;flex-direction:column;gap:16px;padding:20px;border-radius:20px}
+  .log-form .fg{display:flex;flex-direction:column;gap:7px}
+  .log-form .in,.log-form .sel{min-height:48px;background:var(--surface-2);border-color:var(--border-2)}
+  .log-form .amtwrap{background:var(--surface-warm);border-color:var(--warm-border)}
+  .log-form .amtwrap input{font-size:35px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--accent-ink)}
+  .sms-intake{background:var(--accent-soft);border:1px solid var(--accent-3);border-radius:16px;padding:14px}
+  .sms-intake textarea{background:var(--surface);min-height:92px}
+  .log-save{min-height:50px;background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+  .log-effect:not(:empty){border:1px solid var(--border);border-radius:13px;background:var(--surface-2);padding:10px 12px}
+  .activity-section{display:flex;flex-direction:column;gap:12px}
+  .activity-filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+  .activity-filters #logSearch{grid-column:1/-1}
+  .planned-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .planned-actions button{min-height:44px;padding:0 11px;border:1px solid var(--border);border-radius:11px;background:var(--surface);color:var(--accent-ink);font:600 13.5px var(--font);cursor:pointer}
+  .planned-occurrence{padding:16px 0;border-bottom:1px solid var(--border)}
+  .planned-occurrence:last-child{border-bottom:0}
+  .budget-status{display:inline-flex;align-items:center;border:1px solid currentColor;border-radius:999px;padding:2px 8px;margin-right:5px;font-size:12px;font-weight:700}
+  .budget-status.track,.budget-status.refund{color:var(--pos-ink);background:var(--pos-soft)}
+  .budget-status.close{color:var(--warn-ink);background:var(--warn-soft)}
+  .budget-status.over{color:var(--bad-ink);background:var(--bad-soft)}
+  #p-budget .listcard,#p-goals .listcard{box-shadow:none;border-radius:16px}
+  #p-budget .catline{padding:16px;border-top:1px solid var(--border)}
+  #p-goals{gap:24px!important}
+  #p-goals .hero{background:var(--surface-warm);border-top:4px solid var(--accent)!important}
+  #p-goals .dcard{border-radius:16px;box-shadow:none;padding:16px}
+  .finance-ledger{margin-top:14px;padding:12px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr auto;gap:7px 14px;font-size:13.5px}
+  .manage-row{width:100%;min-height:64px;background:none;border-left:0;border-right:0;border-bottom:0;cursor:pointer;text-align:left;font-family:var(--font);color:var(--text)}
+  .manage-icon{width:38px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:11px;background:var(--accent-soft);color:var(--accent-ink)}
+  .csv-review-row{border-left:4px solid var(--border-2);box-shadow:none}
+  .csv-review-row.is-ready{border-left-color:var(--pos)}
+  .csv-review-row.needs-review,.csv-review-row.is-duplicate{border-left-color:var(--warn)}
+  .csv-review-row.is-blocked{border-left-color:var(--bad);background:var(--bad-soft)}
+  .csv-blocking-reason{margin-top:8px;padding:9px 11px;border:1px solid var(--bad);border-radius:10px;background:var(--bad-soft);color:var(--bad-ink);font-size:13.5px;font-weight:600}
+  #csvConfirm:disabled{background:var(--surface-3);color:var(--text-disabled);border-color:var(--border-2)}
+  :disabled,[aria-disabled="true"]{color:var(--text-disabled)!important;cursor:not-allowed!important;border-style:dashed!important;filter:none!important}
+  @media (min-width:760px){
+    :root{--app-max:760px}
+    main{padding-left:24px;padding-right:24px}
+    .header{padding-left:28px;padding-right:28px}
+  }
   ::placeholder{color:var(--muted);opacity:.9}
   ::-webkit-scrollbar{width:0}
 </style>
@@ -222,19 +306,19 @@
   <!-- FIRST RUN -->
   <div id="firstRun" style="display:none;flex:1;flex-direction:column;padding:calc(28px + env(safe-area-inset-top)) 22px calc(30px + env(safe-area-inset-bottom));gap:22px;min-height:100vh">
     <div style="height:8px"></div>
-    <div style="width:52px;height:52px;border-radius:16px;background:var(--primary-weak);display:flex;align-items:center;justify-content:center;font-size:26px">🏡</div>
+    <div style="width:52px;height:52px;border-radius:16px;background:var(--accent-soft);color:var(--accent-ink);display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10M9 20v-6h6v6"/></svg></div>
     <div>
       <div style="font-size:28px;font-weight:600;line-height:1.15;margin-bottom:8px">Your finances, clearly managed.</div>
       <div style="font-size:15px;color:var(--muted);line-height:1.5">Track confirmed money, plan upcoming payments, control budgets, reduce debt, and build your goals. Everything stays on this device.</div>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
-      <div class="dcard" style="display:flex;gap:14px;align-items:flex-start"><div style="font-size:20px">💵</div><div><div style="font-weight:600;font-size:15px">Add your salary and payday</div><div class="hint">So the month resets on the right day.</div></div></div>
-      <div class="dcard" style="display:flex;gap:14px;align-items:flex-start"><div style="font-size:20px">🔁</div><div><div style="font-weight:600;font-size:15px">Set up recurring items</div><div class="hint">Rent, remittance and loans post themselves.</div></div></div>
-      <div class="dcard" style="display:flex;gap:14px;align-items:flex-start"><div style="font-size:20px">🎯</div><div><div style="font-weight:600;font-size:15px">Set the house target and date</div><div class="hint">We'll work out what to save each month.</div></div></div>
+      <div class="dcard" style="display:flex;gap:14px;align-items:flex-start"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16v12H4zM8 7V5h8v2M8 12h8"/></svg><div><div style="font-weight:600;font-size:15px">Add your salary and payday</div><div class="hint">So monthly cash planning starts with confirmed income.</div></div></div>
+      <div class="dcard" style="display:flex;gap:14px;align-items:flex-start"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div><div style="font-weight:600;font-size:15px">Plan payment reminders</div><div class="hint">Log, reschedule or skip each occurrence yourself.</div></div></div>
+      <div class="dcard" style="display:flex;gap:14px;align-items:flex-start"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v3M21 12h-3"/></svg><div><div style="font-weight:600;font-size:15px">Set your first financial goal</div><div class="hint">Choose a target and track confirmed contributions.</div></div></div>
     </div>
     <div style="flex:1"></div>
     <button class="btn" onclick="exitFirstRun()">Get started</button>
-    <button class="btn-ghost" onclick="document.getElementById('restoreFile').click()">I have a backup — restore it</button>
+    <button class="btn-ghost" onclick="document.getElementById('restoreFile').click()">Restore from backup</button>
     <div class="note">No account needed · works offline</div>
   </div>
 
@@ -251,42 +335,57 @@
 
     <!-- DASHBOARD -->
     <div class="page active" id="p-dashboard">
-      <div style="display:flex;align-items:center;justify-content:center;gap:16px">
+      <div id="overview-month" class="month-switcher">
         <button class="iconbtn" style="width:44px;height:44px" id="mPrev" aria-label="Previous month" onclick="chMonth(-1)">‹</button>
         <div style="font-size:14px;font-weight:600;min-width:118px;text-align:center" id="mLab"></div>
         <button class="iconbtn" style="width:44px;height:44px" id="mNext" aria-label="Next month" onclick="chMonth(1)">›</button>
       </div>
 
-      <div id="dashCurrent" style="display:flex;flex-direction:column;gap:14px">
-        <div class="card hero">
+      <div id="dashCurrent" class="overview-stack">
+        <section class="card hero overview-hero" id="overview-hero">
           <div class="lbl" style="font-size:14px">Available within plan</div>
           <div class="big" id="dSafe">—</div>
           <div class="sub2" id="dSafeSub"></div>
+          <div class="track overview-plan-track" aria-label="Spent versus monthly plan"><i id="dPlanW"></i></div>
           <div class="chip" style="margin-top:14px"><span class="dot"></span><span id="dSafeChip"></span></div>
-        </div>
+        </section>
 
-        <div class="card card-sm">
+        <section class="wm-section overview-cash" id="overview-cash">
           <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
             <div><div class="lbl">Cash after commitments</div><div class="hint">Income left after paid and planned cash movements</div></div>
             <div style="font-size:22px;font-weight:700;white-space:nowrap" id="dCashAfter">0 SAR</div>
           </div>
           <div id="dCashBreakdown" class="hint" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)"></div>
-        </div>
+        </section>
 
-        <div class="grid2">
+        <section class="wm-section overview-attention" id="overview-attention">
+          <div class="section-head"><div><div class="section-title">Planned payments</div><div class="hint">What needs your attention next</div></div><button class="linkbtn" onclick="openOverlay('recurring')">Manage</button></div>
+          <div class="listcard" id="dUpcoming"></div>
+          <div class="note">Reminders never create transactions automatically.</div>
+        </section>
+
+        <section class="wm-section overview-budget" id="overview-budget">
+          <div class="section-head"><div class="section-title">Budget health</div><button class="linkbtn" onclick="setTab('budget')">View all</button></div>
+          <div class="grid2 budget-preview">
           <div class="tile"><div class="lbl">Spent this month</div><div class="v" id="dSpent">0</div><div class="hint" id="dSpentSub"></div><div class="track"><i id="dSpentW" style="background:var(--text-2)"></i></div></div>
           <div class="tile"><div class="lbl">Left in the plan</div><div class="v" id="dRem">0</div><div class="hint" id="dRemSub"></div><div class="track"><i id="dRemW"></i></div></div>
-        </div>
+          </div>
+        </section>
 
-        <div class="card" style="padding:16px 18px"><div class="triplet">
+        <section class="wm-section overview-spending" id="overview-spending">
+          <div class="section-title">Where the month is going</div>
+          <div class="spending-bar" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+          <div class="triplet">
           <div><div class="lbl">Committed</div><div class="v" id="dCommitted">0</div></div>
           <div style="border-left:1px solid var(--border);border-right:1px solid var(--border)"><div class="lbl">Flexible</div><div class="v" id="dFlexible">0</div></div>
           <div><div class="lbl">Set aside</div><div class="v" id="dSetAside" style="color:var(--primary-strong)">0</div></div>
-        </div></div>
+          </div>
+        </section>
 
-        <div class="card">
+        <section class="wm-section overview-debt-goals" id="overview-debt-goals">
+        <div class="overview-row">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-            <div style="display:flex;align-items:center;gap:9px"><span style="font-size:18px">🏡</span><span style="font-weight:600;font-size:15px">House fund</span></div>
+            <div class="section-title">House fund</div>
             <span class="badge" id="dHouseBadge"></span>
           </div>
           <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:10px">
@@ -297,24 +396,21 @@
           <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12.5px;color:var(--muted)"><span id="dHousePct"></span><span id="dHouseWhen"></span></div>
         </div>
 
-        <div class="card">
+        <div class="overview-row">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <div style="display:flex;align-items:center;gap:9px"><span style="font-size:18px">🎯</span><span style="font-weight:600;font-size:15px">Total debt remaining</span></div>
+            <div class="section-title">Total debt remaining</div>
             <span style="font-size:13px;font-weight:600;color:var(--muted)" id="dDebtPaid"></span>
           </div>
           <div style="font-size:24px;font-weight:600;margin-bottom:10px" id="dDebt">0 SAR</div>
           <div class="track h10"><i id="dDebtW" style="background:var(--g-oblig)"></i></div>
           <div style="margin-top:8px" class="sub2" id="dDebtNote"></div>
         </div>
+        </section>
 
-        <div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin:2px 4px 10px">
-            <span style="font-weight:600;font-size:15px">Planned payments</span>
-            <button class="linkbtn" onclick="openOverlay('recurring')">Manage</button>
-          </div>
-          <div class="listcard" id="dUpcoming"></div>
-          <div class="note" style="margin-top:9px">Reminders never create transactions automatically.</div>
-        </div>
+        <section class="wm-section overview-activity" id="overview-activity">
+          <div class="section-head"><div class="section-title">Recent activity</div><button class="linkbtn" onclick="setTab('log')">Open Log</button></div>
+          <div class="hint">Your latest confirmed transactions are available in Log.</div>
+        </section>
       </div>
 
       <div id="dashPast" style="display:none;flex-direction:column;gap:14px">
@@ -329,7 +425,7 @@
 
     <!-- LOG -->
     <div class="page" id="p-log">
-      <div class="seg" id="logSeg">
+      <div class="seg log-type-picker" id="logSeg">
         <button data-lt="expense" class="on" onclick="setLogType('expense')">Expense</button>
         <button data-lt="refund" onclick="setLogType('refund')">Refund</button>
         <button data-lt="payment" onclick="setLogType('payment')">Card · loan</button>
@@ -337,11 +433,11 @@
         <button data-lt="goal" onclick="setLogType('goal')">Goal</button>
       </div>
 
-      <div class="card" style="display:flex;flex-direction:column;gap:14px">
-        <div id="logSms" style="background:var(--surface-2);border:1px dashed var(--border-strong);border-radius:14px;padding:13px">
+      <div class="card log-form">
+        <div id="logSms" class="sms-intake">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <div style="font-size:13px;font-weight:600;color:var(--text-2)">📩 Paste a bank SMS</div>
-            <button class="linkbtn" onclick="pasteClip()">📋 Paste</button>
+            <div style="font-size:13.5px;font-weight:700;color:var(--text-2)">Paste a bank SMS</div>
+            <button class="linkbtn" onclick="pasteClip()">Paste</button>
           </div>
           <textarea class="in" id="eSms" dir="auto" placeholder="Paste the SMS here — we'll pull out the amount, merchant and date."></textarea>
           <button class="btn2" style="margin-top:9px;background:var(--primary-weak);color:var(--primary-strong);border-color:var(--primary)" onclick="parseSmsBox()">Fill form from SMS</button>
@@ -398,14 +494,14 @@
           <div class="hint" style="margin-top:6px">Leave empty — it repeats forever.</div>
         </div>
 
-        <button class="btn" id="logBtn" onclick="submitEntry()">Add expense</button>
+        <button class="btn log-save" id="logBtn" onclick="submitEntry()">Add expense</button>
         <button class="btn-ghost" id="logCancelBtn" style="display:none" onclick="cancelEdit()">Cancel edit</button>
-        <div class="hint" id="logMsg" style="min-height:16px;color:var(--positive-ink)"></div>
+        <div class="log-effect" id="log-effect"><div class="hint" id="logMsg" style="min-height:16px;color:var(--positive-ink)"></div></div>
       </div>
 
-      <div>
-        <div style="font-weight:600;font-size:15px;margin:2px 4px 10px">Recent activity</div>
-        <div class="card card-sm" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div class="activity-section">
+        <div class="section-title">Recent activity</div>
+        <div class="activity-filters">
           <input class="in" id="logSearch" placeholder="Search" oninput="renderEntries()" style="grid-column:1/-1">
           <select class="sel" id="logTypeFilter" onchange="renderEntries()"><option value="">All types</option><option value="expense">Expenses</option><option value="refund">Refunds</option><option value="payment">Payments</option><option value="income">Income</option><option value="goal">Goals</option></select>
           <select class="sel" id="logAccountFilter" onchange="renderEntries()"><option value="">All accounts</option><option value="cash">Cash / bank</option><option value="card">Credit card</option></select>
@@ -899,6 +995,36 @@ function undoImportBatch(state,importId,persist){
 /* IMPORT_V9_END */
 
 // ── helpers ──
+const ICON_PATHS=Object.freeze({
+  overview:'<path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/>',
+  log:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',
+  manage:'<path d="M4 6h16M7 12h10M10 18h4"/><circle cx="8" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="12" cy="18" r="2"/>',
+  calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
+  expense:'<path d="M12 3v18M7 8l5-5 5 5"/>',
+  refund:'<path d="M9 7H5v4M5 11c1.5-4 6-6 10-4s5 7 3 11"/>',
+  payment:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h3"/>',
+  income:'<path d="M12 21V3M7 16l5 5 5-5"/>',
+  goal:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v3M21 12h-3"/>',
+  planned:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  budget:'<path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/>',
+  category:'<path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/>',
+  debt:'<path d="M4 7h16v12H4zM8 7V5h8v2M8 12h8"/>',
+  edit:'<path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/>',
+  delete:'<path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/>',
+  filter:'<path d="M4 6h16M7 12h10M10 18h4"/>',
+  backup:'<path d="M12 3v12M7 10l5 5 5-5M4 19h16"/>',
+  restore:'<path d="M12 21V9M7 14l5-5 5 5M4 5h16"/>',
+  csv:'<path d="M6 3h9l4 4v14H6zM15 3v5h5M9 13h6M9 17h6"/>',
+  theme:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/>',
+  warning:'<path d="M12 3L2 21h20L12 3zM12 9v5M12 18h.01"/>',
+  success:'<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>',
+  close:'<path d="M6 6l12 12M18 6L6 18"/>'
+});
+function icon(name,size=24){
+  const body=ICON_PATHS[name]; if(!body)return "";
+  const n=Math.max(16,Math.min(32,Number(size)||24));
+  return `<svg width="${n}" height="${n}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
+}
 const num = v => Number.isFinite(+v) ? +v : 0;
 const clone = o => JSON.parse(JSON.stringify(o));
 const fmt = n => Math.round(num(n)).toLocaleString("en-US");
@@ -1265,6 +1391,7 @@ function renderDashboard(m,rm){
   setText("dSafe",sar(available)); el("dSafe").style.color=available<0?"var(--negative)":"var(--primary-strong)";
   setText("dSafeSub",sar(metrics.spendingPlan)+" plan − "+sar(metrics.actualSpending)+" actual − "+sar(metrics.plannedSpendingRemaining)+" still planned.");
   setText("dSafeChip",available>=0?"Available without exceeding the monthly plan":"Plan exceeded once all planned expenses are paid");
+  el("dPlanW").style.width=(metrics.spendingPlan>0?Math.min(100,Math.max(0,Math.round(metrics.actualSpending/metrics.spendingPlan*100))):0)+"%";
   setText("dCashAfter",sar(metrics.cashAfterCommitments)); el("dCashAfter").style.color=metrics.cashAfterCommitments<0?"var(--negative)":"var(--text)";
   setText("dCashBreakdown",sar(metrics.incomeReceived)+" income − "+sar(metrics.cashPaidSoFar)+" paid − "+sar(metrics.cashObligationsLeft)+" obligations − "+sar(metrics.reservedForGoals)+" goals");
   const income=metrics.incomeReceived, spent=metrics.actualSpending, planned=metrics.spendingPlan;
@@ -1294,7 +1421,7 @@ function renderDashboard(m,rm){
     : (projections.length===state.debts.filter(d=>debtCurrent(d)>0).length&&projections.length
       ? "On pace to be debt-free by "+fmtMonth(projections.map(p=>p.close).sort().pop())+"."
       : "Link a recurring payment to each account to see payoff dates."));
-  setTimeout(()=>renderPlannedPayments(m),0);
+  setTimeout(()=>refreshPlannedViews(m),0);
   // legacy upcoming calculation is immediately replaced by reminder rendering
   const dayNow=parseInt(today().slice(8,10));
   const items=[];
@@ -1349,8 +1476,16 @@ function renderPlannedPayments(m){
     <div style="text-align:right"><div class="amt">${sar(x.r.amount)}</div><button class="linkbtn" onclick="startReminderDraft('${x.r.id}','${x.sourceMonth}','${x.date}')">Log</button></div></div>`).join(""):`<div class="empty" style="border:none"><div class="hint">No open payment reminders for ${fmtMonth(m)}.</div></div>`;
   if(rows.length>3)host.insertAdjacentHTML("beforeend",`<button class="btn2" onclick="showAllPlanned('${m}')">View all overdue and planned (${rows.length})</button>`);
 }
+function refreshPlannedViews(m){
+  renderPlannedPayments(m);
+  if(el("ov-overdue")?.classList.contains("open"))renderAllPlanned(m);
+}
+function renderAllPlanned(m){
+  const rows=plannedOccurrenceRows(m);
+  el("allPlanned").innerHTML=rows.map(x=>`<div class="planned-occurrence"><div style="display:flex;justify-content:space-between;gap:12px"><div><b>${esc(x.r.name)}</b><div class="hint">${x.due} · ${x.date}</div></div><b>${sar(x.r.amount)}</b></div><div class="planned-actions"><button onclick="startReminderDraft('${x.r.id}','${x.sourceMonth}','${x.date}');closeOverlay()">Log</button><button onclick="rescheduleReminder('${x.r.id}','${x.sourceMonth}')">Reschedule</button><button onclick="skipReminder('${x.r.id}','${x.sourceMonth}')">Skip</button></div></div>`).join("")||'<div class="empty">No open reminders.</div>';
+}
 function showAllPlanned(m){
-  const rows=plannedOccurrenceRows(m); el("allPlanned").innerHTML=rows.map(x=>`<div class="dcard"><div style="display:flex;justify-content:space-between;gap:12px"><div><b>${esc(x.r.name)}</b><div class="hint">${x.due} · ${x.date}</div></div><b>${sar(x.r.amount)}</b></div><div style="display:flex;gap:6px;margin-top:8px"><button class="linkbtn" onclick="startReminderDraft('${x.r.id}','${x.sourceMonth}','${x.date}');closeOverlay()">Log</button><button class="linkbtn" onclick="rescheduleReminder('${x.r.id}','${x.sourceMonth}')">Reschedule</button><button class="linkbtn" onclick="skipReminder('${x.r.id}','${x.sourceMonth}')">Skip</button></div></div>`).join("")||'<div class="empty">No open reminders.</div>'; openOverlay("overdue");
+  renderAllPlanned(m); openOverlay("overdue");
 }
 let skipTarget=null;
 function skipReminder(id,m){
@@ -1399,7 +1534,8 @@ function renderBudget(m){
       const eff=effectivePlanned(c.id,m), act=catActual(c.id,m);
       gp+=num(state.budgets[c.id]); ga+=act;
       const over=eff>0&&act>eff;
-      const pct=eff>0?Math.min(100,Math.round(act/eff*100)):0;
+      const pct=act<0?0:(eff>0?Math.min(100,Math.round(act/eff*100)):0);
+      const status=act<0?{label:"Net refund",cls:"refund"}:over?{label:"Over",cls:"over"}:(eff>0&&act/eff>=.85)?{label:"Close",cls:"close"}:{label:"On track",cls:"track"};
       const kind=KINDS[c.kind]?KINDS[c.kind].label:"";
       const carry=rolloverCarry(c.id,m);
       return `<div class="catline">
@@ -1409,7 +1545,7 @@ function renderBudget(m){
           <span class="amts">${fmt(act)} / ${fmt(eff)}</span></div>
         <div class="pace"><div class="fill"><i style="width:${pct}%;background:${over?'var(--negative)':GROUP_COLOR[g]||'var(--primary)'}"></i></div>
           ${isCur?`<div class="mark" style="left:${markLeft}"></div>`:''}</div>
-        <div class="catstatus${over?' over':''}">${over?'<b>▲</b> over by '+sar(act-eff):sar(Math.max(0,eff-act))+' left'}${(c.rollover&&carry>0)?' · incl. '+fmt(carry)+' carried':''}</div>
+        <div class="catstatus${over?' over':''}"><span class="budget-status ${status.cls}">${status.label}</span> ${act<0?sar(Math.abs(act))+" returned":(over?'over by '+sar(act-eff):sar(Math.max(0,eff-act))+' left')}${(c.rollover&&carry>0)?' · incl. '+fmt(carry)+' carried':''}</div>
       </div>`;
     }).join("");
     return `<div class="listcard"><div class="grp"><span class="sw" style="background:${GROUP_COLOR[g]||'var(--muted)'}"></span><b>${esc(g)}</b><span>${fmt(ga)} / ${fmt(gp)}</span></div>${rows}</div>`;
@@ -1465,7 +1601,7 @@ function renderGoals(){
         <div style="text-align:right"><div style="font-weight:600;font-size:14.5px">${sar(bal)}</div><div class="hint">left</div></div>
       </div>
       <div class="track h8"><i style="width:${paidPct}%;background:var(--g-oblig)"></i></div>
-      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr auto;gap:6px 12px;font-size:12.5px">
+      <div class="finance-ledger">
         <span class="hint">Opening</span><b>${sar(mv.opening)}</b>
         ${d.kind==="card"?`<span class="hint">Purchases</span><b>+ ${sar(mv.purchases)}</b><span class="hint">Refunds</span><b>− ${sar(mv.refunds)}</b>`:""}
         <span class="hint">Payments</span><b>− ${sar(mv.payments)}</b>
@@ -1795,18 +1931,18 @@ function renderSettingsList(){
   const td=totalDebt();
   const planned=liveCats().reduce((a,c)=>a+num(state.budgets[c.id]),0);
   const rows=[
-    {icon:"💵",title:"Income plan & house goal",sub:salarySub(),ov:"salary"},
-    {icon:"📊",title:"Budgets",sub:fmt(planned)+" SAR planned across "+liveCats().length+" categories",ov:"budgets"},
-    {icon:"🏷️",title:"Categories",sub:"Rename, re-icon, kind, rollover, archive",ov:"cats"},
-    {icon:"💳",title:"Cards & loans",sub:state.debts.length?(state.debts.length+" accounts · "+fmt(td)+" SAR remaining"):"Add your cards and loans",ov:"debts"}
+    {icon:icon("income"),title:"Income plan & house goal",sub:salarySub(),ov:"salary"},
+    {icon:icon("budget"),title:"Budgets",sub:fmt(planned)+" SAR planned across "+liveCats().length+" categories",ov:"budgets"},
+    {icon:icon("category"),title:"Categories",sub:"Rename, re-icon, kind, rollover, archive",ov:"cats"},
+    {icon:icon("debt"),title:"Cards & loans",sub:state.debts.length?(state.debts.length+" accounts · "+fmt(td)+" SAR remaining"):"Add your cards and loans",ov:"debts"}
   ];
   rows.unshift(
-    {icon:"◷",title:"Planned payments",sub:"Reminder only · log, reschedule, or skip",ov:"recurring"},
-    {icon:"▥",title:"Budget health",sub:"Review limits and overspending",tab:"budget"},
-    {icon:"◎",title:"Goals & commitments",sub:"House, commitments, and roadmap",tab:"goals"}
+    {icon:icon("planned"),title:"Planned payments",sub:"Reminder only · log, reschedule, or skip",ov:"recurring"},
+    {icon:icon("budget"),title:"Budget health",sub:"Review limits and overspending",tab:"budget"},
+    {icon:icon("goal"),title:"Goals & commitments",sub:"House, commitments, and roadmap",tab:"goals"}
   );
-  el("setPlanList").innerHTML=rows.map(r=>`<button class="row" style="width:100%;background:none;border-left:none;border-right:none;border-bottom:none;cursor:pointer;text-align:left;font-family:var(--font);color:var(--text)" onclick="${r.tab?`setTab('${r.tab}')`:`openOverlay('${r.ov}')`}">
-    <span style="font-size:18px;width:24px;text-align:center">${r.icon}</span>
+  el("setPlanList").innerHTML=rows.map(r=>`<button class="row manage-row" onclick="${r.tab?`setTab('${r.tab}')`:`openOverlay('${r.ov}')`}">
+    <span class="manage-icon">${r.icon}</span>
     <span style="flex:1"><span style="display:block;font-weight:600;font-size:14.5px">${r.title}</span><span class="hint">${r.sub}</span></span>
     <span style="color:var(--muted);font-size:18px">›</span></button>`).join("");
   // backup nudge
@@ -2063,7 +2199,7 @@ function renderCsvPreview(){
   renderCsvBulk();const summary=importSummary(csvDraft),included=csvDraft.filter(r=>r.include).length,invalid=csvDraft.filter(r=>r.include&&!r.reviewValid).length;
   setText("csvSummary",summary.total+" total · "+summary.ready+" ready · "+summary.needsReview+" need review · "+summary.duplicates+" duplicates · "+summary.blocked+" blocked · "+summary.excluded+" excluded");
   el("csvConfirm").disabled=invalid>0||included===0;el("csvConfirm").textContent=invalid?"Complete included rows":"Import "+included+" entries";
-  el("csvPreview").innerHTML=csvDraft.map((r,i)=>{const choices=importChoiceOptions(r,csvContext()),req=importRequirements(r),hint=[r.paidWithHint,r.accountHint].filter(Boolean).join(" · ");return `<div class="dcard" style="${r.blocked?'opacity:.65':''}">
+  el("csvPreview").innerHTML=csvDraft.map((r,i)=>{const choices=importChoiceOptions(r,csvContext()),req=importRequirements(r),hint=[r.paidWithHint,r.accountHint].filter(Boolean).join(" · ");return `<div class="dcard csv-review-row ${r.blocked?'is-blocked':r.duplicate?'is-duplicate':r.reviewValid?'is-ready':'needs-review'}">
     <div style="display:flex;gap:10px;align-items:flex-start"><input type="checkbox" aria-label="Include row" ${r.include?'checked':''} ${r.blocked?'disabled':''} onchange="toggleCsvRow(${i},this.checked)" style="width:22px;height:22px">
     <div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;gap:8px"><b>${esc(r.description||"Missing description")}</b><span class="amt">${r.amount?fmt(r.amount):"—"} ${esc(r.currency)}</span></div>
     <div class="rowsub"><span>${esc(r.occurredAt||"Invalid date")}</span><span class="tag">${esc(r.type||"invalid")}</span>${r.reviewValid?'<span class="tag" style="color:var(--positive-ink)">ready</span>':'<span class="tag" style="color:var(--warning-ink)">needs review</span>'}${r.duplicate?'<span class="tag" style="color:var(--warning-ink)">duplicate</span>':''}${r.blocked?'<span class="tag" style="color:var(--negative)">declined · blocked</span>':''}</div>
@@ -2077,7 +2213,7 @@ function renderCsvPreview(){
       ${req.paidWith?`<select class="sel" style="height:44px;grid-column:1/-1" aria-label="Paid with" onchange="setCsvAssignment(${i},'confirmedPaidWith',this.value)">${optionHtml(choices.paidWith,r.confirmedPaidWith,'Select Paid with…')}</select>`:''}
       ${req.debt?`<select class="sel" style="height:44px;grid-column:1/-1" aria-label="Account paid" onchange="setCsvAssignment(${i},'confirmedDebtId',this.value)">${optionHtml(choices.debts,r.confirmedDebtId,'Select Account paid…')}</select>`:''}
     </div>
-    ${r.reviewErrors.length?`<div class="hint" style="color:var(--negative);margin-top:6px">${esc([...new Set(r.reviewErrors)].join(" · "))}</div>`:''}</div></div></div>`}).join("");
+    ${r.reviewErrors.length?`<div class="csv-blocking-reason">${esc([...new Set(r.reviewErrors)].join(" · "))}</div>`:''}</div></div></div>`}).join("");
 }
 function refreshCsvDuplicates(){
   const marked=markImportDuplicates(csvDraft,existingFingerprints());

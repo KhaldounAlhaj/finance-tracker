@@ -16,8 +16,8 @@ test("production has no remote runtime dependency",()=>{
   assert.doesNotMatch(html,/fonts\.googleapis|material-symbols/i);
 });
 
-test("release cache is v9.2 and includes every app asset",()=>{
-  assert.match(sw,/CACHE = "finance-v9\.2"/);
+test("release cache is v10 and includes every app asset",()=>{
+  assert.match(sw,/CACHE = "finance-v10"/);
   for(const asset of ["index.html","manifest.json","icon-180.png","icon-192.png","icon-512.png","examples/finance-import-template.csv"])assert.match(sw,new RegExp(asset.replace(".","\\.")));
 });
 

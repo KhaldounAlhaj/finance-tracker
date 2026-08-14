@@ -1,6 +1,6 @@
 # Finance Tracker — App Documentation
 
-<!-- VERSION --> app **finance-v9.2** · docs synced **2026-08-14** <!-- /VERSION -->
+<!-- VERSION --> app **finance-v10** · docs synced **2026-08-14** <!-- /VERSION -->
 
 > **Living document.** The block between the `AUTO:GENERATED` markers in **§4** is rebuilt
 > from the app's source (`index.html`, `sw.js`, `manifest.json`) every time you commit, by
@@ -86,7 +86,7 @@ CSV account fields are review hints only. The preview requires explicit in-app s
 _Machine-generated from source on every commit — do not edit by hand._
 
 <!-- AUTO:GENERATED:START — produced by docs/generate-docs.mjs · DO NOT EDIT BY HAND -->
-_Synced **2026-08-14** · app version **finance-v9.2** · storage key `khaldoun_finance_v3`_
+_Synced **2026-08-14** · app version **finance-v10** · storage key `khaldoun_finance_v3`_
 
 ### Identity
 - **Finance Tracker** — Personal finance, debt and house-savings tracker
@@ -145,8 +145,8 @@ _0 seed reminder templates (salary planning is added on first run; nothing auto-
 ### Source file manifest (SHA-256, first 16 hex)
 | File | Bytes | Hash |
 |---|---|---|
-| `index.html` | 169,370 | `1b686f5698cc70d1` |
-| `sw.js` | 1,506 | `6c82b493a978bd4d` |
+| `index.html` | 181,198 | `ca798f73301a3b65` |
+| `sw.js` | 1,505 | `ff37a9dffd0a68e6` |
 | `manifest.json` | 480 | `667075e74e294a37` |
 | `README.md` | 3,094 | `de851fd3d670ae60` |
 | `icon-180.png` | 23,893 | `de63b104b43ca1d0` |
@@ -202,6 +202,7 @@ tabular numerals everywhere; `prefers-reduced-motion` respected; system fonts on
 ## 8. Changelog
 | Version | Date | Changes |
 |---|---|---|
+| finance-v10 | 2026-08-14 | **Warm Modern Finance redesign** — Direction 1d with hero 2a, accessible warm light and dark themes, one dependency-free inline SVG icon family, decision-first Overview, amount-first Unified Log, clearer planned-payment actions, four-state Budget Health, complete debt ledgers, seven-route Manage hub, and semantic CSV review. Responsive hardening covers iPhone and centered laptop usability without changing formulas, storage, migrations, or offline privacy. SW cache → finance-v10. |
 | finance-v9.2 | 2026-08-14 | **Reminder occurrence integrity** — deleting a reminder-linked entry now reopens the planned occurrence instead of silently skipping it. A shared resolver keeps dashboard metrics and planned-payment views aligned, and load-time repair safely fixes dangling logged occurrence records while preserving legacy fulfilled entries. Explicit Skip remains a confirmed action and writes only the current occurrence model. Example import card digits are now obviously fake. SW cache → finance-v9.2. |
 | finance-v9.1 | 2026-08-14 | **Account-safe CSV import** — `account_ref` and `paid_with` are treated as non-secret hints only and are never persisted as account IDs. Expense and refund rows require a confirmed **Paid with** choice (cash / debit / other / a configured card), payment rows a confirmed **Account paid**, and goal rows a live goal category; rows with unresolved required choices are blocked from confirmation. `source_ref` became optional — without it, duplicate detection falls back to normalized type, timestamp, amount, description and the original account hint, and re-runs after edits and again immediately before confirming. Declined/rejected rows are permanently non-importable. Bulk assignment applies only to included, compatible rows. Each successful import carries one `importId` and can be undone by removing just that batch. No model-version change. SW cache → finance-v9.1. |
 | finance-v9 | 2026-08-14 | **Financial Control Center** — three-zone navigation (Overview · Log · Manage); reminder-only planned payments with Log / Reschedule / Skip; editable transaction date and time; refunds, goal contributions, card and loan payment separation; Available within plan plus Cash after commitments; per-category Budget Health; monthly debt movement and statement reconciliation; atomic CSV catch-up preview with duplicate protection; modelVersion 9 zero-loss migration; no CDN or external runtime dependencies. |
