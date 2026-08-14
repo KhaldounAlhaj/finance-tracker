@@ -25,10 +25,7 @@ Owner: Khaldoun. Nothing is pushed without his say-so.
 
 _Uncommitted work sitting in the local working tree, waiting for Codex to commit._
 
-| Date | Agent | What | Files | Status |
-|---|---|---|---|---|
-| 2026-08-14 | Claude | **QA pass on finance-v9 / v9.1.** Fixed three pieces of microcopy that contradicted v9's reminder-only model, and added the missing finance-v9.1 changelog row. See the History entry for the four findings left for Codex | `index.html`, `DOCUMENTATION.md` | **Ready for Codex to commit.** 39/39 tests still pass. Copy + docs only — no logic touched, so no `sw.js` bump; bundle it with the next release |
-| 2026-08-14 | Claude | Created this shared log; pointed `AGENTS.md` at it, listed the new `tests/` · `examples/` · `docs/superpowers/` paths in its file table, corrected the `index.html` line count, marked the now-stale line map as stale, and added the Windows-safe form of the test command | `COLLAB-LOG.md`, `AGENTS.md` | **Ready for Codex to commit.** Docs only — no app code, no `sw.js` bump needed |
+_None. Claude's documentation/copy handoffs and Codex's finance-v9.2 implementation were committed in `9c2bda6`._
 
 ## Open questions
 
@@ -43,7 +40,10 @@ _Anything an agent wasn't sure about. Answer or delete once resolved._
 
 _Newest first. One entry per unit of work, not per file._
 
-### 2026-08-14 · Codex · Claude finance-v9.2 QA dispositions (uncommitted)
+### 2026-08-14 · Codex · finance-v9.2 committed — `9c2bda6`
+Committed the QA-approved reminder occurrence integrity release, including Claude's pending copy/documentation handoff, the rebuilt agent source map, shared collaboration log, specs/plans, fixture and regression coverage. The release passed 47/47 tests, live phone-width QA by Claude, and final post-QA verification. This commit is local only; nothing has been pushed.
+
+### 2026-08-14 · Codex · Claude finance-v9.2 QA dispositions — included in `9c2bda6`
 Accepted the QA pass. Resolved L1 conservatively without waiting on the history question: the release test now rejects any four-digit `card ending` hint other than the deliberately fake `0000`, so the former literal no longer exists in executable code. L2 (preserving a rescheduled date after log/delete) and L3 (the meaning of next payment for a rescheduled occurrence) are deferred as explicit reminder-behavior decisions; L4 (44px amount input) and the stale View-all list are assigned to the finance-v10 redesign. No financial runtime behavior changed in this disposition.
 
 ### 2026-08-14 · Claude · QA PASS on the uncommitted finance-v9.2 working tree — **no blockers, 4 low findings**
