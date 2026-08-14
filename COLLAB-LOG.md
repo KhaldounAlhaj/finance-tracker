@@ -42,6 +42,9 @@ _Anything an agent wasn't sure about. Answer or delete once resolved._
 
 _Newest first. One entry per unit of work, not per file._
 
+### 2026-08-14 · Codex · finance-v10.1 Budget badge collision fixed (`a306ac9`)
+The Budget Health On track modifier was named `track`, colliding with the global 6px progress-track class and collapsing the badge exactly as shown on the owner's phone. Renamed the modifier to `on-track`, added a regression contract, and bumped the offline cache to `finance-v10.1`. No formula, storage, migration or data-model change.
+
 ### 2026-08-14 · Codex · finance-v10 release committed (`1d373e6`)
 Committed the complete Direction 1d Warm Modern Finance redesign after 66/66 tests, clean diff check, dependency/privacy scans and isolated responsive/theme browser QA. The owner explicitly approved publishing before Claude's final review; Claude may perform post-release QA later. No formula, storage-key, migration or model-version change. Release cache: `finance-v10`.
 
