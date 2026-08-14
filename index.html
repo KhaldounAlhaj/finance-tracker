@@ -272,7 +272,7 @@
   .planned-occurrence{padding:16px 0;border-bottom:1px solid var(--border)}
   .planned-occurrence:last-child{border-bottom:0}
   .budget-status{display:inline-flex;align-items:center;border:1px solid currentColor;border-radius:999px;padding:2px 8px;margin-right:5px;font-size:12px;font-weight:700}
-  .budget-status.track,.budget-status.refund{color:var(--pos-ink);background:var(--pos-soft)}
+  .budget-status.on-track,.budget-status.refund{color:var(--pos-ink);background:var(--pos-soft)}
   .budget-status.close{color:var(--warn-ink);background:var(--warn-soft)}
   .budget-status.over{color:var(--bad-ink);background:var(--bad-soft)}
   #p-budget .listcard,#p-goals .listcard{box-shadow:none;border-radius:16px}
@@ -1535,7 +1535,7 @@ function renderBudget(m){
       gp+=num(state.budgets[c.id]); ga+=act;
       const over=eff>0&&act>eff;
       const pct=act<0?0:(eff>0?Math.min(100,Math.round(act/eff*100)):0);
-      const status=act<0?{label:"Net refund",cls:"refund"}:over?{label:"Over",cls:"over"}:(eff>0&&act/eff>=.85)?{label:"Close",cls:"close"}:{label:"On track",cls:"track"};
+      const status=act<0?{label:"Net refund",cls:"refund"}:over?{label:"Over",cls:"over"}:(eff>0&&act/eff>=.85)?{label:"Close",cls:"close"}:{label:"On track",cls:"on-track"};
       const kind=KINDS[c.kind]?KINDS[c.kind].label:"";
       const carry=rolloverCarry(c.id,m);
       return `<div class="catline">

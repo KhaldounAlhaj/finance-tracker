@@ -123,6 +123,12 @@ test("Budget Health exposes all four understandable states",()=>{
   assert.match(html,/budget-status/);
 });
 
+test("Budget status modifiers never collide with progress-track styling",()=>{
+  assert.doesNotMatch(html,/label:"On track",cls:"track"/);
+  assert.match(html,/label:"On track",cls:"on-track"/);
+  assert.match(css,/\.budget-status\.on-track/);
+});
+
 test("Goals and debt retain actionable progress and complete ledger arithmetic",()=>{
   const goals=html.match(/<!-- GOALS -->([\s\S]*?)<!-- SETTINGS -->/)?.[1]||"";
   for(const id of ["gHouseSaved","gHouseTarget","gHouseW","gHouseReq","gCommits","gDebts"])assert.match(goals,new RegExp(`id="${id}"`));
