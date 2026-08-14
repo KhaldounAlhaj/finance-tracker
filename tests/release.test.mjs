@@ -16,14 +16,23 @@ test("production has no remote runtime dependency",()=>{
   assert.doesNotMatch(html,/fonts\.googleapis|material-symbols/i);
 });
 
-test("release cache is v9.1 and includes every app asset",()=>{
-  assert.match(sw,/CACHE = "finance-v9\.1"/);
+test("release cache is v9.2 and includes every app asset",()=>{
+  assert.match(sw,/CACHE = "finance-v9\.2"/);
   for(const asset of ["index.html","manifest.json","icon-180.png","icon-192.png","icon-512.png","examples/finance-import-template.csv"])assert.match(sw,new RegExp(asset.replace(".","\\.")));
 });
 
 test("CSV template uses hints rather than configured account IDs",()=>{
   const csv=fs.readFileSync(new URL("../examples/finance-import-template.csv",import.meta.url),"utf8");
   assert.match(csv,/account_ref/);assert.match(csv,/paid_with/);assert.doesNotMatch(csv,/debtId|confirmedDebtId|confirmedPaidWith/);
+  assert.doesNotMatch(csv,/card ending (?!0000)\d{4}/);assert.match(csv,/0000/);
+});
+
+test("explicit Skip keeps confirmation and writes no new legacy skip key",()=>{
+  assert.match(html,/id="sh-skip"/);
+  const skip=html.match(/function skipReminder[\s\S]*?\n\}/)?.[0]||"";
+  const confirm=html.match(/function confirmSkip[\s\S]*?function cancelSkip/)?.[0]||"";
+  assert.match(skip,/sh-skip/);assert.match(confirm,/state\.occurrences/);
+  assert.doesNotMatch(confirm,/state\.skips\.push/);
 });
 
 test("recurring materialization is disabled",()=>{

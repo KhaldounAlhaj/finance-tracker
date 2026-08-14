@@ -524,7 +524,7 @@
 
   <!-- OVERLAYS: recurring / phases / editors -->
   <div class="overlay" id="ov-recurring">
-    <div class="ovhead"><button class="iconbtn" onclick="closeOverlay()" aria-label="Back">‹</button><div class="t">Recurring items</div><button class="iconbtn" style="background:var(--primary);color:var(--primary-ink);border:none" onclick="openRecSheet(null)" aria-label="Add">＋</button></div>
+    <div class="ovhead"><button class="iconbtn" onclick="closeOverlay()" aria-label="Back">‹</button><div class="t">Planned payments</div><button class="iconbtn" style="background:var(--primary);color:var(--primary-ink);border:none" onclick="openRecSheet(null)" aria-label="Add">＋</button></div>
     <div class="ovbody">
       <div class="card" style="padding:16px">
         <div class="lbl" style="margin-bottom:10px" id="recCount"></div>
@@ -691,6 +691,44 @@ function coreDue(r,m){
   return coreMonthsBetween(r.startMonth,m)%Math.max(1,coreNum(r.everyMonths)||1)===0;
 }
 function coreDebt(state,id){ return (state.debts||[]).find(d=>d.id===id)||null; }
+function resolveOccurrence(state,reminderId,month){
+  const key=occurrenceKey(reminderId,month),entries=Array.isArray(state&&state.entries)?state.entries:[];
+  const fulfilling=entries.find(e=>entryFulfillsOccurrence(e,reminderId,key,month))||null;
+  if(fulfilling)return {key,status:"logged",record:state&&state.occurrences&&state.occurrences[key]||null,entry:fulfilling};
+  const record=state&&state.occurrences&&state.occurrences[key]||null;
+  if(record&&record.status==="logged"){
+    const linked=entries.find(e=>e&&e.id===record.entryId&&entryFulfillsOccurrence(e,reminderId,key,month))||null;
+    if(linked)return {key,status:"logged",record,entry:linked};
+    if(Array.isArray(state.skips)&&state.skips.includes(key))return {key,status:"skipped",record,entry:null};
+    return {key,status:"upcoming",record,entry:null};
+  }
+  if(record&&(record.status==="skipped"||record.status==="rescheduled"))return {key,status:record.status,record,entry:null};
+  if(Array.isArray(state&&state.skips)&&state.skips.includes(key))return {key,status:"skipped",record,entry:null};
+  return {key,status:"upcoming",record,entry:null};
+}
+function repairOccurrenceState(input){
+  const out=coreClone(input||{}),occ=out.occurrences&&typeof out.occurrences==="object"&&!Array.isArray(out.occurrences)?out.occurrences:{};
+  out.entries=Array.isArray(out.entries)?out.entries:[];out.skips=Array.isArray(out.skips)?out.skips:[];out.occurrences=occ;
+  for(const [key,record] of Object.entries(occ)){
+    if(!record||record.status!=="logged")continue;
+    const split=key.lastIndexOf(":"),id=split<0?key:key.slice(0,split),month=split<0?"":key.slice(split+1);
+    const linked=out.entries.find(e=>e&&e.id===record.entryId&&entryFulfillsOccurrence(e,id,key,month));
+    if(linked)continue;
+    const matching=out.entries.find(e=>entryFulfillsOccurrence(e,id,key,month));
+    if(matching)occ[key]={...record,entryId:matching.id};
+    else if(out.skips.includes(key))occ[key]={status:"skipped",updatedAt:record.updatedAt};
+    else delete occ[key];
+  }
+  return out;
+}
+function reopenOccurrenceForDeletedEntry(input,entry){
+  const out=coreClone(input||{});out.entries=Array.isArray(out.entries)?out.entries.filter(e=>e.id!==(entry&&entry.id)):[];
+  out.occurrences=out.occurrences&&typeof out.occurrences==="object"&&!Array.isArray(out.occurrences)?out.occurrences:{};
+  out.skips=Array.isArray(out.skips)?out.skips:[];
+  const key=entry&&(entry.recurringOccurrenceKey||(entry.recurringId?occurrenceKey(entry.recurringId,coreMonth(entry.date||entry.occurredAt)):null));
+  if(key){const record=out.occurrences[key];if(record&&record.status==="logged")delete out.occurrences[key];out.skips=out.skips.filter(x=>x!==key);}
+  return out;
+}
 function entryDeltas(entry,cardId){
   const e=entry||{}, amount=coreNum(e.amount), isCard=!!cardId&&(e.paidWith===cardId||e.debtId===cardId);
   if(e.type==="income") return {spending:0,cash:-amount,card:0,loan:0,income:amount,goal:0};
@@ -706,7 +744,7 @@ function migrateV9(input){
   out.occurrences=out.occurrences&&typeof out.occurrences==="object"&&!Array.isArray(out.occurrences)?out.occurrences:{};
   out.imports=Array.isArray(out.imports)?out.imports:[];
   out.entries.forEach(e=>{ if(e.type==="expense"&&e.isRefund){e.type="refund";delete e.isRefund;} if(e.occurredAt==null)e.occurredAt=(e.date||"")+"T12:00"; });
-  return out;
+  return repairOccurrenceState(out);
 }
 function monthMetrics(state,month){
   const categories=state.categories||[], entries=(state.entries||[]).filter(e=>coreMonth(e.date||e.occurredAt)===month);
@@ -723,8 +761,8 @@ function monthMetrics(state,month){
   let plannedSpendingRemaining=0,cashObligationsLeft=0,plannedGoals=0;
   for(const r of state.recurring||[]){
     if(r.isSalary||!coreDue(r,month)) continue;
-    const key=occurrenceKey(r.id,month), status=(state.occurrences&&state.occurrences[key]&&state.occurrences[key].status)||"upcoming";
-    if(entries.some(e=>entryFulfillsOccurrence(e,r.id,key,month))||status==="logged"||status==="skipped"||status==="rescheduled") continue;
+    const resolved=resolveOccurrence(state,r.id,month);
+    if(resolved.status==="logged"||resolved.status==="skipped"||resolved.status==="rescheduled") continue;
     const amount=coreNum(r.amount), type=r.type||"expense", category=r.categoryId||"other";
     if(type==="goal"||goalCats.has(category)){plannedGoals+=amount;}
     else if(type==="expense"){plannedSpendingRemaining+=amount;const debt=coreDebt(state,r.paidWith);if(!(debt&&debt.kind==="card"))cashObligationsLeft+=amount;}
@@ -1009,9 +1047,7 @@ function freqLabel(n){ return n<=1?"monthly":(n===12?"yearly":"every "+n+" month
 function nextOccurrence(r){ if(recStatus(r)!=="active") return null;
   let m=realMonth()>r.startMonth?realMonth():r.startMonth;
   for(let i=0;i<40;i++){
-    if(stepOk(r,m)&&(!r.endMonth||m<=r.endMonth)
-      &&!state.entries.some(e=>entryFulfillsOccurrence(e,r.id,occurrenceKey(r.id,m),m))
-      &&!state.skips.includes(r.id+":"+m)) return m;
+    if(stepOk(r,m)&&(!r.endMonth||m<=r.endMonth)&&resolveOccurrence(state,r.id,m).status==="upcoming") return m;
     m=shift(m,1);
   }
   return null; }
@@ -1293,8 +1329,7 @@ function plannedOccurrenceRows(m){
     let mm=r.startMonth||m,guard=0;
     while(mm<=m&&guard++<240){
       if(coreDue(r,mm)){
-        const key=occurrenceKey(r.id,mm),stored=state.occurrences[key]||{},logged=state.entries.some(e=>entryFulfillsOccurrence(e,r.id,key,mm));
-        const status=logged?"logged":(state.skips.includes(key)?"skipped":(stored.status||"upcoming"));
+        const key=occurrenceKey(r.id,mm),status=resolveOccurrence(state,r.id,mm).status;
         if(!["logged","skipped","rescheduled"].includes(status)){const date=reminderDate(r,mm),due=date<today()?"Overdue":(date===today()?"Due today":"Upcoming");rows.push({r,key,date,due,sourceMonth:mm});}
       }
       mm=shift(mm,1);
@@ -1317,7 +1352,13 @@ function renderPlannedPayments(m){
 function showAllPlanned(m){
   const rows=plannedOccurrenceRows(m); el("allPlanned").innerHTML=rows.map(x=>`<div class="dcard"><div style="display:flex;justify-content:space-between;gap:12px"><div><b>${esc(x.r.name)}</b><div class="hint">${x.due} · ${x.date}</div></div><b>${sar(x.r.amount)}</b></div><div style="display:flex;gap:6px;margin-top:8px"><button class="linkbtn" onclick="startReminderDraft('${x.r.id}','${x.sourceMonth}','${x.date}');closeOverlay()">Log</button><button class="linkbtn" onclick="rescheduleReminder('${x.r.id}','${x.sourceMonth}')">Reschedule</button><button class="linkbtn" onclick="skipReminder('${x.r.id}','${x.sourceMonth}')">Skip</button></div></div>`).join("")||'<div class="empty">No open reminders.</div>'; openOverlay("overdue");
 }
-function skipReminder(id,m){ const key=occurrenceKey(id,m); state.occurrences[key]={status:"skipped",updatedAt:new Date().toISOString()}; if(!state.skips.includes(key))state.skips.push(key); save(); render(); }
+let skipTarget=null;
+function skipReminder(id,m){
+  const r=state.recurring.find(x=>x.id===id);if(!r)return;skipTarget={id,m};
+  setText("skipTitle","Skip "+(r.name||"this payment")+" for "+fmtMonth(m)+"?");
+  setText("skipBody","This removes the occurrence from "+fmtMonth(m)+" only. No transaction will be created, and the reminder returns at its next scheduled date.");
+  el("sh-skip").classList.add("open");
+}
 function rescheduleReminder(id,m){
   const r=state.recurring.find(x=>x.id===id); if(!r)return;
   const to=prompt("Move this occurrence to (YYYY-MM-DD)",reminderDate(r,m)); if(!/^\d{4}-\d{2}-\d{2}$/.test(to||""))return;
@@ -1601,14 +1642,14 @@ function editEntry(id){
   window.scrollTo(0,0);
 }
 function cancelEdit(){ logResetForm(); }
-let skipTarget=null;
 function delEntry(id){
   const e=state.entries.find(x=>x.id===id); if(!e) return;
   if(e.recurringId){
-    skipTarget=e;
-    setText("skipTitle","Skip "+(e.description||"this")+" for "+fmtMonth(monthOf(e.date))+"?");
-    setText("skipBody","This one posts automatically every month. Skipping removes it from "+fmtMonth(monthOf(e.date))+" only — it comes back next month, and nothing is cancelled.");
-    el("sh-skip").classList.add("open");
+    if(confirm("Delete this entry?\n\nIts planned payment will return to due or overdue. Use Skip on the planned payment instead if it is not happening this month.")){
+      state=reopenOccurrenceForDeletedEntry(state,e);
+      if(editingId===id) logResetForm();
+      save(); render();
+    }
   } else if(confirm("Delete this entry?"+(e.type==="payment"?"\n\nThe account balance will recompute automatically.":""))){
     state.entries=state.entries.filter(x=>x.id!==id);
     if(editingId===id) logResetForm();
@@ -1616,9 +1657,7 @@ function delEntry(id){
   }
 }
 function confirmSkip(){ if(skipTarget){
-    state.skips.push(skipTarget.recurringId+":"+monthOf(skipTarget.date));
-    state.entries=state.entries.filter(x=>x.id!==skipTarget.id);
-    if(editingId===skipTarget.id) logResetForm();
+    state.occurrences[occurrenceKey(skipTarget.id,skipTarget.m)]={status:"skipped",updatedAt:new Date().toISOString()};
     skipTarget=null; save(); render();
   } el("sh-skip").classList.remove("open"); }
 function cancelSkip(){ skipTarget=null; el("sh-skip").classList.remove("open"); }
@@ -1756,8 +1795,7 @@ function renderSettingsList(){
   const td=totalDebt();
   const planned=liveCats().reduce((a,c)=>a+num(state.budgets[c.id]),0);
   const rows=[
-    {icon:"💵",title:"Salary & house goal",sub:salarySub(),ov:"salary"},
-    {icon:"🔁",title:"Recurring items",sub:"Auto-posts · pause, end dates, renew",ov:"recurring"},
+    {icon:"💵",title:"Income plan & house goal",sub:salarySub(),ov:"salary"},
     {icon:"📊",title:"Budgets",sub:fmt(planned)+" SAR planned across "+liveCats().length+" categories",ov:"budgets"},
     {icon:"🏷️",title:"Categories",sub:"Rename, re-icon, kind, rollover, archive",ov:"cats"},
     {icon:"💳",title:"Cards & loans",sub:state.debts.length?(state.debts.length+" accounts · "+fmt(td)+" SAR remaining"):"Add your cards and loans",ov:"debts"}
@@ -1767,8 +1805,7 @@ function renderSettingsList(){
     {icon:"▥",title:"Budget health",sub:"Review limits and overspending",tab:"budget"},
     {icon:"◎",title:"Goals & commitments",sub:"House, commitments, and roadmap",tab:"goals"}
   );
-  const cleanRows=rows.filter(r=>r.title!=="Recurring items").map(r=>r.title==="Salary & house goal"?{...r,title:"Income plan & house goal"}:r);
-  el("setPlanList").innerHTML=cleanRows.map(r=>`<button class="row" style="width:100%;background:none;border-left:none;border-right:none;border-bottom:none;cursor:pointer;text-align:left;font-family:var(--font);color:var(--text)" onclick="${r.tab?`setTab('${r.tab}')`:`openOverlay('${r.ov}')`}">
+  el("setPlanList").innerHTML=rows.map(r=>`<button class="row" style="width:100%;background:none;border-left:none;border-right:none;border-bottom:none;cursor:pointer;text-align:left;font-family:var(--font);color:var(--text)" onclick="${r.tab?`setTab('${r.tab}')`:`openOverlay('${r.ov}')`}">
     <span style="font-size:18px;width:24px;text-align:center">${r.icon}</span>
     <span style="flex:1"><span style="display:block;font-weight:600;font-size:14.5px">${r.title}</span><span class="hint">${r.sub}</span></span>
     <span style="color:var(--muted);font-size:18px">›</span></button>`).join("");
@@ -1924,7 +1961,7 @@ function renderDebtEditor(){
           <div class="fg"><label class="fl">Linked budget category</label><div class="selwrap"><select class="sel" data-f="category" style="height:44px">${catOpts}</select></div></div>
         </div>
       </details>
-      <div class="hint" style="margin-top:8px">${rp?("↻ "+esc(rp.name)+" pays "+sar(rp.amount)+" on the "+ordinal(rp.dayOfMonth)+" automatically"):"No recurring payment linked yet — add one in Recurring items to get a payoff date"}</div>
+      <div class="hint" style="margin-top:8px">${rp?("↻ "+esc(rp.name)+" reminds you to pay "+sar(rp.amount)+" on the "+ordinal(rp.dayOfMonth)+" — the projection assumes you log it"):"No planned payment linked yet — add one in Planned payments to get a payoff date"}</div>
     </div>`;
   }).join("") : `<div class="empty"><div style="font-size:26px;margin-bottom:6px">💳</div><div class="hint">No cards or loans yet.</div></div>`;
 }

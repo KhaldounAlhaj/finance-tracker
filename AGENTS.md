@@ -2,6 +2,8 @@
 
 Instructions for AI coding agents working in this repo.
 
+> **Start here: read [`COLLAB-LOG.md`](COLLAB-LOG.md) before you execute anything.** Two agents work on this repo — Codex builds and is the only one that commits/pushes; Claude reviews as QA and may edit the working tree without committing. The log carries pending handoffs, open questions, and what each agent changed. Append an entry to it before you hand work back.
+
 ## What this is
 
 A private, offline personal-finance tracker, shipped as a **single self-contained `index.html`** with **zero dependencies** — no build step, no bundler, no framework, no CDN, no network calls. It is installed as a PWA (iOS home screen, Safari) and served from GitHub Pages.
@@ -14,12 +16,16 @@ Live: https://khaldounalhaj.github.io/finance-tracker/
 
 | File | Role |
 |---|---|
-| `index.html` | The entire app — styles, markup, and logic in one file (~1,764 lines) |
+| `COLLAB-LOG.md` | Shared change log between Codex and Claude — read it first, append before handing back |
+| `index.html` | The entire app — styles, markup, and logic in one file (~2,223 lines) |
 | `sw.js` | Service worker, offline cache. Holds `const CACHE = "finance-vN"` |
 | `manifest.json` | PWA manifest |
 | `icon-512.png` / `icon-192.png` / `icon-180.png` | App icons |
 | `DOCUMENTATION.md` | Full app documentation. **Section 4 is generated — never hand-edit it** |
 | `docs/generate-docs.mjs` | Regenerates DOCUMENTATION.md §4 from the source |
+| `docs/superpowers/specs/` + `plans/` | Per-feature design spec and implementation plan — the requirements baseline a review is checked against |
+| `tests/*.test.mjs` + `tests/fixtures/` | Node test suite; fixtures are old-version payloads for migration tests |
+| `examples/finance-import-template.csv` | Reference CSV shape for the import feature |
 | `.githooks/pre-commit` | Runs the generator and stages the result. Fail-open (skips if Node is missing) |
 | `README.md` | End-user setup instructions (deploy to Pages, add to iPhone) |
 
@@ -29,19 +35,27 @@ Live: https://khaldounalhaj.github.io/finance-tracker/
 
 | Lines | Contents |
 |---|---|
-| 19–214 | `<style>` — design tokens, light/dark themes, all component CSS |
-| 215 | Inline theme bootstrap (reads `localStorage["finance_theme"]` before paint, to avoid a flash) |
-| 220–630 | Markup — First-run screen, then the 5 tabs (Dashboard, Log, Budget, Goals, Settings), then overlays and bottom sheets |
-| 632– | `<script>` — the whole application |
-| 644–710 | Date/DOM/format helpers (`shift`, `monthsBetween`, `esc`, `el`, …) and constants (`KEY`, `MS`, `INCOME_META`, default state) |
-| 712–816 | Persistence + migrations: `load`, `migrate`, `fromLegacy`, `from6`, `from7`, `normalize8`, and the `norm*` normalizers |
-| 820–940 | Derived calculations — `debtCurrent`, `monthSpent`, `catActual`, `committedEq`, `rolloverCarry`, `effectivePlanned`, `safePerDay`, `houseStatus`, `projectDebt`, `commitStatus`, `recStatus` |
-| 911–970 | `materializeRecurring`, tab/overlay routing (`setTab`, `chMonth`, `openOverlay`) |
-| 971–1190 | Renderers — `render`, `renderDashboard`, `renderBudget`, `renderGoals`, `renderEntries` |
-| 1193–1320 | The Log form — `fillLogSelects`, `setLogType`, `submitEntry`, `editEntry`, `delEntry`, skip-sheet |
-| 1320–1440 | Recurring and commitment sheets |
-| 1442–1620 | Settings editors — salary, house, budgets, categories, debts, phases |
-| –1762 | Backup/restore, bank-SMS import, service-worker registration, boot |
+| 19–216 | `<style>` — design tokens, light/dark themes, responsive layout, and all component CSS |
+| 217 | Inline pre-paint theme bootstrap using `localStorage["finance_theme"]` |
+| 220–240 | First-run screen and application shell |
+| 241–329 | Overview markup — current/past month views, headline plan and cash figures, house/debt progress, planned-payment preview |
+| 330–416 | Log markup — unified entry form, SMS/CSV intake, filters, and recent activity |
+| 417–476 | Budget and Goals detail pages (opened through Manage/routing rather than primary navigation) |
+| 477–524 | Manage/Settings hub, backup controls, and three-item primary navigation (`Overview` / `Log` / `Manage`) |
+| 525–616 | Overlays — planned payments, roadmap, salary, house, budgets, categories, debts, overdue list, and CSV review |
+| 617–674 | Bottom sheets — skip occurrence, recurring reminder editor, and commitment editor |
+| 676–899 | Financial core and CSV core — occurrence resolution/repair, entry deltas, v9 migration, monthly/debt metrics, CSV parsing/validation/import helpers |
+| 900–969 | General helpers, constants, neutral default state, and model metadata |
+| 970–1104 | Persistence and migrations — `load`, `migrate`, legacy converters, v8/v9 normalization, `save` |
+| 1105–1207 | Derived finance calculations — balances, category actuals, rollover, safe/day, house/debt/commitment projections, reminder status |
+| 1208–1239 | Tab, month, overlay, and header routing |
+| 1240–1533 | Main renderers — Overview, planned payments, Budget, Goals, reconciliation, and activity Log |
+| 1534–1670 | Unified Log controller — managed selectors, type switching, submit/edit/delete, and confirmed skip |
+| 1671–1792 | Recurring-reminder and commitment editors |
+| 1793–2016 | Manage editors — settings index, salary, house, budgets, categories, debts, and roadmap phases |
+| 2017–2100 | Backup/restore/reset and atomic CSV preview, assignment, import, duplicate handling, and undo |
+| 2101–2184 | On-device bank-SMS parsing, intake population, clipboard, and `#b64=` deep-link handling |
+| 2185–2223 | Theme application, first-run exit, service-worker registration, and boot |
 
 ## Data model
 
@@ -66,7 +80,7 @@ Live: https://khaldounalhaj.github.io/finance-tracker/
 
 ## Testing
 
-Run `node --test tests/*.test.mjs`, then verify by opening `index.html` in a browser (or serving the folder over `http://localhost` if you need the service worker to register):
+Run `node --test tests/*.test.mjs` (in PowerShell the glob isn't expanded — name the files: `node --test tests\finance-core.test.mjs tests\import.test.mjs tests\release.test.mjs`). The finance-v9.2 working tree has 47 tests. Then verify by opening `index.html` in a browser (or serving the folder over `http://localhost` if you need the service worker to register):
 
 - Load with existing data in `localStorage["khaldoun_finance_v3"]`, and separately with an old-version payload, to prove the migration path
 - Walk Overview, Log, and Manage and check the numbers reconcile against the Log

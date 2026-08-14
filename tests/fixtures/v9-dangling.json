@@ -1,0 +1,28 @@
+{
+  "modelVersion": 9,
+  "currentMonth": "2026-08",
+  "settings": {},
+  "categories": [],
+  "budgets": {},
+  "debts": [],
+  "entries": [
+    {
+      "id": "unrelated-entry",
+      "type": "expense",
+      "amount": 10,
+      "date": "2026-08-02",
+      "category": "other",
+      "description": "Unrelated entry"
+    }
+  ],
+  "recurring": [],
+  "skips": [],
+  "occurrences": {
+    "rent-rem:2026-08": {
+      "status": "logged",
+      "entryId": "missing-entry"
+    }
+  },
+  "imports": [],
+  "commitments": []
+}

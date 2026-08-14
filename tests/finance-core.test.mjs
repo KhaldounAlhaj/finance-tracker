@@ -8,8 +8,8 @@ const match = html.match(/\/\* CORE_V9_START \*\/([\s\S]*?)\/\* CORE_V9_END \*\/
 assert.ok(match, "production core-v9 block exists");
 const context = { console, structuredClone: globalThis.structuredClone };
 vm.createContext(context);
-vm.runInContext(`${match[1]};globalThis.coreV9={entryDeltas,monthMetrics,migrateV9,debtMovement,occurrenceKey,entryFulfillsOccurrence};`, context);
-const { entryDeltas, monthMetrics, migrateV9, debtMovement, occurrenceKey, entryFulfillsOccurrence } = context.coreV9;
+vm.runInContext(`${match[1]};globalThis.coreV9={entryDeltas,monthMetrics,migrateV9,debtMovement,occurrenceKey,entryFulfillsOccurrence,resolveOccurrence,repairOccurrenceState,reopenOccurrenceForDeletedEntry};`, context);
+const { entryDeltas, monthMetrics, migrateV9, debtMovement, occurrenceKey, entryFulfillsOccurrence, resolveOccurrence, repairOccurrenceState, reopenOccurrenceForDeletedEntry } = context.coreV9;
 
 test("entry deltas never double-count card purchases and payments", () => {
   assert.deepEqual({ ...entryDeltas({ type:"expense", amount:200, paidWith:"card-1" }, "card-1") },
@@ -113,6 +113,55 @@ test("occurrence keys are stable per reminder and month",()=>{
   assert.equal(occurrenceKey("rent","2026-08"),"rent:2026-08");
 });
 
+test("a fulfilling migrated entry resolves logged without an occurrence record",()=>{
+  const state={categories:[{id:"rent",kind:"committed"}],budgets:{rent:500},debts:[],skips:[],occurrences:{},
+    recurring:[{id:"rent-rem",type:"expense",amount:500,categoryId:"rent",dayOfMonth:1,startMonth:"2026-08",everyMonths:1,active:true}],
+    entries:[{id:"old-rent",type:"expense",amount:500,date:"2026-08-01",category:"rent",recurringId:"rent-rem"}]};
+  assert.equal(resolveOccurrence(state,"rent-rem","2026-08").status,"logged");
+  const metrics=monthMetrics(state,"2026-08");
+  assert.equal(metrics.actualSpending,500);
+  assert.equal(metrics.plannedSpendingRemaining,0);
+});
+
+test("repair reopens a dangling logged occurrence",()=>{
+  const state={modelVersion:9,entries:[],recurring:[],skips:[],occurrences:{"rent:2026-08":{status:"logged",entryId:"missing"}},debts:[]};
+  const repaired=repairOccurrenceState(state);
+  assert.equal(repaired.occurrences["rent:2026-08"],undefined);
+});
+
+test("repair converts a dangling logged occurrence explained by a legacy skip",()=>{
+  const state={modelVersion:9,entries:[],recurring:[],skips:["rent:2026-08"],occurrences:{"rent:2026-08":{status:"logged",entryId:"missing"}},debts:[]};
+  const repaired=repairOccurrenceState(state);
+  assert.equal(repaired.occurrences["rent:2026-08"].status,"skipped");
+});
+
+test("repair backfills a stale entry id from a fulfilling entry and is idempotent",()=>{
+  const state={modelVersion:9,entries:[{id:"actual",date:"2026-08-01",recurringId:"rent"}],recurring:[],skips:[],occurrences:{"rent:2026-08":{status:"logged",entryId:"stale"}},debts:[]};
+  const once=repairOccurrenceState(state),twice=repairOccurrenceState(once);
+  assert.equal(once.occurrences["rent:2026-08"].entryId,"actual");
+  assert.deepEqual(twice,once);
+});
+
+test("deleting a reminder-linked entry reopens its planned obligation",()=>{
+  const state={categories:[{id:"rent",kind:"committed"}],budgets:{rent:500},debts:[],skips:["rent-rem:2026-08"],
+    recurring:[{id:"rent-rem",type:"expense",amount:500,categoryId:"rent",dayOfMonth:1,startMonth:"2026-08",everyMonths:1,active:true}],
+    occurrences:{"rent-rem:2026-08":{status:"logged",entryId:"rent-entry"}},
+    entries:[{id:"rent-entry",type:"expense",amount:500,date:"2026-08-01",category:"rent",recurringId:"rent-rem",recurringOccurrenceKey:"rent-rem:2026-08"}]};
+  const reopened=reopenOccurrenceForDeletedEntry(state,state.entries[0]);
+  assert.equal(reopened.entries.length,0);
+  assert.equal(reopened.occurrences["rent-rem:2026-08"],undefined);
+  assert.equal(reopened.skips.length,0);
+  const metrics=monthMetrics(reopened,"2026-08");
+  assert.equal(metrics.plannedSpendingRemaining,500);
+  assert.equal(metrics.cashObligationsLeft,500);
+});
+
+test("explicit occurrence skip resolves skipped without a legacy skip key",()=>{
+  const state={entries:[],skips:[],occurrences:{"rent:2026-08":{status:"skipped"}}};
+  assert.equal(resolveOccurrence(state,"rent","2026-08").status,"skipped");
+  assert.deepEqual(state.skips,[]);
+});
+
 for(const name of ["v3","v6","v8","v8.4"]){
   test(`${name} fixture reaches the v9 envelope without data loss`,()=>{
     const fixture=JSON.parse(fs.readFileSync(new URL(`fixtures/${name}.json`,import.meta.url),"utf8"));
@@ -123,6 +172,14 @@ for(const name of ["v3","v6","v8","v8.4"]){
     assert.deepEqual(JSON.parse(JSON.stringify(migrateV9(migrated))),JSON.parse(JSON.stringify(migrated)));
   });
 }
+
+test("v9 dangling fixture repairs through migration without mutating input",()=>{
+  const fixture=JSON.parse(fs.readFileSync(new URL("fixtures/v9-dangling.json",import.meta.url),"utf8"));
+  const original=JSON.stringify(fixture),migrated=migrateV9(fixture);
+  assert.equal(JSON.stringify(fixture),original);
+  assert.equal(migrated.occurrences["rent-rem:2026-08"],undefined);
+  assert.equal(migrated.entries[0].description,"Unrelated entry");
+});
 
 test("production migration path upgrades the v8.4 fixture and preserves its entry",()=>{
   const fixture=fs.readFileSync(new URL("fixtures/v8.4.json",import.meta.url),"utf8");
