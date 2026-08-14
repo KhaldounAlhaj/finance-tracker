@@ -2,6 +2,14 @@
 
 A private, offline personal-finance tracker. All data is stored **locally on your device** (browser local storage). Nothing is sent anywhere.
 
+The app is organized into three places:
+
+- **Overview** — monthly plan availability, cash after commitments, reminders, budget health, debts, and goals.
+- **Log** — confirmed expenses, refunds, debt payments, income, goal contributions, SMS intake, and CSV catch-up import.
+- **Manage** — planned-payment reminders, budgets, goals, income plan, categories, cards and loans, preferences, and backup.
+
+Planned payments are reminders only. They never create transactions automatically: use **Log**, **Reschedule**, or **Skip this month** for each occurrence.
+
 ## Put it online (free) with GitHub Pages
 
 1. Go to **github.com** and create a new **public** repository, e.g. `finance-tracker`.
@@ -36,6 +44,6 @@ It now opens full-screen like a real app, works offline, and remembers your data
 
 ## Important — back up your data
 
-Because the data lives only on your phone, open **Settings → Download Backup** once a month.
+Because the data lives only on your phone, open **Manage → Download a backup** once a month.
 The backup file saves to Files / iCloud, and **Restore from Backup** brings it all back if you
 ever clear Safari, change phones, or reinstall.

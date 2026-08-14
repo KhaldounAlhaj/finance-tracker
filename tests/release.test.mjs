@@ -1,0 +1,33 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import fs from "node:fs";
+
+const html=fs.readFileSync(new URL("../index.html",import.meta.url),"utf8");
+const sw=fs.readFileSync(new URL("../sw.js",import.meta.url),"utf8");
+
+test("production navigation exposes exactly three primary zones",()=>{
+  const nav=html.match(/<nav class="nav"[\s\S]*?<\/nav>/)?.[0]||"";
+  assert.deepEqual([...nav.matchAll(/data-tab="([^"]+)"/g)].map(m=>m[1]),["dashboard","log","settings"]);
+  assert.match(nav,/>Overview</);assert.match(nav,/>Log</);assert.match(nav,/>Manage</);
+});
+
+test("production has no remote runtime dependency",()=>{
+  assert.doesNotMatch(html,/(?:src|href)=["']https?:\/\//i);
+  assert.doesNotMatch(html,/fonts\.googleapis|material-symbols/i);
+});
+
+test("release cache is v9 and includes every app asset",()=>{
+  assert.match(sw,/CACHE = "finance-v9"/);
+  for(const asset of ["index.html","manifest.json","icon-180.png","icon-192.png","icon-512.png"])assert.match(sw,new RegExp(asset.replace(".","\\.")));
+});
+
+test("recurring materialization is disabled",()=>{
+  const body=html.match(/function materializeRecurring\(\)\{([\s\S]*?)\n\}/)?.[1]||"";
+  assert.match(body,/return false/);assert.doesNotMatch(body,/state\.entries\.push/);
+});
+
+test("migration failure preserves the original serialized value",()=>{
+  assert.match(html,/migrationRecovery=raw/);
+  assert.match(html,/function save\(\)\{ if\(migrationRecovery\)return/);
+  assert.match(html,/original local data was preserved/);
+});

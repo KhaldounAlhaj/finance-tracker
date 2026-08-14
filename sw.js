@@ -1,5 +1,5 @@
 // Bump this version whenever you change index.html so phones refresh.
-const CACHE = "finance-v8.4";
+const CACHE = "finance-v9";
 const ASSETS = [
   "./",
   "./index.html",

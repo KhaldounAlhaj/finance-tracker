@@ -86,7 +86,7 @@
   .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
   .card-sm{border-radius:var(--radius-sm);padding:15px 16px}
   .hero{position:relative;overflow:hidden;padding:22px}
-  .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(120% 80% at 100% 0%,var(--primary-weak),transparent 60%);opacity:.9;pointer-events:none}
+  .hero::before{content:'';position:absolute;inset:0;background:var(--primary-weak);opacity:.35;pointer-events:none}
   .hero>*{position:relative}
   .lbl{font-size:12.5px;color:var(--muted);font-weight:600}
   .sub2{font-size:13.5px;color:var(--text-2);line-height:1.45}
@@ -125,8 +125,8 @@
   .amt.neg{color:var(--text)} .amt.pos{color:var(--positive-ink)}
   .listcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
 
-  .seg{display:flex;background:var(--surface-3);border-radius:13px;padding:4px;gap:4px}
-  .seg button{flex:1;min-height:44px;border:none;border-radius:9px;cursor:pointer;font-size:13.5px;font-weight:600;
+  .seg{display:flex;flex-wrap:wrap;background:var(--surface-3);border-radius:13px;padding:4px;gap:4px}
+  .seg button{flex:1;min-width:28%;min-height:44px;border:none;border-radius:9px;cursor:pointer;font-size:13.5px;font-weight:600;
     background:transparent;color:var(--muted);font-family:var(--font)}
   .seg button.on{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
 
@@ -222,8 +222,8 @@
     <div style="height:8px"></div>
     <div style="width:52px;height:52px;border-radius:16px;background:var(--primary-weak);display:flex;align-items:center;justify-content:center;font-size:26px">🏡</div>
     <div>
-      <div style="font-size:28px;font-weight:600;line-height:1.15;margin-bottom:8px">Let's build the plan to your house in Jordan.</div>
-      <div style="font-size:15px;color:var(--muted);line-height:1.5">A calm, private place to track spending, close your debts, and watch the house fund grow. Everything stays on this phone.</div>
+      <div style="font-size:28px;font-weight:600;line-height:1.15;margin-bottom:8px">Your finances, clearly managed.</div>
+      <div style="font-size:15px;color:var(--muted);line-height:1.5">Track confirmed money, plan upcoming payments, control budgets, reduce debt, and build your goals. Everything stays on this device.</div>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
       <div class="dcard" style="display:flex;gap:14px;align-items:flex-start"><div style="font-size:20px">💵</div><div><div style="font-weight:600;font-size:15px">Add your salary and payday</div><div class="hint">So the month resets on the right day.</div></div></div>
@@ -257,10 +257,18 @@
 
       <div id="dashCurrent" style="display:flex;flex-direction:column;gap:14px">
         <div class="card hero">
-          <div class="lbl" style="font-size:14px">Safe to spend today</div>
+          <div class="lbl" style="font-size:14px">Available within plan</div>
           <div class="big" id="dSafe">—</div>
           <div class="sub2" id="dSafeSub"></div>
           <div class="chip" style="margin-top:14px"><span class="dot"></span><span id="dSafeChip"></span></div>
+        </div>
+
+        <div class="card card-sm">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+            <div><div class="lbl">Cash after commitments</div><div class="hint">Income left after paid and planned cash movements</div></div>
+            <div style="font-size:22px;font-weight:700;white-space:nowrap" id="dCashAfter">0 SAR</div>
+          </div>
+          <div id="dCashBreakdown" class="hint" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)"></div>
         </div>
 
         <div class="grid2">
@@ -283,7 +291,7 @@
             <span style="font-size:24px;font-weight:600" id="dHouseSaved">0</span>
             <span style="font-size:14px;color:var(--muted)" id="dHouseTarget"></span>
           </div>
-          <div class="track h12"><i id="dHouseW" style="background:linear-gradient(90deg,var(--primary),var(--primary-strong))"></i></div>
+          <div class="track h12"><i id="dHouseW" style="background:var(--primary)"></i></div>
           <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12.5px;color:var(--muted)"><span id="dHousePct"></span><span id="dHouseWhen"></span></div>
         </div>
 
@@ -299,11 +307,11 @@
 
         <div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin:2px 4px 10px">
-            <span style="font-weight:600;font-size:15px">Upcoming this week</span>
+            <span style="font-weight:600;font-size:15px">Planned payments</span>
             <button class="linkbtn" onclick="openOverlay('recurring')">Manage</button>
           </div>
           <div class="listcard" id="dUpcoming"></div>
-          <div class="note" style="margin-top:9px">These post on their own — you only log the variable stuff.</div>
+          <div class="note" style="margin-top:9px">Reminders never create transactions automatically.</div>
         </div>
       </div>
 
@@ -321,8 +329,10 @@
     <div class="page" id="p-log">
       <div class="seg" id="logSeg">
         <button data-lt="expense" class="on" onclick="setLogType('expense')">Expense</button>
+        <button data-lt="refund" onclick="setLogType('refund')">Refund</button>
         <button data-lt="payment" onclick="setLogType('payment')">Card · loan</button>
         <button data-lt="income" onclick="setLogType('income')">Income</button>
+        <button data-lt="goal" onclick="setLogType('goal')">Goal</button>
       </div>
 
       <div class="card" style="display:flex;flex-direction:column;gap:14px">
@@ -334,6 +344,11 @@
           <textarea class="in" id="eSms" dir="auto" placeholder="Paste the SMS here — we'll pull out the amount, merchant and date."></textarea>
           <button class="btn2" style="margin-top:9px;background:var(--primary-weak);color:var(--primary-strong);border-color:var(--primary)" onclick="parseSmsBox()">Fill form from SMS</button>
           <div class="hint" id="smsMsg" style="min-height:16px;margin-top:6px"></div>
+        </div>
+
+        <div style="display:flex;gap:8px">
+          <button class="btn2" type="button" onclick="document.getElementById('csvFile').click()">Import CSV catch-up file</button>
+          <input type="file" id="csvFile" accept=".csv,text/csv" style="display:none" onchange="previewCsv(event)">
         </div>
 
         <div class="fg"><label class="fl" id="amtLabel">Amount</label>
@@ -360,11 +375,11 @@
             <option value="gift">🎁 Gift</option><option value="incomeOther">💰 Other income</option>
           </select></div></div>
 
-        <div class="fg"><label class="fl">Date</label><input class="in" type="date" id="eDate"></div>
+        <div class="fg"><label class="fl">Date and time</label><input class="in" type="datetime-local" id="eDate"></div>
 
         <button class="switchrow" id="repRow" role="switch" aria-checked="false" onclick="toggleRepeat()">
-          <span><span style="display:block;font-weight:600;font-size:14px">Repeats</span>
-          <span class="hint">Posts itself from now on — monthly, every few months, or yearly</span></span>
+          <span><span style="display:block;font-weight:600;font-size:14px">Create a reminder</span>
+          <span class="hint">You will confirm each occurrence before it is logged</span></span>
           <span class="switch"></span>
         </button>
 
@@ -385,7 +400,12 @@
       </div>
 
       <div>
-        <div style="font-weight:600;font-size:15px;margin:2px 4px 10px">Recent entries</div>
+        <div style="font-weight:600;font-size:15px;margin:2px 4px 10px">Recent activity</div>
+        <div class="card card-sm" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          <input class="in" id="logSearch" placeholder="Search" oninput="renderEntries()" style="grid-column:1/-1">
+          <select class="sel" id="logTypeFilter" onchange="renderEntries()"><option value="">All types</option><option value="expense">Expenses</option><option value="refund">Refunds</option><option value="payment">Payments</option><option value="income">Income</option><option value="goal">Goals</option></select>
+          <select class="sel" id="logAccountFilter" onchange="renderEntries()"><option value="">All accounts</option><option value="cash">Cash / bank</option><option value="card">Credit card</option></select>
+        </div>
         <div id="entryList"></div>
       </div>
     </div>
@@ -415,7 +435,7 @@
         <div class="hero" style="border:none;border-radius:0">
           <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px"><span style="font-size:20px">🏡</span><span style="font-weight:600;font-size:16px" id="gHouseTitle">House in Jordan</span></div>
           <div style="display:flex;align-items:baseline;gap:7px"><span style="font-size:34px;font-weight:600" id="gHouseSaved">0</span><span style="font-size:15px;color:var(--muted)" id="gHouseTarget"></span></div>
-          <div class="track h14" style="margin:14px 0 8px"><i id="gHouseW" style="background:linear-gradient(90deg,var(--primary),var(--primary-strong))"></i></div>
+          <div class="track h14" style="margin:14px 0 8px"><i id="gHouseW" style="background:var(--primary)"></i></div>
           <div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted)"><span id="gHousePct"></span><span id="gHouseLeft"></span></div>
         </div>
         <div style="display:flex;border-top:1px solid var(--border)">
@@ -489,16 +509,12 @@
   </main>
 
   <nav class="nav" id="nav">
-    <button data-tab="dashboard" class="on" onclick="setTab('dashboard')" aria-label="Home">
-      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5"/></svg><span>Home</span></button>
+    <button data-tab="dashboard" class="on" onclick="setTab('dashboard')" aria-label="Overview">
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg><span>Overview</span></button>
     <button data-tab="log" onclick="setTab('log')" aria-label="Log">
       <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg><span>Log</span></button>
-    <button data-tab="budget" onclick="setTab('budget')" aria-label="Budget">
-      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Budget</span></button>
-    <button data-tab="goals" onclick="setTab('goals')" aria-label="Goals">
-      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4a1 1 0 0 1 1-1h11l-2.5 4L17 11H6"/></svg><span>Goals</span></button>
-    <button data-tab="settings" onclick="setTab('settings')" aria-label="Settings">
-      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V19a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7 17.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 4.6 11H4.5a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 6.7 4.3l-.1-.1a2 2 0 1 1 2.8-2.8"/></svg><span>More</span></button>
+    <button data-tab="settings" onclick="setTab('settings')" aria-label="Manage">
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"/><circle cx="8" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="12" cy="18" r="2"/></svg><span>Manage</span></button>
   </nav>
   </div>
 
@@ -533,7 +549,7 @@
         <div class="fg" style="flex:1"><label class="fl">Starting from</label><input class="in" type="month" id="sEff"></div></div>
         <div class="fg"><label class="fl">Payday (day of month, 1–28)</label><input class="in" type="number" inputmode="numeric" min="1" max="28" id="sPayday"></div>
         <button class="btn" onclick="saveSalary()">Save salary</button>
-        <div class="hint">Salary posts itself into the Log on payday, from its starting month onward — months before it stay empty. When it changes, save the new amount from the month it kicks in; until then every month keeps the same salary. A bonus month? Log it as Income. Correct one month? Edit that month's salary entry.</div>
+        <div class="hint">This defines the expected salary schedule. Log each salary as confirmed Income when it arrives; reminders never create income automatically.</div>
         <div class="hint" id="salMsg" style="min-height:16px;color:var(--positive-ink)"></div>
       </div>
       <div class="card" style="display:flex;flex-direction:column;gap:14px">
@@ -558,7 +574,7 @@
     <div class="ovhead"><button class="iconbtn" onclick="closeOverlay()" aria-label="Back">‹</button><div class="t">Categories</div><button class="iconbtn" onclick="addCategory()" aria-label="Add category">＋</button></div>
     <div class="ovbody"><div id="catEditor" style="display:flex;flex-direction:column;gap:12px"></div>
       <button class="btn" onclick="saveCategories()">Save categories</button>
-      <div class="hint">Kind drives the math — Committed posts itself, Flexible is day-to-day, Goal is money you're setting aside. Archive keeps history.</div>
+      <div class="hint">Kind drives the math — Committed and Flexible form the expense plan; Goal reserves cash without counting as spending. Archive keeps history.</div>
       <div class="hint" id="catMsg" style="min-height:16px;color:var(--positive-ink)"></div></div>
   </div>
 
@@ -568,6 +584,21 @@
       <button class="btn" onclick="saveDebts()">Save accounts</button>
       <div class="hint">"Amount owed" is the balance when you add the account — after that it moves by itself: payments lower it, and credit-card purchases (Log → "Paid with") raise it.</div>
       <div class="hint" id="debtsMsg" style="min-height:16px;color:var(--positive-ink)"></div></div>
+  </div>
+
+  <div class="overlay" id="ov-overdue">
+    <div class="ovhead"><button class="iconbtn" onclick="closeOverlay()" aria-label="Back">‹</button><div class="t">Open planned payments</div></div>
+    <div class="ovbody" id="allPlanned"></div>
+  </div>
+
+  <div class="overlay" id="ov-csv">
+    <div class="ovhead"><button class="iconbtn" onclick="closeOverlay()" aria-label="Back">‹</button><div class="t">CSV import preview</div></div>
+    <div class="ovbody">
+      <div class="card card-sm"><div style="font-weight:600">Nothing is saved yet</div><div class="hint" id="csvSummary" style="margin-top:4px"></div></div>
+      <div id="csvPreview" style="display:flex;flex-direction:column;gap:10px"></div>
+      <button class="btn" id="csvConfirm" onclick="confirmCsvImport()">Confirm import</button>
+      <button class="btn-ghost" onclick="cancelCsvImport()">Cancel</button>
+    </div>
   </div>
 
   <!-- SHEETS -->
@@ -635,6 +666,123 @@ const KEY = "khaldoun_finance_v3";
 const MS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 
+/* CORE_V9_START */
+function occurrenceKey(reminderId,month){ return String(reminderId)+":"+String(month); }
+function entryFulfillsOccurrence(e,reminderId,key,month){ return e&&e.recurringOccurrenceKey?e.recurringOccurrenceKey===key:(e&&e.recurringId===reminderId&&coreMonth(e.date||e.occurredAt)===month); }
+function coreNum(v){ return Number.isFinite(+v)?+v:0; }
+function coreMonth(date){ return String(date||"").slice(0,7); }
+function coreClone(value){ return JSON.parse(JSON.stringify(value)); }
+function coreMonthsBetween(a,b){ const [ay,am]=String(a).split("-").map(Number),[by,bm]=String(b).split("-").map(Number); return (by-ay)*12+(bm-am); }
+function coreDue(r,m){
+  if(!r||r.active===false||!r.startMonth||m<r.startMonth||(r.endMonth&&m>r.endMonth)) return false;
+  return coreMonthsBetween(r.startMonth,m)%Math.max(1,coreNum(r.everyMonths)||1)===0;
+}
+function coreDebt(state,id){ return (state.debts||[]).find(d=>d.id===id)||null; }
+function entryDeltas(entry,cardId){
+  const e=entry||{}, amount=coreNum(e.amount), isCard=!!cardId&&(e.paidWith===cardId||e.debtId===cardId);
+  if(e.type==="income") return {spending:0,cash:-amount,card:0,loan:0,income:amount,goal:0};
+  if(e.type==="refund") return {spending:-amount,cash:isCard?0:-amount,card:e.paidWith===cardId?-amount:0,loan:0,income:0,goal:0};
+  if(e.type==="payment") return {spending:0,cash:amount,card:isCard?-amount:0,loan:isCard?0:-amount,income:0,goal:0};
+  if(e.type==="goal") return {spending:0,cash:amount,card:0,loan:0,income:0,goal:amount};
+  return {spending:amount,cash:isCard?0:amount,card:e.paidWith===cardId?amount:0,loan:0,income:0,goal:0};
+}
+function migrateV9(input){
+  const out=coreClone(input||{}); out.modelVersion=9;
+  out.entries=Array.isArray(out.entries)?out.entries:[]; out.recurring=Array.isArray(out.recurring)?out.recurring:[];
+  out.skips=Array.isArray(out.skips)?out.skips:[]; out.debts=Array.isArray(out.debts)?out.debts:[];
+  out.occurrences=out.occurrences&&typeof out.occurrences==="object"&&!Array.isArray(out.occurrences)?out.occurrences:{};
+  out.imports=Array.isArray(out.imports)?out.imports:[];
+  out.entries.forEach(e=>{ if(e.type==="expense"&&e.isRefund){e.type="refund";delete e.isRefund;} if(e.occurredAt==null)e.occurredAt=(e.date||"")+"T12:00"; });
+  return out;
+}
+function monthMetrics(state,month){
+  const categories=state.categories||[], entries=(state.entries||[]).filter(e=>coreMonth(e.date||e.occurredAt)===month);
+  const debtCats=new Set((state.debts||[]).map(d=>d.category).filter(Boolean));
+  const expenseCats=new Set(categories.filter(c=>c.kind!=="goal"&&c.kind!=="debt"&&!debtCats.has(c.id)).map(c=>c.id));
+  const goalCats=new Set(categories.filter(c=>c.kind==="goal").map(c=>c.id));
+  const spendingPlan=[...expenseCats].reduce((a,id)=>a+coreNum(state.budgets&&state.budgets[id]),0);
+  let actualSpending=0,cashPaidSoFar=0,incomeReceived=0,confirmedGoals=0;
+  for(const e of entries){
+    const debt=coreDebt(state,e.debtId||e.paidWith),cardId=debt&&debt.kind==="card"?debt.id:null;
+    if((e.type==="expense"||e.type==="goal")&&goalCats.has(e.category)){confirmedGoals+=coreNum(e.amount);if(!cardId)cashPaidSoFar+=coreNum(e.amount);continue;}
+    const d=entryDeltas(e,cardId);actualSpending+=d.spending;if(e.type!=="income")cashPaidSoFar+=d.cash;incomeReceived+=d.income;confirmedGoals+=d.goal;
+  }
+  let plannedSpendingRemaining=0,cashObligationsLeft=0,plannedGoals=0;
+  for(const r of state.recurring||[]){
+    if(r.isSalary||!coreDue(r,month)) continue;
+    const key=occurrenceKey(r.id,month), status=(state.occurrences&&state.occurrences[key]&&state.occurrences[key].status)||"upcoming";
+    if(entries.some(e=>entryFulfillsOccurrence(e,r.id,key,month))||status==="logged"||status==="skipped"||status==="rescheduled") continue;
+    const amount=coreNum(r.amount), type=r.type||"expense", category=r.categoryId||"other";
+    if(type==="goal"||goalCats.has(category)){plannedGoals+=amount;}
+    else if(type==="expense"){plannedSpendingRemaining+=amount;const debt=coreDebt(state,r.paidWith);if(!(debt&&debt.kind==="card"))cashObligationsLeft+=amount;}
+    else if(type==="payment") cashObligationsLeft+=amount;
+  }
+  for(const [sourceKey,o] of Object.entries(state.occurrences||{})){
+    if(!o||o.status!=="rescheduled"||coreMonth(o.to)!==month)continue;
+    const id=sourceKey.slice(0,sourceKey.lastIndexOf(":")),r=(state.recurring||[]).find(x=>x.id===id); if(!r)continue;
+    const amount=coreNum(r.amount),type=r.type||"expense",category=r.categoryId||"other";
+    if(type==="goal"||goalCats.has(category))plannedGoals+=amount;
+    else if(type==="expense"){plannedSpendingRemaining+=amount;const debt=coreDebt(state,r.paidWith);if(!(debt&&debt.kind==="card"))cashObligationsLeft+=amount;}
+    else if(type==="payment")cashObligationsLeft+=amount;
+  }
+  const budgetGoals=[...goalCats].reduce((a,id)=>a+coreNum(state.budgets&&state.budgets[id]),0);
+  const reservedForGoals=Math.max(0,Math.max(budgetGoals,plannedGoals)-confirmedGoals);
+  return {spendingPlan,actualSpending,plannedSpendingRemaining,availableWithinPlan:spendingPlan-actualSpending-plannedSpendingRemaining,
+    incomeReceived,cashPaidSoFar,cashObligationsLeft,reservedForGoals,cashAfterCommitments:incomeReceived-cashPaidSoFar-cashObligationsLeft-reservedForGoals};
+}
+function debtMovement(state,debtId,month){
+  const debt=coreDebt(state,debtId)||{}; let opening=coreNum(debt.startingBalance);
+  for(const e of state.entries||[]){if(coreMonth(e.date)>=month)continue;if(e.paidWith===debtId&&e.type==="expense")opening+=coreNum(e.amount);if(e.paidWith===debtId&&e.type==="refund")opening-=coreNum(e.amount);if(e.debtId===debtId&&e.type==="payment")opening-=coreNum(e.amount);if(e.debtId===debtId&&e.type==="balance_adjustment")opening+=coreNum(e.amount);}
+  let purchases=0,refunds=0,payments=0,adjustments=0;
+  for(const e of state.entries||[]){if(coreMonth(e.date)!==month)continue;if(e.paidWith===debtId&&e.type==="expense")purchases+=coreNum(e.amount);if(e.paidWith===debtId&&e.type==="refund")refunds+=coreNum(e.amount);if(e.debtId===debtId&&e.type==="payment")payments+=coreNum(e.amount);if(e.debtId===debtId&&e.type==="balance_adjustment")adjustments+=coreNum(e.amount);}
+  const closing=opening+purchases-refunds-payments+adjustments; return {opening,purchases,refunds,payments,adjustments,closing,net:closing-opening};
+}
+/* CORE_V9_END */
+
+/* IMPORT_V9_START */
+function parseCsv(text){
+  const rows=[]; let row=[],field="",quoted=false;
+  for(let i=0;i<String(text||"").length;i++){
+    const c=text[i],next=text[i+1];
+    if(c==='"'&&quoted&&next==='"'){field+='"';i++;}
+    else if(c==='"')quoted=!quoted;
+    else if(c===","&&!quoted){row.push(field);field="";}
+    else if((c==="\n"||c==="\r")&&!quoted){if(c==="\r"&&next==="\n")i++;row.push(field);if(row.some(v=>v!==""))rows.push(row);row=[];field="";}
+    else field+=c;
+  }
+  row.push(field);if(row.some(v=>v!==""))rows.push(row);
+  if(rows.length<2)return [];
+  const headers=rows.shift().map(h=>h.trim().toLowerCase());
+  return rows.map(values=>Object.fromEntries(headers.map((h,i)=>[h,(values[i]||"").trim()])));
+}
+function normalizeImportRow(raw){
+  const r=raw||{}, type=String(r.type||"").trim().toLowerCase(), amount=Number(String(r.amount||"").replace(/,/g,""));
+  const stamp=String(r.occurred_at||r.occurredAt||"").trim().replace(" ","T").slice(0,16);
+  const blocked=["declined","rejected"].includes(type)||/declin|reject|مرفوض|رفض/i.test(String(r.notes||""));
+  const validTypes=["expense","refund","payment","income"];
+  const errors=[];
+  if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(stamp))errors.push("Invalid date/time");
+  if(!validTypes.includes(type))errors.push("Invalid type");
+  if(!Number.isFinite(amount)||amount<=0)errors.push("Invalid amount");
+  if(!String(r.currency||"").trim())errors.push("Currency required");
+  if(!String(r.description||"").trim())errors.push("Description required");
+  if(!String(r.source_ref||r.sourceRef||"").trim())errors.push("Source reference required");
+  return {type,amount,occurredAt:stamp,date:stamp.slice(0,10),currency:String(r.currency||"").toUpperCase(),description:String(r.description||""),
+    category:String(r.category||"other"),paidWith:String(r.paid_with||"")||null,accountRef:String(r.account_ref||""),sourceRef:String(r.source_ref||r.sourceRef||""),
+    notes:String(r.notes||""),blocked,valid:!blocked&&errors.length===0,errors};
+}
+function entryFingerprint(e){
+  if(e&&e.sourceRef)return "source:"+String(e.sourceRef).trim().toLowerCase();
+  const clean=v=>String(v||"").trim().toLowerCase().replace(/\s+/g," ");
+  const amount=Number.isFinite(+(e&&e.amount))?+(e&&e.amount):0;
+  return "entry:"+[clean(e&&e.type),clean(e&&e.occurredAt),amount.toFixed(2),clean(e&&e.description),clean(e&&e.accountRef)].join("|");
+}
+function markImportDuplicates(rows,existing){
+  const seen=new Set(existing||[]);
+  return (rows||[]).map(row=>{const fp=entryFingerprint(row),duplicate=seen.has(fp);seen.add(fp);return {...row,fp,duplicate};});
+}
+/* IMPORT_V9_END */
+
 // ── helpers ──
 const num = v => Number.isFinite(+v) ? +v : 0;
 const clone = o => JSON.parse(JSON.stringify(o));
@@ -642,6 +790,7 @@ const fmt = n => Math.round(num(n)).toLocaleString("en-US");
 const sar = n => fmt(n)+" SAR";
 const monthOf = d => (d||"").substring(0,7);
 const today = () => new Date().toISOString().split("T")[0];
+function localDateTime(){ const d=new Date(Date.now()-new Date().getTimezoneOffset()*60000); return d.toISOString().slice(0,16); }
 const realMonth = () => monthOf(today());
 function pad2(n){ return String(n).padStart(2,"0"); }
 function fmtMonth(s){ const a=(s||"").split("-"); return (MS[(+a[1]||1)-1]||"")+" "+(a[0]||""); }
@@ -663,7 +812,7 @@ const KINDS = { committed:{label:"AUTO"}, flexible:{label:""}, goal:{label:"GOAL
 
 const DEFAULTS = {
   currentMonth: "2026-07",
-  modelVersion: 8,
+  modelVersion: 9,
   settings: { salarySteps:{}, payday:1,
               houseTarget:0, houseTargetMonth:"2029-12", houseSavedStart:0, houseAccrueFrom:"2026-07",
               lastBackupAt:null, salaryOverrides:{} },
@@ -697,29 +846,28 @@ const DEFAULTS = {
 };
 
 const PHASES = [
-  { name:"Phase 1", title:"Clear Jordan Obligations", start:"2026-06", end:"2026-10",
-    goal:"Pay Jordan loan (closes Oct), clear Jordan credit card. Pay minimums on KSA cards." },
-  { name:"Phase 2", title:"Destroy KSA Credit Cards", start:"2026-11", end:"2027-09",
-    goal:"Attack the highest-interest card first, then the next, putting the monthly surplus toward the cards." },
-  { name:"Phase 3", title:"Finish Car Loan", start:"2027-10", end:"2028-01",
-    goal:"Double payments on car loan. Clear remaining balance by January 2028." },
-  { name:"Phase 4", title:"Full Savings Mode", start:"2028-02", end:"2031-12",
-    goal:"Shift to a high savings rate and invest steadily toward the house goal." }
+  { name:"Phase 1", title:"Build the baseline", start:"2026-01", end:"2026-03", goal:"Log income, expenses, commitments, and opening balances." },
+  { name:"Phase 2", title:"Reduce expensive debt", start:"2026-04", end:"2026-12", goal:"Prioritize the highest-cost revolving balance." },
+  { name:"Phase 3", title:"Finish remaining loans", start:"2027-01", end:"2027-12", goal:"Redirect released payments toward remaining balances." },
+  { name:"Phase 4", title:"Grow long-term goals", start:"2028-01", end:"2031-12", goal:"Increase regular contributions toward selected goals." }
 ];
 
 // ── LOAD + MIGRATION (v1→v8 chain, in place, zero loss) ──
 let fresh=false;
+let migrationRecovery=null;
 let state = load();
 function load(){
-  try{ const s = localStorage.getItem(KEY); if(s) return migrate(JSON.parse(s)); }catch(e){}
-  fresh=true; const d=normalize8(clone(DEFAULTS)); d.currentMonth=realMonth(); return d;
+  let raw=null;
+  try{ raw=localStorage.getItem(KEY); if(raw) return migrate(JSON.parse(raw)); }
+  catch(e){ migrationRecovery=raw; const d=normalize9(clone(DEFAULTS)); d.currentMonth=realMonth(); return d; }
+  fresh=true; const d=normalize9(clone(DEFAULTS)); d.currentMonth=realMonth(); return d;
 }
 function migrate(s){
-  if(!s || typeof s!=="object" || Array.isArray(s)){ fresh=true; const d=normalize8(clone(DEFAULTS)); d.currentMonth=realMonth(); return d; }
-  if(num(s.modelVersion)>=8) return normalize8(s);
-  if(Array.isArray(s.categories)) return normalize8(from7(s));          // v7
-  if(s.settings && Array.isArray(s.entries)) return normalize8(from7(from6(s))); // v6
-  return normalize8(from7(from6(fromLegacy(s))));                        // v1–v5
+  if(!s || typeof s!=="object" || Array.isArray(s)){ fresh=true; const d=normalize9(clone(DEFAULTS)); d.currentMonth=realMonth(); return d; }
+  if(num(s.modelVersion)>=8) return normalize9(s);
+  if(Array.isArray(s.categories)) return normalize9(from7(s));          // v7
+  if(s.settings && Array.isArray(s.entries)) return normalize9(from7(from6(s))); // v6
+  return normalize9(from7(from6(fromLegacy(s))));                        // v1–v5
 }
 function fromLegacy(o){
   const d={ currentMonth:o.currentMonth, settings:{ salaryCurrent:num(o.salaryNow), salaryFrom:"2027-04",
@@ -768,12 +916,14 @@ function normDebt(d){ d=d||{}; return { id:d.id||uid(), name:d.name||"Debt", ban
   startingBalance:num(d.startingBalance!=null?d.startingBalance:d.balance), original:num(d.original),
   ratePerMonth:num(d.ratePerMonth!=null?d.ratePerMonth:d.rate), kind:d.kind==="card"?"card":"loan", category:d.category||"other" }; }
 function normEntry(e){ if(!e||typeof e!=="object") return null;
-  const type=e.type==="payment"?"payment":(e.type==="income"?"income":"expense");
+  const type=["expense","refund","payment","income","goal","balance_adjustment"].includes(e.type)?e.type:"expense";
   return { id:e.id||uid(), date:e.date||today(), amount:num(e.amount), category:e.category||"other", type,
-    debtId:type==="payment"?(e.debtId||null):null, paidWith:type==="expense"?(e.paidWith||null):null,
-    description:e.description||e.desc||"", recurringId:e.recurringId||null }; }
+    occurredAt:e.occurredAt||((e.date||today())+"T12:00"), debtId:["payment","balance_adjustment"].includes(type)?(e.debtId||null):null,
+    paidWith:["expense","refund"].includes(type)?(e.paidWith||null):null, goalId:e.goalId||null,
+    description:e.description||e.desc||"", recurringId:e.recurringId||null, recurringOccurrenceKey:e.recurringOccurrenceKey||null, sourceRef:e.sourceRef||null,
+    importId:e.importId||null, importedDuplicate:!!e.importedDuplicate }; }
 function normRec(r){ r=r||{}; return { id:r.id||uid(), name:r.name||"Recurring", amount:num(r.amount),
-  type:(r.type==="income"||r.type==="payment")?r.type:"expense", categoryId:r.categoryId||"other",
+  type:["income","payment","goal"].includes(r.type)?r.type:"expense", categoryId:r.categoryId||"other", paidWith:r.paidWith||null,
   debtId:r.debtId||null, dayOfMonth:Math.min(28,Math.max(1,num(r.dayOfMonth)||1)),
   everyMonths:Math.min(24,Math.max(1,num(r.everyMonths)||1)),
   startMonth:r.startMonth||realMonth(), endMonth:r.endMonth||null, active:r.active!==false, isSalary:!!r.isSalary }; }
@@ -783,7 +933,7 @@ function nextOccurrence(r){ if(recStatus(r)!=="active") return null;
   let m=realMonth()>r.startMonth?realMonth():r.startMonth;
   for(let i=0;i<40;i++){
     if(stepOk(r,m)&&(!r.endMonth||m<=r.endMonth)
-      &&!state.entries.some(e=>e.recurringId===r.id&&monthOf(e.date)===m)
+      &&!state.entries.some(e=>entryFulfillsOccurrence(e,r.id,occurrenceKey(r.id,m),m))
       &&!state.skips.includes(r.id+":"+m)) return m;
     m=shift(m,1);
   }
@@ -828,7 +978,16 @@ function normalize8(s){
   if(salR&&stepMs.length) salR.startMonth=stepMs[0]; // salary only exists from the first step's month
   return out;
 }
-function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+function normalize9(s){
+  const migrated=migrateV9(s), out=normalize8(migrated);
+  out.modelVersion=9;
+  out.occurrences=migrated.occurrences&&typeof migrated.occurrences==="object"&&!Array.isArray(migrated.occurrences)?clone(migrated.occurrences):{};
+  out.imports=Array.isArray(migrated.imports)?clone(migrated.imports):[];
+  out.entries=(Array.isArray(migrated.entries)?migrated.entries:out.entries).map(normEntry).filter(Boolean);
+  out.recurring=(Array.isArray(migrated.recurring)?migrated.recurring:out.recurring).map(normRec);
+  return out;
+}
+function save(){ if(migrationRecovery)return; try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
 
 // ── CALCULATION ENGINE (derive, never store) ──
 function getCat(id){ return state.categories.find(c=>c.id===id)||null; }
@@ -839,17 +998,21 @@ function expectedSalary(m){ const ov=state.settings.salaryOverrides||{}; if(ov[m
   const steps=state.settings.salarySteps||{}; let best=null;
   for(const k in steps){ if(k<=m&&(best==null||k>best)) best=k; } // latest step at or before m carries forward
   return best?num(steps[best]):0; }
-function debtCurrent(d){ const paid=state.entries.filter(e=>e.type==="payment"&&e.debtId===d.id).reduce((a,e)=>a+num(e.amount),0);
-  const charged=d.kind==="card"?state.entries.filter(e=>e.type==="expense"&&e.paidWith===d.id).reduce((a,e)=>a+num(e.amount),0):0;
-  return Math.max(0,num(d.startingBalance)+charged-paid); }
-// Paying a CARD is a balance transfer, not new spending (the spend was the purchase). Loan payments ARE spending.
+function debtCurrent(d){
+  const all=state.entries||[];
+  const paid=all.filter(e=>e.type==="payment"&&e.debtId===d.id).reduce((a,e)=>a+num(e.amount),0);
+  const charged=d.kind==="card"?all.filter(e=>e.type==="expense"&&e.paidWith===d.id).reduce((a,e)=>a+num(e.amount),0):0;
+  const refunded=d.kind==="card"?all.filter(e=>e.type==="refund"&&e.paidWith===d.id).reduce((a,e)=>a+num(e.amount),0):0;
+  const adjusted=all.filter(e=>e.type==="balance_adjustment"&&e.debtId===d.id).reduce((a,e)=>a+num(e.amount),0);
+  return Math.max(0,num(d.startingBalance)+charged-refunded-paid+adjusted); }
+// Debt payments move cash and debt balances but are not new category spending.
 function isCardPayment(e){ if(e.type!=="payment") return false; const d=state.debts.find(x=>x.id===e.debtId); return !!(d&&d.kind==="card"); }
 function totalDebt(){ return state.debts.reduce((a,d)=>a+debtCurrent(d),0); }
 function totalOriginal(){ return state.debts.reduce((a,d)=>a+num(d.original),0); }
 function monthEntries(m){ return state.entries.filter(e=>monthOf(e.date)===m); }
-function monthSpent(m){ return monthEntries(m).filter(e=>e.type!=="income"&&!isCardPayment(e)).reduce((a,e)=>a+num(e.amount),0); }
+function monthSpent(m){ return monthMetrics(state,m).actualSpending; }
 function monthIncomeActual(m){ return monthEntries(m).filter(e=>e.type==="income").reduce((a,e)=>a+num(e.amount),0); }
-function catActual(cat,m){ return monthEntries(m).filter(e=>e.type!=="income"&&!isCardPayment(e)&&e.category===cat).reduce((a,e)=>a+num(e.amount),0); }
+function catActual(cat,m){ return monthEntries(m).filter(e=>e.category===cat).reduce((a,e)=>a+(["expense","goal"].includes(e.type)?num(e.amount):(e.type==="refund"?-num(e.amount):0)),0); }
 function kindPlanned(kind){ return liveCats().filter(c=>c.kind===kind).reduce((a,c)=>a+num(state.budgets[c.id]),0); }
 // Monthly-equivalent of everything that posts itself (annual rent weighs 1/12 per month).
 // Goal-category recurring (e.g. the house-fund transfer) is excluded — it's counted in kindPlanned("goal").
@@ -880,7 +1043,7 @@ function safePerDay(m){
   return { perDay:(flexBudget-flexSpent)/daysLeft, flexBudget, flexSpent, daysLeft, day, dim };
 }
 function houseSavedTotal(){ const from=state.settings.houseAccrueFrom;
-  const logged=state.entries.filter(e=>e.type!=="income"&&e.category==="houseSavings"&&monthOf(e.date)>=from).reduce((a,e)=>a+num(e.amount),0);
+  const logged=state.entries.filter(e=>e.category==="houseSavings"&&monthOf(e.date)>=from).reduce((a,e)=>a+(["expense","goal"].includes(e.type)?num(e.amount):(e.type==="refund"?-num(e.amount):0)),0);
   return num(state.settings.houseSavedStart)+logged; }
 function pace3mo(catId){ // avg of last 3 closed-ish months incl. current
   const rm=realMonth(); let tot=0,n=0;
@@ -910,7 +1073,7 @@ function projectDebt(d){
 }
 function commitStatus(c){
   const from=c.createdFrom;
-  const logged=c.categoryId?state.entries.filter(e=>e.type!=="income"&&e.category===c.categoryId&&monthOf(e.date)>=from).reduce((a,e)=>a+num(e.amount),0):0;
+  const logged=c.categoryId?state.entries.filter(e=>e.category===c.categoryId&&monthOf(e.date)>=from).reduce((a,e)=>a+(["expense","goal"].includes(e.type)?num(e.amount):(e.type==="refund"?-num(e.amount):0)),0):0;
   const funded=num(c.fundedStart)+logged;
   const left=Math.max(0,num(c.target)-funded);
   const mLeft=Math.max(1,monthsBetween(realMonth(),c.dueMonth));
@@ -924,35 +1087,14 @@ function recStatus(r){ return !r.active?"paused":(recEnded(r)?"ended":"active");
 
 // ── RECURRING ENGINE ──
 function materializeRecurring(){
-  const nowM=realMonth(); let changed=false;
-  state.recurring.forEach(r=>{
-    if(!r.active) return;
-    let m=r.startMonth||nowM, guard=0;
-    while(m<=nowM&&guard++<240){
-      const due=stepOk(r,m)&&(!r.endMonth||m<=r.endMonth)&&!state.skips.includes(r.id+":"+m)
-        &&!state.entries.some(e=>e.recurringId===r.id&&monthOf(e.date)===m);
-      if(due){
-        let amt=r.isSalary?expectedSalary(m):num(r.amount);
-        let cat=r.categoryId, dId=null, type=r.type;
-        if(type==="payment"){ const debt=state.debts.find(d=>d.id===r.debtId);
-          if(!debt){ m=shift(m,1); continue; } cat=debt.category; dId=debt.id; }
-        const day=r.isSalary?(num(state.settings.payday)||1):r.dayOfMonth;
-        const date=m+"-"+pad2(Math.min(28,Math.max(1,day)));
-        if(amt>0&&date<=today()){
-          state.entries.push({ id:uid(), date, amount:amt, category:cat, type, debtId:dId, description:r.name, recurringId:r.id });
-          changed=true;
-        }
-      }
-      m=shift(m,1);
-    }
-  });
-  if(changed) save();
-  return changed;
+  // From model v9 onward recurring rules are reminders. They never create
+  // confirmed entries; only saving the editable Log draft does that.
+  return false;
 }
 
 // ── NAV / SHELL ──
 let tab="dashboard";
-const TABTITLES={ dashboard:["","Good day"], log:["Add money","Log"], budget:["","Budget"], goals:["Your plan","Goals"], settings:["Preferences","Settings"] };
+const TABTITLES={ dashboard:["Monthly status","Overview"], log:["Confirmed money","Log"], budget:["Plan versus actual","Budget health"], goals:["Progress and commitments","Goals"], settings:["Editors and configuration","Manage"] };
 function headerFor(){
   const d=new Date();
   if(tab==="dashboard") return [DAYS[d.getDay()]+", "+d.getDate()+" "+MS[d.getMonth()], (d.getHours()<12?"Good morning":(d.getHours()<17?"Good afternoon":"Good evening"))];
@@ -1005,21 +1147,22 @@ function renderDashboard(m,rm){
       <span style="color:var(--muted);font-size:13.5px">${r[0]}</span><span style="font-weight:600;color:${r[2]}">${r[1]}</span></div>`).join("");
     return;
   }
-  const sp=safePerDay(m);
-  const safe=Math.max(0,Math.floor(sp.perDay));
-  setText("dSafe",sar(safe));
-  setText("dSafeSub","income minus committed bills and set-asides, spread over the "+sp.daysLeft+" days left in "+fmtMonth(m).split(" ")[0]+".");
-  setText("dSafeChip", sp.perDay>0 ? "Day-to-day spending is holding up" : "Flexible budget is used up for "+fmtMonth(m).split(" ")[0]);
-  const income=expectedSalary(m), spent=monthSpent(m);
-  const planned=liveCats().reduce((a,c)=>a+num(state.budgets[c.id]),0);
-  setText("dSpent",sar(spent)); setText("dSpentSub","of "+sar(planned)+" planned");
-  el("dSpentW").style.width=(planned>0?Math.min(100,Math.round(spent/planned*100)):0)+"%";
-  const remaining=Math.max(0,planned-spent);
+  const metrics=monthMetrics(state,m), sp=safePerDay(m);
+  const available=metrics.availableWithinPlan;
+  setText("dSafe",sar(available)); el("dSafe").style.color=available<0?"var(--negative)":"var(--primary-strong)";
+  setText("dSafeSub",sar(metrics.spendingPlan)+" plan − "+sar(metrics.actualSpending)+" actual − "+sar(metrics.plannedSpendingRemaining)+" still planned.");
+  setText("dSafeChip",available>=0?"Available without exceeding the monthly plan":"Plan exceeded once all planned expenses are paid");
+  setText("dCashAfter",sar(metrics.cashAfterCommitments)); el("dCashAfter").style.color=metrics.cashAfterCommitments<0?"var(--negative)":"var(--text)";
+  setText("dCashBreakdown",sar(metrics.incomeReceived)+" income − "+sar(metrics.cashPaidSoFar)+" paid − "+sar(metrics.cashObligationsLeft)+" obligations − "+sar(metrics.reservedForGoals)+" goals");
+  const income=metrics.incomeReceived, spent=metrics.actualSpending, planned=metrics.spendingPlan;
+  setText("dSpent",sar(spent)); setText("dSpentSub","of "+sar(planned)+" expense plan");
+  el("dSpentW").style.width=(planned>0?Math.min(100,Math.max(0,Math.round(spent/planned*100))):0)+"%";
+  const remaining=metrics.availableWithinPlan;
   setText("dRem",sar(remaining)); setText("dRemSub","left in this month's plan");
   el("dRemW").style.width=(planned>0?Math.max(0,Math.round(remaining/planned*100)):0)+"%";
-  setText("dCommitted",fmt(committedEq()));
-  setText("dFlexible",fmt(Math.max(0,sp.flexBudget)));
-  setText("dSetAside",fmt(kindPlanned("goal")));
+  setText("dCommitted",fmt(metrics.cashObligationsLeft));
+  setText("dFlexible",fmt(metrics.plannedSpendingRemaining));
+  setText("dSetAside",fmt(metrics.reservedForGoals));
   // house
   const hs=houseStatus();
   setText("dHouseSaved",sar(hs.saved)); setText("dHouseTarget","of "+sar(hs.target));
@@ -1038,7 +1181,8 @@ function renderDashboard(m,rm){
     : (projections.length===state.debts.filter(d=>debtCurrent(d)>0).length&&projections.length
       ? "On pace to be debt-free by "+fmtMonth(projections.map(p=>p.close).sort().pop())+"."
       : "Link a recurring payment to each account to see payoff dates."));
-  // upcoming 7 days
+  setTimeout(()=>renderPlannedPayments(m),0);
+  // legacy upcoming calculation is immediately replaced by reminder rendering
   const dayNow=parseInt(today().slice(8,10));
   const items=[];
   state.recurring.filter(r=>recStatus(r)==="active").forEach(r=>{
@@ -1046,7 +1190,7 @@ function renderDashboard(m,rm){
     const nm=shift(rm,1);
     const inThis=day>=dayNow&&day<=daysInMonth(rm)&&(!r.endMonth||rm<=r.endMonth)&&stepOk(r,rm);
     const inNext=(day+daysInMonth(rm)-dayNow)<=7&&(!r.endMonth||nm<=r.endMonth)&&stepOk(r,nm);
-    const posted=state.entries.some(e=>e.recurringId===r.id&&monthOf(e.date)===rm)&&day<=dayNow;
+    const posted=state.entries.some(e=>entryFulfillsOccurrence(e,r.id,occurrenceKey(r.id,rm),rm))&&day<=dayNow;
     if(inThis&&day-dayNow<=7) items.push({r,day,when:rm,posted});
     else if(!inThis&&inNext) items.push({r,day,when:nm,posted:false});
   });
@@ -1065,15 +1209,64 @@ function renderDashboard(m,rm){
       <div class="amt ${income2?'pos':''}">${income2?'+ ':'− '}${sar(amt)}</div></div>`;
   }).join("") : `<div class="empty" style="border:none"><div style="font-size:26px;margin-bottom:6px">🗓️</div><div class="hint">Nothing due in the next 7 days.</div></div>`;
 }
+function reminderDate(r,m){ return m+"-"+pad2(Math.min(daysInMonth(m),Math.max(1,num(r.dayOfMonth)||1))); }
+function plannedOccurrenceRows(m){
+  const rows=[];
+  state.recurring.filter(r=>!r.isSalary).forEach(r=>{
+    let mm=r.startMonth||m,guard=0;
+    while(mm<=m&&guard++<240){
+      if(coreDue(r,mm)){
+        const key=occurrenceKey(r.id,mm),stored=state.occurrences[key]||{},logged=state.entries.some(e=>entryFulfillsOccurrence(e,r.id,key,mm));
+        const status=logged?"logged":(state.skips.includes(key)?"skipped":(stored.status||"upcoming"));
+        if(!["logged","skipped","rescheduled"].includes(status)){const date=reminderDate(r,mm),due=date<today()?"Overdue":(date===today()?"Due today":"Upcoming");rows.push({r,key,date,due,sourceMonth:mm});}
+      }
+      mm=shift(mm,1);
+    }
+  });
+  Object.entries(state.occurrences||{}).forEach(([key,o])=>{if(!o||o.status!=="rescheduled"||monthOf(o.to)!==m)return;const id=key.slice(0,key.lastIndexOf(":")),r=state.recurring.find(x=>x.id===id);if(!r)return;const date=o.to,due=date<today()?"Overdue":(date===today()?"Due today":"Upcoming");rows.push({r,key,date,due,sourceMonth:key.slice(-7)});});
+  return rows.sort((a,b)=>a.date.localeCompare(b.date));
+}
+function renderPlannedPayments(m){
+  const host=el("dUpcoming"); if(!host)return;
+  const rows=plannedOccurrenceRows(m), visible=rows.slice(0,3);
+  host.innerHTML=visible.length?visible.map(x=>`<div class="row" style="align-items:flex-start">
+    <div class="rowico"><b>${x.date.slice(8,10)}</b><small>${MS[+x.date.slice(5,7)-1]}</small></div>
+    <div class="rowbody"><div class="rowname" dir="auto">${esc(x.r.name)}</div><div class="rowsub"><span>${x.due}</span><span class="tag">${freqLabel(x.r.everyMonths)}</span></div>
+      <details style="margin-top:8px"><summary class="linkbtn" style="list-style:none;display:inline-flex;align-items:center">More actions</summary>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="linkbtn" onclick="rescheduleReminder('${x.r.id}','${x.sourceMonth}')">Reschedule</button><button class="linkbtn" onclick="skipReminder('${x.r.id}','${x.sourceMonth}')">Skip this month</button></div></details></div>
+    <div style="text-align:right"><div class="amt">${sar(x.r.amount)}</div><button class="linkbtn" onclick="startReminderDraft('${x.r.id}','${x.sourceMonth}','${x.date}')">Log</button></div></div>`).join(""):`<div class="empty" style="border:none"><div class="hint">No open payment reminders for ${fmtMonth(m)}.</div></div>`;
+  if(rows.length>3)host.insertAdjacentHTML("beforeend",`<button class="btn2" onclick="showAllPlanned('${m}')">View all overdue and planned (${rows.length})</button>`);
+}
+function showAllPlanned(m){
+  const rows=plannedOccurrenceRows(m); el("allPlanned").innerHTML=rows.map(x=>`<div class="dcard"><div style="display:flex;justify-content:space-between;gap:12px"><div><b>${esc(x.r.name)}</b><div class="hint">${x.due} · ${x.date}</div></div><b>${sar(x.r.amount)}</b></div><div style="display:flex;gap:6px;margin-top:8px"><button class="linkbtn" onclick="startReminderDraft('${x.r.id}','${x.sourceMonth}','${x.date}');closeOverlay()">Log</button><button class="linkbtn" onclick="rescheduleReminder('${x.r.id}','${x.sourceMonth}')">Reschedule</button><button class="linkbtn" onclick="skipReminder('${x.r.id}','${x.sourceMonth}')">Skip</button></div></div>`).join("")||'<div class="empty">No open reminders.</div>'; openOverlay("overdue");
+}
+function skipReminder(id,m){ const key=occurrenceKey(id,m); state.occurrences[key]={status:"skipped",updatedAt:new Date().toISOString()}; if(!state.skips.includes(key))state.skips.push(key); save(); render(); }
+function rescheduleReminder(id,m){
+  const r=state.recurring.find(x=>x.id===id); if(!r)return;
+  const to=prompt("Move this occurrence to (YYYY-MM-DD)",reminderDate(r,m)); if(!/^\d{4}-\d{2}-\d{2}$/.test(to||""))return;
+  state.occurrences[occurrenceKey(id,m)]={status:"rescheduled",to,updatedAt:new Date().toISOString()}; save(); render();
+}
+let draftReminder=null;
+function startReminderDraft(id,m,overrideDate){
+  const r=state.recurring.find(x=>x.id===id); if(!r)return; draftReminder={id,month:m};
+  setTab("log"); setLogType(r.type==="goal"?"goal":r.type); fillLogSelects();
+  el("eAmt").value=r.amount; el("eDesc").value=r.name; el("eDate").value=localDateTime();
+  if(["expense","goal"].includes(r.type))el("eCat").value=r.categoryId||"other";
+  if(r.type==="payment")el("ePay").value=r.debtId||"";
+  msg("logMsg","Draft from reminder — review date, time and amount, then save");
+}
 function renderBudget(m){
-  const cats=liveCats();
-  const planned=cats.reduce((a,c)=>a+num(state.budgets[c.id]),0);
-  const spent=monthSpent(m), diff=planned-spent;
+  const cats=liveCats().slice().sort((a,b)=>{
+    const ao=catActual(a.id,m)-effectivePlanned(a.id,m),bo=catActual(b.id,m)-effectivePlanned(b.id,m);
+    return (bo>0)-(ao>0)||bo-ao||a.name.localeCompare(b.name);
+  });
+  const metrics=monthMetrics(state,m), planned=metrics.spendingPlan;
+  const spent=metrics.actualSpending, diff=planned-spent-metrics.plannedSpendingRemaining;
   setText("bPlanned",sar(planned)); setText("bActual",sar(spent));
   const bd=el("bDiff"); bd.textContent=(diff>=0?fmt(diff)+" under":fmt(-diff)+" over"); bd.style.color=diff>=0?"var(--positive-ink)":"var(--negative)";
   const sp=safePerDay(m);
-  setText("bCommitted",fmt(committedEq())); setText("bFlexible",fmt(Math.max(0,sp.flexBudget)));
-  setText("bSafeDay",fmt(Math.max(0,Math.floor(sp.perDay))));
+  setText("bCommitted",fmt(metrics.cashObligationsLeft)); setText("bFlexible",fmt(metrics.plannedSpendingRemaining));
+  setText("bSafeDay",fmt(Math.floor(metrics.availableWithinPlan/Math.max(1,sp.daysLeft))));
   const isCur=m===realMonth();
   const pacePct=planned>0?spent/planned:0, dayPct=sp.day/sp.dim;
   setText("bPace", isCur ? ("Day "+sp.day+" of "+sp.dim+" — "+(pacePct<=dayPct?("pacing about "+Math.round((dayPct-pacePct)*100)+"% under plan."):("pacing about "+Math.round((pacePct-dayPct)*100)+"% over plan.")))
@@ -1139,7 +1332,7 @@ function renderGoals(){
   }).join("") : `<div class="empty"><div style="font-size:26px;margin-bottom:6px">🎓</div><div class="hint">School fees, trips, annual insurance — add a commitment and we'll work out the monthly set-aside.</div></div>`;
   // debts
   el("gDebts").innerHTML = state.debts.length? state.debts.map(d=>{
-    const bal=debtCurrent(d), orig=num(d.original);
+    const bal=debtCurrent(d), orig=num(d.original), mv=debtMovement(state,d.id,state.currentMonth);
     const paidPct=orig>0?Math.max(0,Math.round((orig-bal)/orig*100)):0;
     const pr=projectDebt(d);
     const verdict = bal<=0 ? {cls:"b-pos",txt:"✓ Paid off"} :
@@ -1154,10 +1347,17 @@ function renderGoals(){
         <div style="text-align:right"><div style="font-weight:600;font-size:14.5px">${sar(bal)}</div><div class="hint">left</div></div>
       </div>
       <div class="track h8"><i style="width:${paidPct}%;background:var(--g-oblig)"></i></div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr auto;gap:6px 12px;font-size:12.5px">
+        <span class="hint">Opening</span><b>${sar(mv.opening)}</b>
+        ${d.kind==="card"?`<span class="hint">Purchases</span><b>+ ${sar(mv.purchases)}</b><span class="hint">Refunds</span><b>− ${sar(mv.refunds)}</b>`:""}
+        <span class="hint">Payments</span><b>− ${sar(mv.payments)}</b>
+        ${mv.adjustments?`<span class="hint">Reconciliation</span><b>${mv.adjustments>0?'+ ':'− '}${sar(Math.abs(mv.adjustments))}</b>`:""}
+        <span style="font-weight:700">Closing</span><b>${sar(mv.closing)}</b>
+      </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:9px;gap:8px">
         <span class="hint">${paidPct}% paid off${pr&&pr.interest?", ≈"+sar(Math.round(pr.interest))+" interest ahead":""}</span>
         <span class="badge ${verdict.cls}">${verdict.txt}</span>
-      </div></div>`;
+      </div><button class="btn2" style="margin-top:10px" onclick="reconcileDebt('${d.id}')">Reconcile statement balance</button></div>`;
   }).join("") : `<div class="empty"><div style="font-size:26px;margin-bottom:6px">💳</div><div class="hint">No cards or loans — add them in Settings → Cards &amp; loans.</div></div>`;
   // roadmap
   const rm=realMonth();
@@ -1175,17 +1375,27 @@ function renderGoals(){
         </div></div>`;
     }).join("")+`</div>`;
 }
+function reconcileDebt(id){
+  const d=state.debts.find(x=>x.id===id); if(!d)return;
+  const current=debtCurrent(d), raw=prompt("Actual amount currently owed",String(current)); if(raw===null)return;
+  const actual=Number(raw); if(!Number.isFinite(actual)||actual<0){alert("Enter a valid balance");return;}
+  const amount=actual-current; if(Math.abs(amount)<0.005)return;
+  state.entries.push(normEntry({id:uid(),date:today(),occurredAt:localDateTime(),type:"balance_adjustment",amount,debtId:id,category:d.category,description:"Statement reconciliation"}));
+  save();render();
+}
 function renderEntries(){
   const list=el("entryList");
-  const es=[...state.entries].sort((a,b)=>(b.date===a.date?(b.id>a.id?1:-1):b.date.localeCompare(a.date)));
+  const q=(el("logSearch")&&el("logSearch").value||"").trim().toLowerCase(),tf=el("logTypeFilter")&&el("logTypeFilter").value||"",af=el("logAccountFilter")&&el("logAccountFilter").value||"";
+  const es=[...state.entries].filter(e=>(!tf||e.type===tf)&&(!q||[e.description,catName(e.category)].join(" ").toLowerCase().includes(q))&&
+    (!af||(af==="card"&&state.debts.some(d=>d.kind==="card"&&(e.paidWith===d.id||e.debtId===d.id)))||(af==="cash"&&!e.paidWith))).sort((a,b)=>(b.date===a.date?(b.id>a.id?1:-1):b.date.localeCompare(a.date)));
   if(!es.length){ list.innerHTML=`<div class="empty"><div style="font-size:30px;margin-bottom:8px">🧾</div>
     <div style="font-weight:600;font-size:15px;margin-bottom:4px">No entries yet</div>
     <div class="hint">Log your first purchase above, or paste a bank SMS to fill it in automatically.</div></div>`; return; }
   list.innerHTML=`<div class="listcard">`+es.slice(0,50).map(e=>{
     const d=new Date(e.date+"T12:00:00");
-    const income=e.type==="income", payment=e.type==="payment";
+    const income=e.type==="income", refund=e.type==="refund", goal=e.type==="goal", payment=e.type==="payment";
     const label=e.description||(payment?("Payment · "+debtName(e.debtId)):catName(e.category));
-    const tag=e.recurringId?"auto":(payment?"payment":null);
+    const tag=e.importedDuplicate?"imported duplicate":(e.recurringId?"from reminder":(payment?"payment":(goal?"goal":null)));
     const pwLab=e.paidWith?(e.paidWith==="cashJOD"?"JOD cash":e.paidWith==="debit"?"debit":e.paidWith==="otherPay"?"other":((state.debts.find(x=>x.id===e.paidWith)||{}).name||null)):null;
     return `<div class="row">
       <div class="rowico" style="font-size:18px">${income?catIcon(e.category):(payment?"💳":catIcon(e.category))}</div>
@@ -1193,10 +1403,10 @@ function renderEntries(){
         <div class="rowsub"><span>${catName(e.category)} · ${d.getDate()} ${MS[d.getMonth()]}</span>
         ${tag?`<span class="tag">${tag}</span>`:''}${pwLab?`<span class="tag" style="color:var(--g-oblig)">via ${esc(pwLab)}</span>`:''}</div></div>
       <div style="text-align:right;flex:none">
-        <div class="amt ${income?'pos':'neg'}">${income?'+ ':'− '}${sar(e.amount)}</div>
+        <div class="amt ${(income||refund)?'pos':'neg'}">${income||refund?'+ ':'− '}${sar(e.amount)}</div>
         <div class="rowactions">
           ${(!e.recurringId&&!income)?`<button class="act-pri" onclick="makeRecurringFrom('${e.id}')">↻ Recurring</button>`:''}
-          <button onclick="editEntry('${e.id}')">Edit</button>
+          ${e.type!=="balance_adjustment"?`<button onclick="editEntry('${e.id}')">Edit</button>`:''}
           <button onclick="delEntry('${e.id}')">${e.recurringId?'Skip':'Delete'}</button>
         </div></div></div>`;
   }).join("")+`</div>`;
@@ -1230,14 +1440,15 @@ function payWithChanged(){ const v=el("ePayWith")?el("ePayWith").value:"";
   const h=el("payWithHint"); if(h) h.style.display=isCard?"":"none"; }
 function setLogType(t){ logType=t;
   document.querySelectorAll("#logSeg button").forEach(b=>b.classList.toggle("on",b.dataset.lt===t));
-  el("logSms").style.display=t==="expense"?"":"none";
+  el("logSms").style.display=["expense","refund"].includes(t)?"":"none";
   el("fDesc").style.display=t==="income"?"none":"";
-  el("fCat").style.display=t==="expense"?"":"none";
-  el("fPayWith").style.display=t==="expense"?"":"none";
+  el("fCat").style.display=["expense","refund","goal"].includes(t)?"":"none";
+  el("fPayWith").style.display=["expense","refund"].includes(t)?"":"none";
   el("fPay").style.display=t==="payment"?"":"none";
   el("fSrc").style.display=t==="income"?"":"none";
   setText("amtLabel",t==="income"?"Amount received":"Amount");
-  el("logBtn").textContent=editingId?"Update entry":(t==="expense"?"Add expense":(t==="payment"?"Add payment":"Add income"));
+  const labels={expense:"Save expense",refund:"Save refund",payment:"Save payment",income:"Save income",goal:"Save goal contribution"};
+  el("logBtn").textContent=editingId?"Update entry":labels[t];
 }
 function toggleRepeat(){ repeatOn=!repeatOn;
   el("repRow").setAttribute("aria-checked",repeatOn?"true":"false");
@@ -1247,41 +1458,50 @@ function logResetForm(){
   ["eDesc","eAmt","eSms","eUntil"].forEach(id=>{ const x=el(id); if(x) x.value=""; });
   const ef=el("eFreq"); if(ef) ef.value="1";
   const pw=el("ePayWith"); if(pw){ pw.value=""; payWithChanged(); }
-  el("eDate").value=today();
+  el("eDate").value=localDateTime(); draftReminder=null;
   el("repRow").setAttribute("aria-checked","false"); el("fUntil").style.display="none";
   el("repRow").style.display="";
   el("logCancelBtn").style.display="none";
   setLogType("expense");
 }
 function submitEntry(){
-  const amt=parseFloat(el("eAmt").value), date=el("eDate").value;
-  if(!amt||amt<=0||!date){ msg("logMsg","Enter an amount and date"); return; }
+  const amt=parseFloat(el("eAmt").value), occurredAt=el("eDate").value, date=(occurredAt||"").slice(0,10);
+  if(!amt||amt<=0||!date){ msg("logMsg","Enter an amount, date and time"); return; }
   let entry;
-  if(logType==="expense"){
+  if(["expense","refund"].includes(logType)){
     const cat=el("eCat").value||(liveCats()[0]&&liveCats()[0].id)||"other";
-    entry={ date, amount:amt, category:cat, type:"expense", debtId:null, paidWith:el("ePayWith").value||null, description:el("eDesc").value.trim() };
+    if(logType==="expense"&&catActual(cat,monthOf(date))+amt>effectivePlanned(cat,monthOf(date))&&num(state.budgets[cat])>0){
+      const over=catActual(cat,monthOf(date))+amt-effectivePlanned(cat,monthOf(date));
+      if(!confirm("This will put "+catName(cat)+" "+sar(over)+" over its "+fmtMonth(monthOf(date))+" budget.\n\nSave it anyway?"))return;
+    }
+    entry={ date, occurredAt, amount:amt, category:cat, type:logType, debtId:null, paidWith:el("ePayWith").value||null, description:el("eDesc").value.trim() };
   } else if(logType==="payment"){
     const debt=state.debts.find(d=>d.id===el("ePay").value);
     if(!debt){ msg("logMsg","Choose an account — add one in Settings"); return; }
-    entry={ date, amount:amt, category:debt.category, type:"payment", debtId:debt.id, description:(el("eDesc").value.trim()||("Payment · "+debt.name)) };
+    entry={ date, occurredAt, amount:amt, category:debt.category, type:"payment", debtId:debt.id, description:(el("eDesc").value.trim()||("Payment · "+debt.name)) };
+  } else if(logType==="goal"){
+    const cat=el("eCat").value||(liveCats().find(c=>c.kind==="goal")||{}).id||"houseSavings";
+    entry={date,occurredAt,amount:amt,category:cat,type:"goal",goalId:cat,description:el("eDesc").value.trim()||catName(cat)};
   } else {
     const src=el("eIncSrc").value;
-    entry={ date, amount:amt, category:src, type:"income", debtId:null, description:el("eDesc").value.trim()||(INCOME_META[src]?INCOME_META[src].name:"Income") };
+    entry={ date, occurredAt, amount:amt, category:src, type:"income", debtId:null, description:el("eDesc").value.trim()||(INCOME_META[src]?INCOME_META[src].name:"Income") };
   }
   if(editingId){
     const ix=state.entries.findIndex(e=>e.id===editingId);
     if(ix>=0) state.entries[ix]=Object.assign({},state.entries[ix],entry);
     msg("logMsg","Entry updated ✓");
   } else {
-    entry.id=uid(); state.entries.push(entry);
+    entry.id=uid();
+    if(draftReminder){ entry.recurringId=draftReminder.id;entry.recurringOccurrenceKey=occurrenceKey(draftReminder.id,draftReminder.month);state.occurrences[entry.recurringOccurrenceKey]={status:"logged",entryId:entry.id,updatedAt:new Date().toISOString()}; }
+    state.entries.push(entry);
     if(repeatOn){
       const day=Math.min(28,Math.max(1,parseInt(date.slice(8,10))||1));
       const every=Math.min(24,Math.max(1,parseInt(el("eFreq").value)||1));
       state.recurring.push({ id:uid(), name:entry.description||catName(entry.category), amount:amt, type:logType,
-        categoryId:logType==="expense"?entry.category:(logType==="income"?entry.category:"other"),
+        categoryId:["expense","refund","goal"].includes(logType)?entry.category:(logType==="income"?entry.category:"other"), paidWith:entry.paidWith||null,
         debtId:logType==="payment"?entry.debtId:null, dayOfMonth:day, everyMonths:every,
         startMonth:shift(monthOf(date),every), endMonth:el("eUntil").value||null, active:true, isSalary:false });
-      msg("logMsg","Added — posts "+freqLabel(every)+" from now on ✓");
+      msg("logMsg","Saved and reminder created — future occurrences require confirmation");
     } else {
       msg("logMsg",(logType==="payment"?"Payment":logType==="income"?"Income":"Expense")+" added ✓");
     }
@@ -1292,11 +1512,12 @@ function submitEntry(){
 function editEntry(id){
   const e=state.entries.find(x=>x.id===id); if(!e) return;
   setTab("log"); editingId=id; setLogType(e.type);
-  el("eAmt").value=e.amount; el("eDate").value=e.date;
+  el("eAmt").value=e.amount; el("eDate").value=e.occurredAt||e.date+"T12:00";
   el("repRow").style.display="none"; el("fUntil").style.display="none";
-  if(e.type==="expense"){ el("eDesc").value=e.description||""; fillLogSelects(); el("eCat").value=e.category;
+  if(["expense","refund"].includes(e.type)){ el("eDesc").value=e.description||""; fillLogSelects(); el("eCat").value=e.category;
     el("ePayWith").value=e.paidWith||""; payWithChanged(); }
   else if(e.type==="payment"){ fillLogSelects(); el("ePay").value=e.debtId||""; el("eDesc").value=e.description||""; }
+  else if(e.type==="goal"){ fillLogSelects(); el("eCat").value=e.category; el("eDesc").value=e.description||""; }
   else { el("eIncSrc").value=INCOME_META[e.category]?e.category:"incomeOther"; }
   el("logBtn").textContent="Update entry";
   el("logCancelBtn").style.display="";
@@ -1335,7 +1556,7 @@ function makeRecurringFrom(id){
 function renderRecurring(){
   const items=state.recurring.filter(r=>!r.isSalary);
   const act=state.recurring.filter(r=>recStatus(r)==="active");
-  setText("recCount",act.length+" active · posts automatically each month");
+  setText("recCount",act.length+" active · reminders only");
   const inSum=act.filter(r=>r.type==="income").reduce((a,r)=>a+(r.isSalary?expectedSalary(realMonth()):num(r.amount))/Math.max(1,num(r.everyMonths)||1),0);
   const outSum=act.filter(r=>r.type!=="income").reduce((a,r)=>a+num(r.amount)/Math.max(1,num(r.everyMonths)||1),0);
   setText("recIn","+ "+sar(inSum)); setText("recOut","− "+sar(outSum));
@@ -1344,9 +1565,9 @@ function renderRecurring(){
     const st=recStatus(r), income=r.type==="income";
     const every=Math.max(1,num(r.everyMonths)||1);
     const nxt=every>1?nextOccurrence(r):null;
-    const schedule = st==="ended" ? "Ended "+fmtMonth(r.endMonth)+" — no longer posts"
-      : st==="paused" ? "Paused — won't post"
-      : "Posts on the "+ordinal(r.dayOfMonth)+" · "+freqLabel(every)+(nxt?(" (next "+fmtMonth(nxt)+")"):"")+" · "+(r.endMonth?("until "+fmtMonth(r.endMonth)):"forever");
+    const schedule = st==="ended" ? "Ended "+fmtMonth(r.endMonth)+" — no longer appears"
+      : st==="paused" ? "Paused — won't appear"
+      : "Reminder on the "+ordinal(r.dayOfMonth)+" · "+freqLabel(every)+(nxt?(" (next "+fmtMonth(nxt)+")"):"")+" · "+(r.endMonth?("until "+fmtMonth(r.endMonth)):"forever");
     return `<div class="dcard${st!=="active"?' dim':''}">
       <div style="display:flex;align-items:center;gap:11px">
         <div class="rowico" style="width:40px;height:40px;font-size:18px">${income?"💵":(r.type==="payment"?"💳":catIcon(r.categoryId))}</div>
@@ -1464,7 +1685,13 @@ function renderSettingsList(){
     {icon:"🏷️",title:"Categories",sub:"Rename, re-icon, kind, rollover, archive",ov:"cats"},
     {icon:"💳",title:"Cards & loans",sub:state.debts.length?(state.debts.length+" accounts · "+fmt(td)+" SAR remaining"):"Add your cards and loans",ov:"debts"}
   ];
-  el("setPlanList").innerHTML=rows.map(r=>`<button class="row" style="width:100%;background:none;border-left:none;border-right:none;border-bottom:none;cursor:pointer;text-align:left;font-family:var(--font);color:var(--text)" onclick="openOverlay('${r.ov}')">
+  rows.unshift(
+    {icon:"◷",title:"Planned payments",sub:"Reminder only · log, reschedule, or skip",ov:"recurring"},
+    {icon:"▥",title:"Budget health",sub:"Review limits and overspending",tab:"budget"},
+    {icon:"◎",title:"Goals & commitments",sub:"House, commitments, and roadmap",tab:"goals"}
+  );
+  const cleanRows=rows.filter(r=>r.title!=="Recurring items").map(r=>r.title==="Salary & house goal"?{...r,title:"Income plan & house goal"}:r);
+  el("setPlanList").innerHTML=cleanRows.map(r=>`<button class="row" style="width:100%;background:none;border-left:none;border-right:none;border-bottom:none;cursor:pointer;text-align:left;font-family:var(--font);color:var(--text)" onclick="${r.tab?`setTab('${r.tab}')`:`openOverlay('${r.ov}')`}">
     <span style="font-size:18px;width:24px;text-align:center">${r.icon}</span>
     <span style="flex:1"><span style="display:block;font-weight:600;font-size:14.5px">${r.title}</span><span class="hint">${r.sub}</span></span>
     <span style="color:var(--muted);font-size:18px">›</span></button>`).join("");
@@ -1685,13 +1912,58 @@ function backup(){
 function restore(ev){
   const f=ev.target.files[0]; if(!f) return;
   const rd=new FileReader();
-  rd.onload=()=>{ try{ state=migrate(JSON.parse(rd.result)); save(); materializeRecurring();
+  rd.onload=()=>{ try{ const restored=migrate(JSON.parse(rd.result)); state=restored; migrationRecovery=null; save(); materializeRecurring();
       el("firstRun").style.display="none"; el("shell").style.display="flex";
       render(); msg("backupMsg","Data restored ✓"); }catch(e){ msg("backupMsg","Invalid backup file ✗"); } };
   rd.readAsText(f); ev.target.value="";
 }
 function resetAll(){ if(confirm("This erases all your data and restores defaults. Continue?")){
-  state=normalize8(clone(DEFAULTS)); state.currentMonth=realMonth(); save(); render(); } }
+  state=normalize9(clone(DEFAULTS)); state.currentMonth=realMonth(); save(); render(); } }
+
+let csvDraft=[];
+function resolveDebtRef(ref){ const q=String(ref||"").trim().toLowerCase(); return state.debts.find(d=>d.id===q||String(d.name||"").toLowerCase().includes(q))||null; }
+function existingFingerprints(){ return new Set(state.entries.map(e=>entryFingerprint({sourceRef:e.sourceRef,type:e.type,occurredAt:e.occurredAt||e.date+"T12:00",amount:e.amount,description:e.description,accountRef:e.debtId||e.paidWith||""}))); }
+function previewCsv(event){
+  const file=event.target.files&&event.target.files[0]; if(!file)return;
+  const reader=new FileReader(); reader.onload=()=>{
+    const rows=parseCsv(reader.result).map((raw,index)=>{const row=normalizeImportRow(raw);if(row.type==="payment"&&!resolveDebtRef(row.accountRef)){row.valid=false;row.errors.push("Match payment to a card or loan");}return {...row,index};});
+    csvDraft=markImportDuplicates(rows,existingFingerprints()).map(row=>({...row,include:row.valid&&!row.duplicate,duplicateAccepted:false}));
+    renderCsvPreview(); openOverlay("csv"); event.target.value="";
+  }; reader.readAsText(file);
+}
+function renderCsvPreview(){
+  const invalid=csvDraft.filter(r=>r.include&&!r.valid).length, included=csvDraft.filter(r=>r.include&&r.valid).length;
+  setText("csvSummary",included+" included · "+csvDraft.filter(r=>r.duplicate).length+" possible duplicates · "+csvDraft.filter(r=>r.blocked).length+" blocked");
+  el("csvConfirm").disabled=invalid>0||included===0; el("csvConfirm").textContent=invalid?"Fix included errors first":"Import "+included+" entries";
+  el("csvPreview").innerHTML=csvDraft.map((r,i)=>`<div class="dcard" style="${r.blocked?'opacity:.65':''}">
+    <div style="display:flex;gap:10px;align-items:flex-start"><input type="checkbox" aria-label="Include row" ${r.include?'checked':''} ${r.blocked?'disabled':''} onchange="toggleCsvRow(${i},this.checked)" style="width:22px;height:22px">
+    <div style="flex:1"><div style="display:flex;justify-content:space-between;gap:8px"><b>${esc(r.description||"Missing description")}</b><span class="amt">${r.amount?fmt(r.amount):"—"} ${esc(r.currency)}</span></div>
+    <div class="rowsub"><span>${esc(r.occurredAt||"Invalid date")}</span><span class="tag">${esc(r.type||"invalid")}</span>${r.duplicate?'<span class="tag" style="color:var(--warning-ink)">duplicate</span>':''}${r.blocked?'<span class="tag" style="color:var(--negative)">declined · blocked</span>':''}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px">
+      <input class="in" style="height:42px" value="${esc(String(r.amount||''))}" inputmode="decimal" aria-label="Amount" onchange="editCsvRow(${i},'amount',this.value)">
+      <select class="sel" style="height:42px" aria-label="Type" onchange="editCsvRow(${i},'type',this.value)">${["expense","refund","payment","income"].map(t=>`<option value="${t}" ${r.type===t?'selected':''}>${t}</option>`).join("")}</select>
+      <input class="in" style="height:42px;grid-column:1/-1" value="${esc(r.description)}" aria-label="Description" onchange="editCsvRow(${i},'description',this.value)">
+      <input class="in" style="height:42px" value="${esc(r.occurredAt)}" aria-label="Date and time" onchange="editCsvRow(${i},'occurredAt',this.value)">
+      <input class="in" style="height:42px" value="${esc(r.category)}" aria-label="Category" onchange="editCsvRow(${i},'category',this.value)">
+      <input class="in" style="height:42px;grid-column:1/-1" value="${esc(r.accountRef)}" aria-label="Account reference" placeholder="Account for payments" onchange="editCsvRow(${i},'accountRef',this.value)">
+    </div>
+    ${r.errors.length?`<div class="hint" style="color:var(--negative);margin-top:6px">${esc(r.errors.join(" · "))}</div>`:''}</div></div></div>`).join("");
+}
+function refreshCsvDuplicates(){
+  const marked=markImportDuplicates(csvDraft,existingFingerprints());
+  csvDraft=marked.map((row,i)=>{const prior=csvDraft[i]||{};const changed=prior.fp!==row.fp;return {...row,duplicateAccepted:row.duplicate&&!changed&&!!prior.duplicateAccepted,include:row.duplicate?(!changed&&!!prior.duplicateAccepted&&!!prior.include):!!prior.include};});
+}
+function toggleCsvRow(i,on){ if(csvDraft[i]&&!csvDraft[i].blocked){csvDraft[i].include=on;csvDraft[i].duplicateAccepted=!!(on&&csvDraft[i].duplicate);renderCsvPreview();} }
+function editCsvRow(i,key,value){ const r=csvDraft[i];if(!r)return;r[key]=key==="amount"?Number(value):value;if(key==="occurredAt")r.date=String(value).slice(0,10);r.valid=!r.blocked&&r.amount>0&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(r.occurredAt)&&["expense","refund","payment","income"].includes(r.type)&&!!r.description&&!!r.sourceRef&&(r.type!=="payment"||!!resolveDebtRef(r.accountRef));r.errors=r.valid?[]:["Review required fields and account match"];refreshCsvDuplicates();renderCsvPreview(); }
+function confirmCsvImport(){
+  refreshCsvDuplicates();renderCsvPreview();
+  const selected=csvDraft.filter(r=>r.include); if(!selected.length||selected.some(r=>!r.valid||r.blocked||(r.duplicate&&!r.duplicateAccepted)))return;
+  const importId=uid(), additions=selected.map(r=>{const debt=resolveDebtRef(r.accountRef),card=resolveDebtRef(r.paidWith);return normEntry({id:uid(),date:r.date,occurredAt:r.occurredAt,type:r.type,amount:r.amount,category:r.category||"other",description:r.description,
+    debtId:r.type==="payment"&&debt?debt.id:null,paidWith:["expense","refund"].includes(r.type)&&card?card.id:(r.paidWith||null),sourceRef:r.sourceRef,importId,importedDuplicate:r.duplicate});});
+  const next=state.entries.concat(additions); if(next.some(e=>!e))return;
+  state.entries=next; state.imports.push({id:importId,at:new Date().toISOString(),count:additions.length}); save(); csvDraft=[]; closeOverlay(); render(); msg("logMsg",additions.length+" entries imported");
+}
+function cancelCsvImport(){csvDraft=[];closeOverlay();}
 
 // ── BANK SMS IMPORT (on-device parsing — feeds the Log expense form) ──
 const CAT_RULES = [
@@ -1801,10 +2073,11 @@ function exitFirstRun(){ el("firstRun").style.display="none"; el("shell").style.
 // ── INIT ──
 save();
 materializeRecurring();
-el("eDate").value=today();
+el("eDate").value=localDateTime();
 setLogType("expense");
 if(fresh){ el("firstRun").style.display="flex"; el("shell").style.display="none"; }
 render();
+if(migrationRecovery)setTimeout(()=>alert("The update could not migrate the saved data. Your original local data was preserved and has not been overwritten. Restore a recent backup from Manage, or export the original browser data before making changes."),0);
 handleIncoming();
 applyTheme();
 window.addEventListener("hashchange",handleIncoming);

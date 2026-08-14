@@ -114,7 +114,7 @@ ${debts.map((d) => `| ${d.name} | ${d.bank || ""} | ${nf(d.startingBalance)} | $
 ${categories.map((c) => `| ${c.icon || ""} ${c.name || c.id} | ${nf(budgets[c.id])} | ${c.group || ""} | ${c.kind || "flexible"}${c.rollover ? " ↻" : ""} |`).join("\n") || "| — | | | |"}
 
 ### Recurring, commitments & entries (seed)
-_${recurring.length} seed recurring ${recurring.length === 1 ? "item" : "items"} (salary auto-creates on first run) · ${commitments.length} seed ${commitments.length === 1 ? "commitment" : "commitments"} · ${entries.length} seed ${entries.length === 1 ? "entry" : "entries"} — your income, expenses & payments live here._
+_${recurring.length} seed reminder ${recurring.length === 1 ? "template" : "templates"} (salary planning is added on first run; nothing auto-posts) · ${commitments.length} seed ${commitments.length === 1 ? "commitment" : "commitments"} · ${entries.length} seed ${entries.length === 1 ? "entry" : "entries"} — confirmed income, expenses, refunds, payments and goal contributions live here._
 
 ### Seed roadmap (copied into your data on first run — edit it in Goals)
 | # | Phase | Window | Goal |
