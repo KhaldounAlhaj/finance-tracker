@@ -16,9 +16,14 @@ test("production has no remote runtime dependency",()=>{
   assert.doesNotMatch(html,/fonts\.googleapis|material-symbols/i);
 });
 
-test("release cache is v9 and includes every app asset",()=>{
-  assert.match(sw,/CACHE = "finance-v9"/);
-  for(const asset of ["index.html","manifest.json","icon-180.png","icon-192.png","icon-512.png"])assert.match(sw,new RegExp(asset.replace(".","\\.")));
+test("release cache is v9.1 and includes every app asset",()=>{
+  assert.match(sw,/CACHE = "finance-v9\.1"/);
+  for(const asset of ["index.html","manifest.json","icon-180.png","icon-192.png","icon-512.png","examples/finance-import-template.csv"])assert.match(sw,new RegExp(asset.replace(".","\\.")));
+});
+
+test("CSV template uses hints rather than configured account IDs",()=>{
+  const csv=fs.readFileSync(new URL("../examples/finance-import-template.csv",import.meta.url),"utf8");
+  assert.match(csv,/account_ref/);assert.match(csv,/paid_with/);assert.doesNotMatch(csv,/debtId|confirmedDebtId|confirmedPaidWith/);
 });
 
 test("recurring materialization is disabled",()=>{

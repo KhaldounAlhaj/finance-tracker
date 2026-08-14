@@ -64,6 +64,8 @@
   body{background:var(--canvas);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.45;
     -webkit-font-smoothing:antialiased;min-height:100vh;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
   #app{max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative}
+  .csv-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px;min-width:0}
+  @media (max-width:370px){.csv-grid{grid-template-columns:1fr}.csv-grid>*{grid-column:1!important}}
   @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
   @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
   @keyframes sheetup{from{transform:translateY(100%)}to{transform:none}}
@@ -348,8 +350,10 @@
 
         <div style="display:flex;gap:8px">
           <button class="btn2" type="button" onclick="document.getElementById('csvFile').click()">Import CSV catch-up file</button>
+          <button class="btn-ghost" id="undoImportBtn" type="button" onclick="undoLastImport()" style="display:none">Undo last import</button>
           <input type="file" id="csvFile" accept=".csv,text/csv" style="display:none" onchange="previewCsv(event)">
         </div>
+        <a class="linkbtn" href="examples/finance-import-template.csv" download style="align-self:flex-start">Download CSV template</a>
 
         <div class="fg"><label class="fl" id="amtLabel">Amount</label>
           <div class="amtwrap"><input id="eAmt" inputmode="decimal" placeholder="0"><span>SAR</span></div>
@@ -595,6 +599,15 @@
     <div class="ovhead"><button class="iconbtn" onclick="closeOverlay()" aria-label="Back">‹</button><div class="t">CSV import preview</div></div>
     <div class="ovbody">
       <div class="card card-sm"><div style="font-weight:600">Nothing is saved yet</div><div class="hint" id="csvSummary" style="margin-top:4px"></div></div>
+      <div class="card card-sm" id="csvBulk">
+        <div style="font-weight:600;margin-bottom:8px">Apply to included rows</div>
+        <div style="display:grid;grid-template-columns:1fr;gap:8px">
+          <select class="sel" id="csvBulkPayWith" onchange="applyCsvBulk('confirmedPaidWith',this.value);this.value=''" aria-label="Bulk Paid with"></select>
+          <select class="sel" id="csvBulkDebt" onchange="applyCsvBulk('confirmedDebtId',this.value);this.value=''" aria-label="Bulk Account paid"></select>
+          <select class="sel" id="csvBulkCategory" onchange="applyCsvBulk('confirmedCategoryId',this.value);this.value=''" aria-label="Bulk category"></select>
+        </div>
+        <div class="hint" style="margin-top:7px">CSV account values are hints only. You confirm the actual account here before saving.</div>
+      </div>
       <div id="csvPreview" style="display:flex;flex-direction:column;gap:10px"></div>
       <button class="btn" id="csvConfirm" onclick="confirmCsvImport()">Confirm import</button>
       <button class="btn-ghost" onclick="cancelCsvImport()">Cancel</button>
@@ -755,31 +768,95 @@ function parseCsv(text){
   const headers=rows.shift().map(h=>h.trim().toLowerCase());
   return rows.map(values=>Object.fromEntries(headers.map((h,i)=>[h,(values[i]||"").trim()])));
 }
+function validImportTimestamp(stamp){
+  const m=String(stamp||"").match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);if(!m)return false;
+  const y=+m[1],mo=+m[2],d=+m[3],h=+m[4],mi=+m[5];if(h>23||mi>59||mo<1||mo>12||d<1)return false;
+  const date=new Date(Date.UTC(y,mo-1,d,h,mi));return date.getUTCFullYear()===y&&date.getUTCMonth()===mo-1&&date.getUTCDate()===d&&date.getUTCHours()===h&&date.getUTCMinutes()===mi;
+}
+function hashImportValue(value){let h=0x811c9dc5;for(const ch of String(value||"")){h^=ch.charCodeAt(0);h=Math.imul(h,0x01000193);}return (h>>>0).toString(16).padStart(8,"0");}
 function normalizeImportRow(raw){
   const r=raw||{}, type=String(r.type||"").trim().toLowerCase(), amount=Number(String(r.amount||"").replace(/,/g,""));
   const stamp=String(r.occurred_at||r.occurredAt||"").trim().replace(" ","T").slice(0,16);
   const blocked=["declined","rejected"].includes(type)||/declin|reject|مرفوض|رفض/i.test(String(r.notes||""));
-  const validTypes=["expense","refund","payment","income"];
+  const validTypes=["expense","refund","payment","income","goal"];
   const errors=[];
-  if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(stamp))errors.push("Invalid date/time");
+  if(!validImportTimestamp(stamp))errors.push("Invalid date/time");
   if(!validTypes.includes(type))errors.push("Invalid type");
   if(!Number.isFinite(amount)||amount<=0)errors.push("Invalid amount");
-  if(!String(r.currency||"").trim())errors.push("Currency required");
+  if(String(r.currency||"").trim().toUpperCase()!=="SAR")errors.push("Only SAR is supported");
   if(!String(r.description||"").trim())errors.push("Description required");
-  if(!String(r.source_ref||r.sourceRef||"").trim())errors.push("Source reference required");
   return {type,amount,occurredAt:stamp,date:stamp.slice(0,10),currency:String(r.currency||"").toUpperCase(),description:String(r.description||""),
-    category:String(r.category||"other"),paidWith:String(r.paid_with||"")||null,accountRef:String(r.account_ref||""),sourceRef:String(r.source_ref||r.sourceRef||""),
+    categoryHint:String(r.category||""),paidWithHint:String(r.paid_with||""),accountHint:String(r.account_ref||""),sourceRef:String(r.source_ref||r.sourceRef||""),
     notes:String(r.notes||""),blocked,valid:!blocked&&errors.length===0,errors};
 }
 function entryFingerprint(e){
+  if(e&&e.importFingerprint)return e.importFingerprint;
   if(e&&e.sourceRef)return "source:"+String(e.sourceRef).trim().toLowerCase();
   const clean=v=>String(v||"").trim().toLowerCase().replace(/\s+/g," ");
   const amount=Number.isFinite(+(e&&e.amount))?+(e&&e.amount):0;
-  return "entry:"+[clean(e&&e.type),clean(e&&e.occurredAt),amount.toFixed(2),clean(e&&e.description),clean(e&&e.accountRef)].join("|");
+  const canonical=[clean(e&&e.type),clean(e&&e.occurredAt),amount.toFixed(2),clean(e&&e.description),clean(e&&(e.accountRef||e.accountHint||e.paidWithHint))].join("|");
+  return "entry:"+hashImportValue(canonical);
 }
 function markImportDuplicates(rows,existing){
   const seen=new Set(existing||[]);
   return (rows||[]).map(row=>{const fp=entryFingerprint(row),duplicate=seen.has(fp);seen.add(fp);return {...row,fp,duplicate};});
+}
+function importRequirements(row){
+  const type=String(row&&row.type||"");
+  return {category:type==="expense"||type==="refund"||type==="goal",paidWith:type==="expense"||type==="refund",debt:type==="payment",goal:type==="goal"};
+}
+function validateImportDraft(row,context){
+  const errors=[...(row&&row.errors||[])], req=importRequirements(row), categories=context&&context.categories||[], debts=context&&context.debts||[];
+  const category=categories.find(c=>c.id===row.confirmedCategoryId&&!c.archived);
+  const debt=debts.find(d=>d.id===row.confirmedDebtId);
+  const pay=row&&row.confirmedPaidWith, card=debts.find(d=>d.id===pay&&d.kind==="card");
+  if(row&&row.blocked)errors.push("Declined or rejected transaction");
+  if(req.category&&!category)errors.push(req.goal?"Select a goal":"Select a category");
+  if(req.goal&&category&&category.kind!=="goal")errors.push("Select a goal category");
+  if(req.category&&!req.goal&&category&&category.kind==="goal")errors.push("Select an expense category");
+  if(req.paidWith&&!(["cash","debit","cashJOD","otherPay"].includes(pay)||card))errors.push("Select Paid with");
+  if(req.debt&&!debt)errors.push("Select Account paid");
+  return {valid:errors.length===0,errors};
+}
+function buildImportEntries(rows,context,importId,idFactory){
+  const selected=(rows||[]).filter(r=>r.include), invalid=selected.filter(r=>!validateImportDraft(r,context).valid);
+  if(invalid.length)return {valid:false,entries:[],invalid};
+  const makeId=idFactory||(()=>String(Date.now())+Math.random());
+  const entries=selected.map(r=>{const debt=(context.debts||[]).find(d=>d.id===r.confirmedDebtId);return {
+    id:makeId(),date:r.date,occurredAt:r.occurredAt,type:r.type,amount:r.amount,
+    category:r.type==="income"?"income":(r.type==="payment"?(debt&&debt.category||"other"):r.confirmedCategoryId),
+    description:r.description,debtId:r.type==="payment"?r.confirmedDebtId:null,
+    paidWith:(r.type==="expense"||r.type==="refund")?(r.confirmedPaidWith==="cash"?null:r.confirmedPaidWith):null,
+    goalId:null,sourceRef:r.sourceRef||null,importFingerprint:r.fp||entryFingerprint(r),importId,importedDuplicate:!!r.duplicate
+  };});
+  return {valid:true,entries,invalid:[]};
+}
+function importSummary(rows){
+  const all=rows||[];
+  return {total:all.length,ready:all.filter(r=>r.include&&r.reviewValid).length,
+    needsReview:all.filter(r=>!r.blocked&&!r.duplicate&&!r.reviewValid).length,
+    duplicates:all.filter(r=>r.duplicate).length,blocked:all.filter(r=>r.blocked).length,excluded:all.filter(r=>!r.include).length};
+}
+function importChoiceOptions(row,context){
+  const categories=(context&&context.categories||[]).filter(c=>!c.archived&&((row&&row.type)==="goal"?c.kind==="goal":c.kind!=="goal"));
+  const debts=(context&&context.debts||[]);
+  return {categories:categories.map(c=>({value:c.id,label:c.name||c.id})),
+    paidWith:[{value:"cash",label:"Cash / bank transfer"},{value:"debit",label:"Debit card"},{value:"otherPay",label:"Other"},...debts.filter(d=>d.kind==="card").map(d=>({value:d.id,label:d.name||d.id}))],
+    debts:debts.map(d=>({value:d.id,label:d.name||d.id}))};
+}
+function applyImportAssignment(rows,field,value){
+  return (rows||[]).map(row=>{if(!row.include)return row;const req=importRequirements(row);
+    const compatible=field==="confirmedPaidWith"?req.paidWith:field==="confirmedDebtId"?req.debt:field==="confirmedCategoryId"?req.category:false;
+    return compatible?{...row,[field]:value}:row;});
+}
+function entriesWithoutImport(entries,importId){return (entries||[]).filter(e=>e.importId!==importId);}
+function applyImportBatch(state,entries,record,persist){
+  const oldEntries=state.entries,oldImports=state.imports;state.entries=oldEntries.concat(entries);state.imports=oldImports.concat([record]);
+  if(persist())return true;state.entries=oldEntries;state.imports=oldImports;return false;
+}
+function undoImportBatch(state,importId,persist){
+  const oldEntries=state.entries,oldImports=state.imports;state.entries=entriesWithoutImport(oldEntries,importId);state.imports=oldImports.filter(x=>x.id!==importId);
+  if(persist())return true;state.entries=oldEntries;state.imports=oldImports;return false;
 }
 /* IMPORT_V9_END */
 
@@ -921,7 +998,7 @@ function normEntry(e){ if(!e||typeof e!=="object") return null;
     occurredAt:e.occurredAt||((e.date||today())+"T12:00"), debtId:["payment","balance_adjustment"].includes(type)?(e.debtId||null):null,
     paidWith:["expense","refund"].includes(type)?(e.paidWith||null):null, goalId:e.goalId||null,
     description:e.description||e.desc||"", recurringId:e.recurringId||null, recurringOccurrenceKey:e.recurringOccurrenceKey||null, sourceRef:e.sourceRef||null,
-    importId:e.importId||null, importedDuplicate:!!e.importedDuplicate }; }
+    importId:e.importId||null, importFingerprint:e.importFingerprint||null, importedDuplicate:!!e.importedDuplicate }; }
 function normRec(r){ r=r||{}; return { id:r.id||uid(), name:r.name||"Recurring", amount:num(r.amount),
   type:["income","payment","goal"].includes(r.type)?r.type:"expense", categoryId:r.categoryId||"other", paidWith:r.paidWith||null,
   debtId:r.debtId||null, dayOfMonth:Math.min(28,Math.max(1,num(r.dayOfMonth)||1)),
@@ -987,7 +1064,7 @@ function normalize9(s){
   out.recurring=(Array.isArray(migrated.recurring)?migrated.recurring:out.recurring).map(normRec);
   return out;
 }
-function save(){ if(migrationRecovery)return; try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+function save(){ if(migrationRecovery)return false;try{localStorage.setItem(KEY,JSON.stringify(state));return true;}catch(e){return false;} }
 
 // ── CALCULATION ENGINE (derive, never store) ──
 function getCat(id){ return state.categories.find(c=>c.id===id)||null; }
@@ -1130,7 +1207,7 @@ function render(){
   const [kick,title]=headerFor(); setText("hKicker",kick); setText("hTitle",title);
   setText("mLab",fmtMonth(m));
   el("mNext").style.opacity=m<rm?"1":".3";
-  renderDashboard(m,rm); renderBudget(m); renderGoals(); renderEntries(); fillLogSelects(); renderSettingsList();
+  renderDashboard(m,rm); renderBudget(m); renderGoals(); renderEntries(); fillLogSelects(); renderSettingsList(); updateUndoImportButton();
 }
 function renderDashboard(m,rm){
   const current=m===rm;
@@ -1921,49 +1998,68 @@ function resetAll(){ if(confirm("This erases all your data and restores defaults
   state=normalize9(clone(DEFAULTS)); state.currentMonth=realMonth(); save(); render(); } }
 
 let csvDraft=[];
-function resolveDebtRef(ref){ const q=String(ref||"").trim().toLowerCase(); return state.debts.find(d=>d.id===q||String(d.name||"").toLowerCase().includes(q))||null; }
-function existingFingerprints(){ return new Set(state.entries.map(e=>entryFingerprint({sourceRef:e.sourceRef,type:e.type,occurredAt:e.occurredAt||e.date+"T12:00",amount:e.amount,description:e.description,accountRef:e.debtId||e.paidWith||""}))); }
+const csvContext=()=>({categories:state.categories||[],debts:state.debts||[]});
+function existingFingerprints(){ return new Set(state.entries.map(e=>entryFingerprint({sourceRef:e.sourceRef,importFingerprint:e.importFingerprint,type:e.type,occurredAt:e.occurredAt||e.date+"T12:00",amount:e.amount,description:e.description,accountRef:e.debtId||e.paidWith||""}))); }
+function csvCategoryMatch(hint,type){
+  const q=String(hint||"").trim().toLowerCase(); if(!q)return ""; const goal=type==="goal";
+  const c=(state.categories||[]).find(x=>!x.archived&&(x.kind==="goal")===goal&&(x.id.toLowerCase()===q||String(x.name||"").trim().toLowerCase()===q));
+  return c?c.id:"";
+}
+function revalidateCsv(){const context=csvContext();csvDraft=csvDraft.map(row=>{const review=validateImportDraft(row,context);return {...row,reviewValid:review.valid,reviewErrors:review.errors};});}
 function previewCsv(event){
   const file=event.target.files&&event.target.files[0]; if(!file)return;
   const reader=new FileReader(); reader.onload=()=>{
-    const rows=parseCsv(reader.result).map((raw,index)=>{const row=normalizeImportRow(raw);if(row.type==="payment"&&!resolveDebtRef(row.accountRef)){row.valid=false;row.errors.push("Match payment to a card or loan");}return {...row,index};});
+    const rows=parseCsv(reader.result).map((raw,index)=>{const row=normalizeImportRow(raw);return {...row,index,suggestedCategoryId:csvCategoryMatch(row.categoryHint,row.type),confirmedCategoryId:"",confirmedPaidWith:"",confirmedDebtId:""};});
     csvDraft=markImportDuplicates(rows,existingFingerprints()).map(row=>({...row,include:row.valid&&!row.duplicate,duplicateAccepted:false}));
-    renderCsvPreview(); openOverlay("csv"); event.target.value="";
+    revalidateCsv();renderCsvPreview(); openOverlay("csv"); event.target.value="";
   }; reader.readAsText(file);
 }
+function optionHtml(options,value,placeholder){return `<option value="">${esc(placeholder)}</option>`+(options||[]).map(o=>`<option value="${esc(o.value)}" ${o.value===value?'selected':''}>${esc(o.label)}</option>`).join("");}
+function renderCsvBulk(){
+  const context=csvContext(), generic=importChoiceOptions({type:"expense"},context);
+  el("csvBulkPayWith").innerHTML=optionHtml(generic.paidWith,"","Set Paid with…");
+  el("csvBulkDebt").innerHTML=optionHtml(importChoiceOptions({type:"payment"},context).debts,"","Set Account paid…");
+  const cats=(state.categories||[]).filter(c=>!c.archived).map(c=>({value:c.id,label:(c.icon||"")+" "+c.name}));
+  el("csvBulkCategory").innerHTML=optionHtml(cats,"","Set category / goal…");
+}
 function renderCsvPreview(){
-  const invalid=csvDraft.filter(r=>r.include&&!r.valid).length, included=csvDraft.filter(r=>r.include&&r.valid).length;
-  setText("csvSummary",included+" included · "+csvDraft.filter(r=>r.duplicate).length+" possible duplicates · "+csvDraft.filter(r=>r.blocked).length+" blocked");
-  el("csvConfirm").disabled=invalid>0||included===0; el("csvConfirm").textContent=invalid?"Fix included errors first":"Import "+included+" entries";
-  el("csvPreview").innerHTML=csvDraft.map((r,i)=>`<div class="dcard" style="${r.blocked?'opacity:.65':''}">
+  renderCsvBulk();const summary=importSummary(csvDraft),included=csvDraft.filter(r=>r.include).length,invalid=csvDraft.filter(r=>r.include&&!r.reviewValid).length;
+  setText("csvSummary",summary.total+" total · "+summary.ready+" ready · "+summary.needsReview+" need review · "+summary.duplicates+" duplicates · "+summary.blocked+" blocked · "+summary.excluded+" excluded");
+  el("csvConfirm").disabled=invalid>0||included===0;el("csvConfirm").textContent=invalid?"Complete included rows":"Import "+included+" entries";
+  el("csvPreview").innerHTML=csvDraft.map((r,i)=>{const choices=importChoiceOptions(r,csvContext()),req=importRequirements(r),hint=[r.paidWithHint,r.accountHint].filter(Boolean).join(" · ");return `<div class="dcard" style="${r.blocked?'opacity:.65':''}">
     <div style="display:flex;gap:10px;align-items:flex-start"><input type="checkbox" aria-label="Include row" ${r.include?'checked':''} ${r.blocked?'disabled':''} onchange="toggleCsvRow(${i},this.checked)" style="width:22px;height:22px">
-    <div style="flex:1"><div style="display:flex;justify-content:space-between;gap:8px"><b>${esc(r.description||"Missing description")}</b><span class="amt">${r.amount?fmt(r.amount):"—"} ${esc(r.currency)}</span></div>
-    <div class="rowsub"><span>${esc(r.occurredAt||"Invalid date")}</span><span class="tag">${esc(r.type||"invalid")}</span>${r.duplicate?'<span class="tag" style="color:var(--warning-ink)">duplicate</span>':''}${r.blocked?'<span class="tag" style="color:var(--negative)">declined · blocked</span>':''}</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px">
-      <input class="in" style="height:42px" value="${esc(String(r.amount||''))}" inputmode="decimal" aria-label="Amount" onchange="editCsvRow(${i},'amount',this.value)">
-      <select class="sel" style="height:42px" aria-label="Type" onchange="editCsvRow(${i},'type',this.value)">${["expense","refund","payment","income"].map(t=>`<option value="${t}" ${r.type===t?'selected':''}>${t}</option>`).join("")}</select>
-      <input class="in" style="height:42px;grid-column:1/-1" value="${esc(r.description)}" aria-label="Description" onchange="editCsvRow(${i},'description',this.value)">
-      <input class="in" style="height:42px" value="${esc(r.occurredAt)}" aria-label="Date and time" onchange="editCsvRow(${i},'occurredAt',this.value)">
-      <input class="in" style="height:42px" value="${esc(r.category)}" aria-label="Category" onchange="editCsvRow(${i},'category',this.value)">
-      <input class="in" style="height:42px;grid-column:1/-1" value="${esc(r.accountRef)}" aria-label="Account reference" placeholder="Account for payments" onchange="editCsvRow(${i},'accountRef',this.value)">
+    <div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;gap:8px"><b>${esc(r.description||"Missing description")}</b><span class="amt">${r.amount?fmt(r.amount):"—"} ${esc(r.currency)}</span></div>
+    <div class="rowsub"><span>${esc(r.occurredAt||"Invalid date")}</span><span class="tag">${esc(r.type||"invalid")}</span>${r.reviewValid?'<span class="tag" style="color:var(--positive-ink)">ready</span>':'<span class="tag" style="color:var(--warning-ink)">needs review</span>'}${r.duplicate?'<span class="tag" style="color:var(--warning-ink)">duplicate</span>':''}${r.blocked?'<span class="tag" style="color:var(--negative)">declined · blocked</span>':''}</div>
+    ${hint?`<div class="hint" style="margin-top:5px">CSV hint: ${esc(hint)} — confirm below</div>`:''}
+    <div class="csv-grid">
+      <input class="in" style="height:44px" value="${esc(String(r.amount||''))}" inputmode="decimal" aria-label="Amount" onchange="editCsvRow(${i},'amount',this.value)">
+      <select class="sel" style="height:44px" aria-label="Type" onchange="editCsvRow(${i},'type',this.value)">${["expense","refund","payment","income","goal"].map(t=>`<option value="${t}" ${r.type===t?'selected':''}>${t}</option>`).join("")}</select>
+      <input class="in" style="height:44px;grid-column:1/-1" value="${esc(r.description)}" aria-label="Description" onchange="editCsvRow(${i},'description',this.value)">
+      <input class="in" style="height:44px" value="${esc(r.occurredAt)}" aria-label="Date and time" onchange="editCsvRow(${i},'occurredAt',this.value)">
+      ${req.category?`<select class="sel" style="height:44px" aria-label="${req.goal?'Goal':'Category'}" onchange="setCsvAssignment(${i},'confirmedCategoryId',this.value)">${optionHtml(choices.categories,r.confirmedCategoryId,(req.goal?'Select goal':'Select category')+(r.suggestedCategoryId?' · suggested '+((state.categories.find(c=>c.id===r.suggestedCategoryId)||{}).name||r.suggestedCategoryId):'')+'…')}</select>`:'<div></div>'}
+      ${req.paidWith?`<select class="sel" style="height:44px;grid-column:1/-1" aria-label="Paid with" onchange="setCsvAssignment(${i},'confirmedPaidWith',this.value)">${optionHtml(choices.paidWith,r.confirmedPaidWith,'Select Paid with…')}</select>`:''}
+      ${req.debt?`<select class="sel" style="height:44px;grid-column:1/-1" aria-label="Account paid" onchange="setCsvAssignment(${i},'confirmedDebtId',this.value)">${optionHtml(choices.debts,r.confirmedDebtId,'Select Account paid…')}</select>`:''}
     </div>
-    ${r.errors.length?`<div class="hint" style="color:var(--negative);margin-top:6px">${esc(r.errors.join(" · "))}</div>`:''}</div></div></div>`).join("");
+    ${r.reviewErrors.length?`<div class="hint" style="color:var(--negative);margin-top:6px">${esc([...new Set(r.reviewErrors)].join(" · "))}</div>`:''}</div></div></div>`}).join("");
 }
 function refreshCsvDuplicates(){
   const marked=markImportDuplicates(csvDraft,existingFingerprints());
   csvDraft=marked.map((row,i)=>{const prior=csvDraft[i]||{};const changed=prior.fp!==row.fp;return {...row,duplicateAccepted:row.duplicate&&!changed&&!!prior.duplicateAccepted,include:row.duplicate?(!changed&&!!prior.duplicateAccepted&&!!prior.include):!!prior.include};});
 }
-function toggleCsvRow(i,on){ if(csvDraft[i]&&!csvDraft[i].blocked){csvDraft[i].include=on;csvDraft[i].duplicateAccepted=!!(on&&csvDraft[i].duplicate);renderCsvPreview();} }
-function editCsvRow(i,key,value){ const r=csvDraft[i];if(!r)return;r[key]=key==="amount"?Number(value):value;if(key==="occurredAt")r.date=String(value).slice(0,10);r.valid=!r.blocked&&r.amount>0&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(r.occurredAt)&&["expense","refund","payment","income"].includes(r.type)&&!!r.description&&!!r.sourceRef&&(r.type!=="payment"||!!resolveDebtRef(r.accountRef));r.errors=r.valid?[]:["Review required fields and account match"];refreshCsvDuplicates();renderCsvPreview(); }
+function toggleCsvRow(i,on){ if(csvDraft[i]&&!csvDraft[i].blocked){csvDraft[i].include=on;csvDraft[i].duplicateAccepted=!!(on&&csvDraft[i].duplicate);revalidateCsv();renderCsvPreview();} }
+function setCsvAssignment(i,key,value){if(!csvDraft[i])return;csvDraft[i][key]=value;revalidateCsv();renderCsvPreview();}
+function applyCsvBulk(field,value){if(!value)return;csvDraft=applyImportAssignment(csvDraft,field,value);revalidateCsv();renderCsvPreview();}
+function editCsvRow(i,key,value){const r=csvDraft[i];if(!r)return;r[key]=key==="amount"?Number(value):value;if(key==="occurredAt")r.date=String(value).slice(0,10);if(key==="type"){r.suggestedCategoryId=csvCategoryMatch(r.categoryHint,r.type);r.confirmedCategoryId="";r.confirmedPaidWith="";r.confirmedDebtId="";}r.errors=[];if(!Number.isFinite(r.amount)||r.amount<=0)r.errors.push("Invalid amount");if(!validImportTimestamp(r.occurredAt))r.errors.push("Invalid date/time");if(!["expense","refund","payment","income","goal"].includes(r.type))r.errors.push("Invalid type");if(r.currency!=="SAR")r.errors.push("Only SAR is supported");if(!r.description)r.errors.push("Description required");r.valid=!r.blocked&&!r.errors.length;refreshCsvDuplicates();revalidateCsv();renderCsvPreview();}
 function confirmCsvImport(){
-  refreshCsvDuplicates();renderCsvPreview();
-  const selected=csvDraft.filter(r=>r.include); if(!selected.length||selected.some(r=>!r.valid||r.blocked||(r.duplicate&&!r.duplicateAccepted)))return;
-  const importId=uid(), additions=selected.map(r=>{const debt=resolveDebtRef(r.accountRef),card=resolveDebtRef(r.paidWith);return normEntry({id:uid(),date:r.date,occurredAt:r.occurredAt,type:r.type,amount:r.amount,category:r.category||"other",description:r.description,
-    debtId:r.type==="payment"&&debt?debt.id:null,paidWith:["expense","refund"].includes(r.type)&&card?card.id:(r.paidWith||null),sourceRef:r.sourceRef,importId,importedDuplicate:r.duplicate});});
-  const next=state.entries.concat(additions); if(next.some(e=>!e))return;
-  state.entries=next; state.imports.push({id:importId,at:new Date().toISOString(),count:additions.length}); save(); csvDraft=[]; closeOverlay(); render(); msg("logMsg",additions.length+" entries imported");
+  refreshCsvDuplicates();revalidateCsv();renderCsvPreview();
+  const selected=csvDraft.filter(r=>r.include);if(!selected.length||selected.some(r=>!r.reviewValid||r.blocked||(r.duplicate&&!r.duplicateAccepted)))return;
+  const importId=uid(),built=buildImportEntries(csvDraft,csvContext(),importId,uid);if(!built.valid)return;
+  const additions=built.entries.map(normEntry);if(additions.some(e=>!e))return;
+  const summary=importSummary(csvDraft),record={id:importId,at:new Date().toISOString(),count:additions.length,summary};if(!applyImportBatch(state,additions,record,save)){msg("logMsg","Import could not be saved · your data was not changed");return;}csvDraft=[];closeOverlay();render();msg("logMsg",additions.length+" imported · "+summary.excluded+" excluded · "+summary.duplicates+" duplicates · "+summary.blocked+" blocked · Undo is available");
 }
 function cancelCsvImport(){csvDraft=[];closeOverlay();}
+function updateUndoImportButton(){const b=el("undoImportBtn");if(!b)return;const last=(state.imports||[]).at(-1);b.style.display=last?"inline-flex":"none";b.textContent=last?"Undo last import ("+last.count+")":"Undo last import";}
+function undoLastImport(){const last=(state.imports||[]).at(-1);if(!last)return;if(!confirm("Remove the "+last.count+" entries from the last CSV import?"))return;if(!undoImportBatch(state,last.id,save)){msg("logMsg","Undo could not be saved · your data was not changed");return;}render();msg("logMsg","Last CSV import undone");}
 
 // ── BANK SMS IMPORT (on-device parsing — feeds the Log expense form) ──
 const CAT_RULES = [

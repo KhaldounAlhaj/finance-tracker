@@ -1,6 +1,6 @@
 # Finance Tracker — App Documentation
 
-<!-- VERSION --> app **finance-v9** · docs synced **2026-08-14** <!-- /VERSION -->
+<!-- VERSION --> app **finance-v9.1** · docs synced **2026-08-14** <!-- /VERSION -->
 
 > **Living document.** The block between the `AUTO:GENERATED` markers in **§4** is rebuilt
 > from the app's source (`index.html`, `sw.js`, `manifest.json`) every time you commit, by
@@ -74,6 +74,8 @@ A three-zone bottom bar keeps logging, reviewing, and configuration separate. Pl
   — `paidWith`: null (SAR cash/bank) · "cashJOD" · "debit" · "otherPay" · a card's debt id (raises its balance)
 - `phases [ { name, title, start, end, goal } ]` — the editable roadmap
 - `imports [ { id, at, count } ]` records completed atomic CSV batches; import rows retain `sourceRef` for duplicate detection.
+
+CSV account fields are review hints only. The preview requires explicit in-app selection of Paid with for expenses/refunds and Account paid for debt payments; arbitrary CSV account text is never persisted. Categories and goals use live dropdowns, unresolved included rows block confirmation, `source_ref` is optional, and the latest import batch can be undone by `importId`.
 - **House saved is derived**: `houseSavedStart` + every confirmed contribution logged to the House savings category since
   `houseAccrueFrom` (v7's manual `houseSaved` migrates into `houseSavedStart`; nothing recomputable is stored).
 - Every older shape upgrades in place: v7 gains kinds, rollover flags and `commitments`; v6 and legacy v1–v5
@@ -84,7 +86,7 @@ A three-zone bottom bar keeps logging, reviewing, and configuration separate. Pl
 _Machine-generated from source on every commit — do not edit by hand._
 
 <!-- AUTO:GENERATED:START — produced by docs/generate-docs.mjs · DO NOT EDIT BY HAND -->
-_Synced **2026-08-14** · app version **finance-v9** · storage key `khaldoun_finance_v3`_
+_Synced **2026-08-14** · app version **finance-v9.1** · storage key `khaldoun_finance_v3`_
 
 ### Identity
 - **Finance Tracker** — Personal finance, debt and house-savings tracker
@@ -143,10 +145,10 @@ _0 seed reminder templates (salary planning is added on first run; nothing auto-
 ### Source file manifest (SHA-256, first 16 hex)
 | File | Bytes | Hash |
 |---|---|---|
-| `index.html` | 157,078 | `91bbd72127a5e78b` |
-| `sw.js` | 1,459 | `6d7b24bad5ed5a84` |
+| `index.html` | 166,626 | `f9f9e9448a2ab9b0` |
+| `sw.js` | 1,504 | `108f49de289ef128` |
 | `manifest.json` | 480 | `667075e74e294a37` |
-| `README.md` | 2,213 | `24a20ce440552362` |
+| `README.md` | 3,030 | `290744b5247db4d5` |
 | `icon-180.png` | 23,893 | `de63b104b43ca1d0` |
 | `icon-192.png` | 26,915 | `0cb0b374422b11ee` |
 | `icon-512.png` | 148,189 | `d68c4eae11e7ba8f` |

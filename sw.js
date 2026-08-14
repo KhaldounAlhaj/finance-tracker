@@ -1,12 +1,13 @@
 // Bump this version whenever you change index.html so phones refresh.
-const CACHE = "finance-v9";
+const CACHE = "finance-v9.1";
 const ASSETS = [
   "./",
   "./index.html",
   "./manifest.json",
   "./icon-180.png",
   "./icon-192.png",
-  "./icon-512.png"
+  "./icon-512.png",
+  "./examples/finance-import-template.csv"
 ];
 
 self.addEventListener("install", (e) => {

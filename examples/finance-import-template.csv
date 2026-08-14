@@ -1,0 +1,6 @@
+occurred_at,type,amount,currency,description,category,paid_with,account_ref,source_ref,notes
+2026-08-14 09:30,expense,25.50,SAR,Example shop,food,card ending 0000,,example-001,Choose Paid with in the app
+2026-08-14 10:00,refund,10.00,SAR,Example refund,food,card ending 0000,,example-002,Choose Paid with in the app
+2026-08-14 11:00,payment,500.00,SAR,Example card payment,,,card ending 0000,example-003,Choose Account paid in the app
+2026-08-14 12:00,income,1000.00,SAR,Example income,,,,example-004,
+2026-08-14 13:00,goal,100.00,SAR,Example goal contribution,houseSavings,,,example-005,Choose the goal in the app

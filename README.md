@@ -10,6 +10,21 @@ The app is organized into three places:
 
 Planned payments are reminders only. They never create transactions automatically: use **Log**, **Reschedule**, or **Skip this month** for each occurrence.
 
+## CSV catch-up import
+
+Use **Log → Download CSV template** when you need to catch up on several transactions. After selecting the completed CSV, the app previews every row before saving.
+
+- CSV account values and card endings are hints only.
+- Choose **Paid with** inside the app for each expense or refund.
+- Choose **Account paid** inside the app for each card or loan payment.
+- Category and goal choices come from your current app data.
+- Use the bulk selectors to classify several included rows at once.
+- Declined transactions stay blocked and possible duplicates start excluded.
+- `source_ref` is optional but recommended for reliable duplicate detection.
+- A completed batch can be removed with **Undo last import**.
+
+Nothing is written until every included row is valid and you press **Confirm import**.
+
 ## Put it online (free) with GitHub Pages
 
 1. Go to **github.com** and create a new **public** repository, e.g. `finance-tracker`.
