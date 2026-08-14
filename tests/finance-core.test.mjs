@@ -8,8 +8,25 @@ const match = html.match(/\/\* CORE_V9_START \*\/([\s\S]*?)\/\* CORE_V9_END \*\/
 assert.ok(match, "production core-v9 block exists");
 const context = { console, structuredClone: globalThis.structuredClone };
 vm.createContext(context);
-vm.runInContext(`${match[1]};globalThis.coreV9={entryDeltas,monthMetrics,monthlyMoneySummary,migrateV9,debtMovement,occurrenceKey,entryFulfillsOccurrence,resolveOccurrence,repairOccurrenceState,reopenOccurrenceForDeletedEntry};`, context);
-const { entryDeltas, monthMetrics, monthlyMoneySummary, migrateV9, debtMovement, occurrenceKey, entryFulfillsOccurrence, resolveOccurrence, repairOccurrenceState, reopenOccurrenceForDeletedEntry } = context.coreV9;
+vm.runInContext(`${match[1]};globalThis.coreV9={entryDeltas,classifyMoneyEntry,monthMetrics,monthlyMoneySummary,migrateV9,debtMovement,occurrenceKey,entryFulfillsOccurrence,resolveOccurrence,repairOccurrenceState,reopenOccurrenceForDeletedEntry};`, context);
+const { entryDeltas, classifyMoneyEntry, monthMetrics, monthlyMoneySummary, migrateV9, debtMovement, occurrenceKey, entryFulfillsOccurrence, resolveOccurrence, repairOccurrenceState, reopenOccurrenceForDeletedEntry } = context.coreV9;
+
+test("statement reconciliation changes debt only, never spending or liquidity",()=>{
+  assert.deepEqual({...entryDeltas({type:"balance_adjustment",amount:250,debtId:"card"},"card")},{spending:0,cash:0,card:0,loan:0,income:0,goal:0});
+  assert.deepEqual({...entryDeltas({type:"balance_adjustment",amount:250,debtId:"loan"},null)},{spending:0,cash:0,card:0,loan:0,income:0,goal:0});
+});
+
+test("card-funded legacy goal movement does not reduce current liquidity",()=>{
+  const state={categories:[{id:"house",kind:"goal"}],debts:[{id:"card",kind:"card"}],entries:[
+    {type:"income",amount:1000,date:"2026-08-01"},
+    {type:"expense",amount:300,date:"2026-08-02",category:"house",paidWith:"card"}
+  ]};
+  const classified=classifyMoneyEntry(state,state.entries[1]);
+  assert.equal(classified.kind,"goal");assert.equal(classified.cardFunded,true);
+  const result=monthlyMoneySummary(state,"2026-08");
+  assert.equal(result.spent,0);assert.equal(result.movedToGoals,300);assert.equal(result.cashLeftNow,1000);
+  assert.deepEqual({...result.bySource},{});
+});
 
 test("monthly money summary separates spending sources from debt and goal movements",()=>{
   const state={debts:[{id:"card-a",kind:"card"},{id:"card-b",kind:"card"},{id:"loan-a",kind:"loan"}],entries:[

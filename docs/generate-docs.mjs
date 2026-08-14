@@ -23,7 +23,9 @@ const START = "<!-- AUTO:GENERATED:START";
 const END = "<!-- AUTO:GENERATED:END -->";
 
 const nf = (n) => (Number.isFinite(+n) ? (+n).toLocaleString("en-US") : "—");
-const today = new Date().toISOString().slice(0, 10);
+const today = new Intl.DateTimeFormat("en-CA",{
+  timeZone:"Asia/Riyadh",year:"numeric",month:"2-digit",day:"2-digit"
+}).format(new Date());
 
 // Return the substring of `src` from the first `open` at/after fromIndex through its
 // matching `close`, ignoring delimiters inside strings and // and /* */ comments.

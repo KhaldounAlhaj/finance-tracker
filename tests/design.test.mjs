@@ -99,7 +99,21 @@ test("Overview money rows drill into a clearable selected-month activity filter"
   assert.match(html,/function openActivityDrill\(type,source\)/);
   assert.match(html,/function clearActivityDrill\(\)/);
   assert.match(html,/id="logDrillFilter"/);
-  assert.match(html,/monthOf\(e\.date\)===drill\.month/);
+  assert.match(html,/monthOf\(e\.date\)!==drill\.month/);
+});
+
+test("money drill-through shares classification and explains filtered empty results",()=>{
+  assert.match(html,/classifyMoneyEntry\(state,e\)/);
+  assert.match(html,/No matching transactions/);
+  assert.match(html,/logTypeFilter/);
+  assert.match(html,/amount<0\?'− '/);
+});
+
+test("closed months expose liquidity, source spending, debt and goal totals",()=>{
+  for(const id of ["pastCashNow","pastCashAfter","pastSpendTotal","pastSpendSources","pastDebtPayments","pastGoalMoves"]){
+    assert.match(html,new RegExp(`id="${id}"`));
+  }
+  assert.match(html,/activityDrill\.month=next/);
 });
 
 test("Unified Log preserves every managed entry path and one save action",()=>{
