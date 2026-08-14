@@ -42,6 +42,9 @@ _Anything an agent wasn't sure about. Answer or delete once resolved._
 
 _Newest first. One entry per unit of work, not per file._
 
+### 2026-08-14 · Codex · finance-v10.2 monthly spending and liquidity implemented (`3cfcfa4`)
+Added a tested monthly money summary that nets refunds against their recorded sources, keeps card/loan payments and goal contributions separate from consumption spending, and derives current liquidity without treating card purchases as bank outflow. Overview now presents Cash left now, After upcoming commitments, source-level spending, Debt payments and Moved to goals; each money row opens a clearable selected-month Log drill-through. No migration or stored-data rewrite.
+
 ### 2026-08-14 · Codex · finance-v10.1 Budget badge collision fixed (`a306ac9`)
 The Budget Health On track modifier was named `track`, colliding with the global 6px progress-track class and collapsing the badge exactly as shown on the owner's phone. Renamed the modifier to `on-track`, added a regression contract, and bumped the offline cache to `finance-v10.1`. No formula, storage, migration or data-model change.
 
