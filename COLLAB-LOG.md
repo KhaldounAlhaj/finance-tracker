@@ -42,6 +42,21 @@ _Anything an agent wasn't sure about. Answer or delete once resolved._
 
 _Newest first. One entry per unit of work, not per file._
 
+### 2026-08-15 · Claude · self-review of v10.4–v10.6 → finance-v10.7
+With the owner away and no second reviewer available, ran an adversarial pass over Claude's own three releases rather than leave them unreviewed. **Two real defects found and fixed, two suspected defects disproved.**
+
+**Fixed:**
+- **A net-refund month was drawn as a month of spending.** `renderSpendTrend` sizes bars by magnitude, so a month whose refunds exceeded purchases produced a tall bar in the ordinary spending colour — a large refund read as a large outlay, which is the opposite of the truth. Those months now use the positive treatment, carry a `+`, and say "returned to you" in the accessible label.
+- **`activityDrill` was declared below three functions that read it** (`goToMonth`, `chMonth`, `resetToNow`). It worked only because nothing calls them during script evaluation — a temporal-dead-zone `ReferenceError` waiting for the first caller that runs earlier. Declaration hoisted above its consumers, with a test that enforces the ordering.
+
+**Disproved before reporting** — worth recording, because both looked like defects at first:
+- "Update future reminders did not update the template." It does; the first test run was swallowed by the over-budget `confirm()` dialog returning false in the automation context. Re-tested with the dialog stubbed: 1,500 → 1,623, opt-in resets, the repeat row is restored.
+- "The rescheduled date never appears on the reminder row." It does. The first scenario had an *open August occurrence* that legitimately falls before the October reschedule, so August was the correct answer. Re-tested with a quarterly reminder whose next natural date is November and an occurrence moved to 9 September: the row reads "(moved to 2026-09-09)", and deleting the reschedule reverts it to the natural date.
+
+Verified live afterwards: trend colours correct in both themes, drill-through and month navigation still work after the hoist, no console errors, no overflow. **100/100 tests.**
+
+**Still open and not closeable here:** the iOS Shortcut `#b64=` storage test, which needs the owner's phone. And this pass does not replace independent review — the author and the reviewer were the same person, which is exactly the gap recorded in Open questions.
+
 ### 2026-08-15 · Claude · finance-v10.6 — the entry-type picker explains itself
 Owner feedback: the buttons at the top of Log "do nothing" and look like filters. Investigated rather than assumed, and he was right about the experience. They are the entry-type picker, not a filter — but **Expense and Refund share every single field**, so switching between them changed exactly one thing: the word on the Save button, below the form. Payment, Income and Goal do reveal different fields, but the two a person tries first look inert.
 

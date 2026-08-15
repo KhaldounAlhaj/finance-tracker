@@ -265,3 +265,16 @@ test("the entry-type picker explains what each type does to your money", () => {
   assert.match(fn, /setText\("logTypeHint"/);
   assert.match(html, /does not change the form above/, "the activity filters are distinguished from the picker");
 });
+
+test("a net-refund month is not drawn as a month of spending", () => {
+  const fn = html.match(/function renderSpendTrend\([\s\S]*?\n\}/)[0];
+  assert.match(fn, /refunded/, "negative months are marked");
+  assert.match(fn, /returned to you/, "and say so in the accessible label");
+  assert.match(css, /\.trend button\.refunded \.bar\{[^}]*var\(--positive-weak\)/);
+});
+
+test("the activity drill variable is declared before anything reads it", () => {
+  const decl = html.indexOf("let activityDrill");
+  for (const fn of ["function goToMonth", "function chMonth", "function resetToNow"])
+    assert.ok(decl < html.indexOf(fn), fn + " must not read activityDrill before it is initialised");
+});
