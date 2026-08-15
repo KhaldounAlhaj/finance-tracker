@@ -13,7 +13,7 @@ Owner: Khaldoun. Nothing is pushed without his say-so.
 
 1. **Read `## Pending handoffs` and the newest entries in `## History` before you start.** If another agent has uncommitted work in the tree, do not overwrite it — reconcile first, or ask the owner.
 2. **Log before you hand back.** Every agent appends an entry to `## History` (newest at the top) describing what it changed and why.
-3. **Claude never commits or pushes.** When Claude finishes local edits, it moves them to `## Pending handoffs` and tells the owner they're ready for Codex to commit.
+3. **Claude commits and pushes only when the owner says so for that piece of work** (changed 2026-08-15; it previously never did). Default remains: finish, log, and hand back. When Claude does ship, it keeps releases small, works test-first, and Codex must `git pull` before its next unit.
 4. **Codex clears the handoff when it commits.** Move the item from `## Pending handoffs` into `## History` with its commit hash.
 5. **When in doubt, don't guess — put it in `## Open questions` and ask the owner.** That applies to both agents.
 6. `index.html` is one file holding the whole app. Two agents editing it at once will collide. Only one agent touches it at a time; check `git status` and this log first.
@@ -35,7 +35,8 @@ _Anything an agent wasn't sure about. Answer or delete once resolved._
 
 | Date | Raised by | Question |
 |---|---|---|
-| 2026-08-14 | Claude | Two long-standing blockers are still open: (a) one real bank SMS is needed to tune the on-device parser, (b) the iOS Shortcut `#b64=` storage test — does Safari share `localStorage` with the installed home-screen PWA? Both block work that's already half-built. |
+| 2026-08-15 | Claude | **For the owner: the iOS Shortcut `#b64=` storage test.** Does Safari share `localStorage` with the installed home-screen app? Only he can run it, on his phone. Until it is answered the Shortcut intake path cannot be trusted. *(The other half of this question — needing a real bank SMS to tune the parser — is now **resolved**: he supplied 16 SMS and 4 card-log screenshots, and finance-v10.5 taught the parser the transfer shape from them.)* |
+| 2026-08-15 | Claude | **No independent QA exists for finance-v10.4, v10.5 or v10.6.** Claude authored and reviewed all three, so the reviewer/author separation that covered v9.1–v10.3 is absent. Codex should run the standing QA prompt over `fdb1940..HEAD` before further feature work. |
 
 ## History
 
