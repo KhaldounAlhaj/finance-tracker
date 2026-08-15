@@ -2367,6 +2367,9 @@ function parseBankSMS(raw){
   let desc="";
   const mps=[
     /(?:\bat\b|merchant|store|outlet|لدى|لدي|من\s+متجر)\s*[:=]?\s*([^\n;،]{2,40})/i,
+    // Transfers read "…من <account> لـ <service>" and carry no balance line — the shape
+    // used by AlinmaPay, STC Bank and similar. Missing it loses whole transfers.
+    /لـ\s*[:=]?\s*([^\n;،]{2,40})/,
     /(?:\bto\b|إلى|الى)\s*[:=]?\s*([^\n;،]{2,40})/i
   ];
   for(const p of mps){ const m=t.match(p); if(m){ desc=m[1].trim(); break; } }
@@ -2378,15 +2381,23 @@ function parseBankSMS(raw){
   if(m1) date=m1[1]+"-"+pad2(m1[2])+"-"+pad2(m1[3]);
   else if(m2){ let y=m2[3]; if(y.length===2) y="20"+y; date=y+"-"+pad2(m2[2])+"-"+pad2(m2[1]); }
   if(!date||!validDate(date)) date=today();
-  if(amount==null||isNaN(amount)||amount<=0) return { ok:false };
-  return { ok:true, amount, currency, desc, date, category:guessCat(t), isCredit:credit&&!debit };
+  // The bank prints the transaction time next to the date; the spec makes it authoritative.
+  const tm=t.match(/\b([01]?\d|2[0-3]):([0-5]\d)\b/);
+  const time=tm?pad2(tm[1])+":"+tm[2]:null;
+  // A refusal is not a purchase, however much it looks like one.
+  const declined=/تم\s*رفض|رفض\s*العملية|مرفوض|declined|rejected|insufficient/i.test(t);
+  if(amount==null||isNaN(amount)||amount<=0) return { ok:false, declined };
+  return { ok:true, amount, currency, desc, date, time, declined, category:guessCat(t), isCredit:credit&&!debit };
 }
 function fillFromParse(p){
-  el("eDesc").value=p.desc; el("eAmt").value=p.amount; el("eDate").value=p.date;
+  el("eDesc").value=p.desc; el("eAmt").value=p.amount;
+  // eDate is a datetime-local input, so a date alone is rejected and the field stays blank.
+  el("eDate").value=p.date+"T"+(p.time||"12:00");
   fillLogSelects(); el("eCat").value=p.category;
 }
 function parseSmsBox(){
   const p=parseBankSMS(el("eSms").value);
+  if(p&&p.declined){ msg("smsMsg","That message is a declined transaction — nothing to log"); return; }
   if(!p||!p.ok){ msg("smsMsg","Couldn't find an amount — fill in manually"); return; }
   fillFromParse(p);
   msg("smsMsg",(p.isCredit?"⚠︎ Looks like incoming money — use the Income tab? ":"Read ✓ ")+fmt(p.amount)+" "+p.currency+" · "+catName(p.category));
