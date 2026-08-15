@@ -184,10 +184,28 @@ test("CSV preview communicates every review state without trusting account hints
   assert.match(html,/csvConfirm[^\n]*\.disabled=/);
 });
 
-test("laptop usability widens one shared shell without introducing desktop navigation",()=>{
+test("laptop widens one shared shell, then composes two columns above 1100px",()=>{
   assert.match(css,/@media\s*\(min-width:\s*760px\)[\s\S]*--app-max:\s*760px/);
   assert.match(css,/@media\s*\(min-width:\s*760px\)[\s\S]*main\s*\{[^}]*padding-left:\s*24px[^}]*padding-right:\s*24px/s);
-  assert.doesNotMatch(css,/grid-template-columns:\s*(?:repeat\()?2fr\s+1fr|sidebar/i);
+  // The desktop composition was approved after v10; below 1100px the phone shape must survive intact.
+  assert.match(css,/@media\s*\(min-width:\s*1100px\)[\s\S]*--app-max:\s*1180px/);
+  assert.match(css,/@media\s*\(min-width:\s*1100px\)[\s\S]*#dashCurrent\{[^}]*grid-template-columns/s);
+  assert.match(css,/@media\s*\(min-width:\s*1100px\)[\s\S]*\.overview-hero \.big\{font-size:52px\}/s);
+  assert.doesNotMatch(css.split("@media (min-width:1100px)")[0],/#dashCurrent\{[^}]*grid-template-columns/,
+    "no two-column layout leaks below the desktop breakpoint");
+  // the grid only wins if JS stops setting display inline
+  assert.doesNotMatch(html,/dashCurrent"\)\.style\.display/,"visibility is toggled by attribute, not inline display");
+});
+
+test("the four shells still share one width token at every breakpoint",()=>{
+  for(const sel of ["#app",".nav",".overlay",".sheetwrap"])
+    assert.match(css,new RegExp(sel.replace(/[.#]/g,"\\$&")+"[^}]*max-width:\\s*var\\(--app-max\\)","s"));
+});
+
+test("the plan bar gains a Free reading on laptop only",()=>{
+  assert.match(css,/\.plan-legend\{display:none/,"hidden at phone width for space");
+  assert.match(css,/@media\s*\(min-width:\s*1100px\)[\s\S]*\.plan-legend\{display:flex\}/s);
+  assert.match(html,/Free <b>/);
 });
 
 test("resetting to the current month keeps an active activity drill in sync",()=>{

@@ -41,6 +41,24 @@ _Anything an agent wasn't sure about. Answer or delete once resolved._
 
 _Newest first. One entry per unit of work, not per file._
 
+### 2026-08-15 · Claude · finance-v10.5 — the whole backlog cleared, with four owner decisions taken
+The owner asked for everything outstanding and answered the four questions that gated it. **Decisions recorded, since they change documented behaviour:** a reopened occurrence keeps a prior reschedule · "Next payment" means the rescheduled date when one is nearer · the laptop gets the full two-column composition from `HANDOFF.md` · the per-device data split gets a warning and an explicit transfer story.
+
+Shipped in four reviewable commits, each test-first:
+
+1. **Reminder semantics (L2, L3).** The logged occurrence record now carries the moved date, so delete reopens on it and repair restores it; `nextOccurrence` returns `{month,date,rescheduled}` and the reminder row shows the moved date. Both were open product questions since the v9.2 QA.
+2. **SMS parser.** Learned the transfer shape `…من <account> لـ <service>` — no balance line, previously unmatched, and the direct cause of two significant transfers being lost from catch-up imports twice. Also captures the printed transaction time, and flags refusals so a declined message can no longer be pasted in as a purchase. Fixed alongside: `fillFromParse` was writing a bare date into a `datetime-local` field, which silently discarded it. New `tests/sms.test.mjs` exercises the parser directly against real message shapes.
+3. **Update-future opt-in, spending trend, device-scope warning.** All three were owed: §4.3 and §3.4 of the v9 spec were confirmed *missed* rather than deferred, and the device split had no story.
+4. **Laptop composition.** 1180px shell above 1100px, top navigation, decisions left / reference right, 52px hero, third "Free" reading on the plan bar. Below 1100px nothing changes.
+
+**Two defects found in my own work by live testing, not by the suite** — worth recording because source-level tests would not have caught either. The two-column grid silently did nothing, because `renderDashboard` set `display` as an *inline* style, which beats any stylesheet rule; visibility now toggles the `hidden` attribute and a test asserts JS no longer writes that inline display. And the `.plan-legend` base rule sat *after* its media query, so equal specificity meant the later `display:none` always won.
+
+**Tests changed, declared rather than buried:** the v10 contract "laptop widens one shared shell **without introducing desktop navigation**" encoded the decision to defer desktop. That decision has been reversed by the owner, so the contract now asserts the new intent — two columns only above 1100px, and explicitly that nothing leaks below it. One first-run contract asserted the exact string "Restore from backup"; the copy changed, the capability did not, so it now tests for a restore path.
+
+Verification: **97/97 tests** (up from 74; 23 added across this and v10.4), `git diff --check` clean, no remote dependency, no storage-key, model-version or migration change. Live on an isolated origin: 390×844 clean in both themes across five pages, the closed-month view and seven overlays, with no grid leak, the bottom navigation intact, the legend hidden and every trend bar meeting 44px; 1280×800 and 1920×1080 show the two columns with all four shells at 1180px and the top navigation keyboard-focusable; no console errors at any width. Cache `finance-v10.5`.
+
+**Still open and not touched:** the iOS Shortcut `#b64=` storage test, which only the owner can run on his phone.
+
 ### 2026-08-15 · Claude · finance-v10.4 implemented, committed and pushed — **workflow change**
 Release commit `2c59806`. **The owner explicitly authorised Claude to commit and push for this release**, overriding the standing rule that Codex is the only agent that does so. That rule existed because of the GitHub account split, not because of judgement; treat it as changed for this repo until the owner says otherwise. Codex must `git pull` before its next unit of work — `index.html` moved.
 

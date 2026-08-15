@@ -233,6 +233,8 @@
   .wm-sheet{background:var(--surface);border:1px solid var(--border);border-radius:20px 20px 0 0;box-shadow:var(--shadow-lg)}
   .month-switcher{display:flex;align-items:center;justify-content:center;gap:16px}
   .overview-stack{display:flex;flex-direction:column;gap:24px}
+  #dashPast{display:flex;flex-direction:column;gap:14px}
+  #dashCurrent[hidden],#dashPast[hidden]{display:none}
   .overview-hero{background:var(--surface-warm);border:1px solid var(--warm-border);border-top:4px solid var(--accent);box-shadow:none;padding:22px}
   .overview-hero .big{font-size:42px;line-height:1.05;letter-spacing:-.03em;font-variant-numeric:tabular-nums;margin:9px 0 8px}
   .overview-plan-track{margin-top:18px;height:10px;background:var(--surface-3)}
@@ -309,6 +311,31 @@
     main{padding-left:24px;padding-right:24px}
     .header{padding-left:28px;padding-right:28px}
   }
+  /* The third "Free" reading is a laptop affordance; phone width omits it for space. */
+  .plan-legend{display:none;gap:16px;margin-top:10px;flex-wrap:wrap}
+  .plan-legend span{font-size:13.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .plan-legend b{color:var(--text);font-weight:600}
+  /* Laptop composition: decisions on the left, reference figures on the right.
+     Cards keep their own width rather than stretching across the viewport. */
+  @media (min-width:1100px){
+    :root{--app-max:1180px}
+    .nav{top:0;bottom:auto;border-top:none;border-bottom:1px solid var(--border);
+      padding:8px 20px;justify-content:flex-end;gap:6px}
+    .nav button{flex:0 0 auto;min-width:112px;flex-direction:row;gap:8px;padding:8px 14px;border-radius:12px}
+    .nav button.on{background:var(--primary-weak)}
+    .header{top:69px}
+    main{padding-top:87px;padding-bottom:40px}
+    /* the sections live inside #dashCurrent, so that is the grid container */
+    #dashCurrent{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:22px;align-items:start}
+    #dashCurrent>*{min-width:0}
+    .overview-hero,.overview-attention{grid-column:1}
+    .overview-cash,.overview-money,.overview-trend,.overview-budget,
+    .overview-spending,.overview-debt-goals,.overview-activity{grid-column:2}
+    #dashPast{grid-column:1/-1}
+    .overview-hero .big{font-size:52px}
+    .overview-cash{border-bottom:none}
+    .plan-legend{display:flex}
+  }
   ::placeholder{color:var(--muted);opacity:.9}
   ::-webkit-scrollbar{width:0}
 </style>
@@ -361,6 +388,7 @@
           <div class="big" id="dSafe">—</div>
           <div class="sub2" id="dSafeSub"></div>
           <div class="track overview-plan-track" aria-label="Spent versus monthly plan"><i id="dPlanW"></i></div>
+          <div class="plan-legend" id="dPlanLegend"></div>
           <div class="chip" style="margin-top:14px"><span class="dot"></span><span id="dSafeChip"></span></div>
         </section>
 
@@ -439,7 +467,7 @@
         </section>
       </div>
 
-      <div id="dashPast" style="display:none;flex-direction:column;gap:14px">
+      <div id="dashPast" hidden>
         <div class="card" style="background:var(--surface-2);display:flex;align-items:center;gap:11px;padding:16px">
           <span style="font-size:20px">📅</span>
           <div style="flex:1"><div style="font-weight:600;font-size:14px" id="pastLabel"></div><div class="hint">You're looking back — this isn't your current month.</div></div>
@@ -1497,8 +1525,9 @@ function render(){
 function renderDashboard(m,rm){
   const current=m===rm;
   const metrics=monthMetrics(state,m),money=monthlyMoneySummary(state,m);
-  el("dashCurrent").style.display=current?"flex":"none";
-  el("dashPast").style.display=current?"none":"flex";
+  // display lives in CSS so the laptop grid can take over; JS only toggles visibility
+  el("dashCurrent").hidden=!current;
+  el("dashPast").hidden=current;
   if(!current){
     setText("pastLabel",fmtMonth(m)+" is closed");
     el("pastRows").innerHTML=[
@@ -1519,6 +1548,9 @@ function renderDashboard(m,rm){
   setText("dSafeSub",sar(metrics.spendingPlan)+" plan − "+sar(metrics.actualSpending)+" actual − "+sar(metrics.plannedSpendingRemaining)+" still planned.");
   setText("dSafeChip",available>=0?"Available without exceeding the monthly plan":"Plan exceeded once all planned expenses are paid");
   el("dPlanW").style.width=(metrics.spendingPlan>0?Math.min(100,Math.max(0,Math.round(metrics.actualSpending/metrics.spendingPlan*100))):0)+"%";
+  el("dPlanLegend").innerHTML=`<span>Spent <b>${esc(sar(metrics.actualSpending))}</b></span>`
+    +`<span>Still planned <b>${esc(sar(metrics.plannedSpendingRemaining))}</b></span>`
+    +`<span>Free <b>${esc(sar(Math.max(0,available)))}</b></span>`;
   setText("dCashNow",sar(money.cashLeftNow));el("dCashNow").style.color=money.cashLeftNow<0?"var(--negative)":"var(--text)";
   setText("dCashAfter",sar(metrics.cashAfterCommitments)); el("dCashAfter").style.color=metrics.cashAfterCommitments<0?"var(--negative)":"var(--text)";
   setText("dCashBreakdown",sar(money.cashLeftNow)+" now − "+sar(metrics.cashObligationsLeft)+" obligations − "+sar(metrics.reservedForGoals)+" goals");
