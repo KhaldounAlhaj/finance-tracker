@@ -255,3 +255,13 @@ test("the device-scope warning and explicit transfer wording are present", () =>
   assert.match(html, /does not sync/i);
   assert.match(html, /Already using it on another device/i);
 });
+
+test("the entry-type picker explains what each type does to your money", () => {
+  assert.match(html, /What are you logging\?/, "the picker is labelled as a form control");
+  assert.match(html, /id="logTypeHint"/);
+  const fn = html.match(/function setLogType\([\s\S]*?\n\}/)[0];
+  for (const t of ["expense","refund","payment","income","goal"])
+    assert.match(fn, new RegExp(t + ":\""), "every type states its effect: " + t);
+  assert.match(fn, /setText\("logTypeHint"/);
+  assert.match(html, /does not change the form above/, "the activity filters are distinguished from the picker");
+});

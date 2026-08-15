@@ -491,6 +491,7 @@
 
     <!-- LOG -->
     <div class="page" id="p-log">
+      <div class="lbl" style="margin-bottom:8px">What are you logging?</div>
       <div class="seg log-type-picker" id="logSeg">
         <button data-lt="expense" class="on" onclick="setLogType('expense')">Expense</button>
         <button data-lt="refund" onclick="setLogType('refund')">Refund</button>
@@ -498,6 +499,7 @@
         <button data-lt="income" onclick="setLogType('income')">Income</button>
         <button data-lt="goal" onclick="setLogType('goal')">Goal</button>
       </div>
+      <div class="hint" id="logTypeHint" style="margin:8px 2px 0"></div>
 
       <div class="card log-form">
         <div id="logSms" class="sms-intake">
@@ -573,6 +575,7 @@
 
       <div class="activity-section">
         <div class="section-title">Recent activity</div>
+        <div class="hint" style="margin-top:2px">Search and filter what you have already logged — this does not change the form above.</div>
         <div id="logDrillFilter" class="note" style="display:none;align-items:center;justify-content:space-between;gap:12px;margin-top:10px"><span id="logDrillLabel"></span><button class="linkbtn" type="button" onclick="clearActivityDrill()">Clear</button></div>
         <div class="activity-filters">
           <input class="in" id="logSearch" placeholder="Search" oninput="renderEntries()" style="grid-column:1/-1">
@@ -1877,6 +1880,15 @@ function setLogType(t){ logType=t;
   el("fPay").style.display=t==="payment"?"":"none";
   el("fSrc").style.display=t==="income"?"":"none";
   setText("amtLabel",t==="income"?"Amount received":"Amount");
+  // Expense and refund share every field, so without this line the picker looks inert.
+  const effects={
+    expense:"Money you spent. Counts against this month's plan and lowers cash left now.",
+    refund:"Money returned to you. Subtracts from the source it came back to, so that source can go negative.",
+    payment:"Money paid to a card or loan. Lowers that balance and your cash, but is not new spending.",
+    income:"Money received. Raises cash left now.",
+    goal:"Money moved into a goal. Savings, not spending — it leaves your cash but is not counted against the plan."
+  };
+  setText("logTypeHint",effects[t]||"");
   const labels={expense:"Save expense",refund:"Save refund",payment:"Save payment",income:"Save income",goal:"Save goal contribution"};
   el("logBtn").textContent=editingId?"Update entry":labels[t];
 }

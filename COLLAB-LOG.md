@@ -41,6 +41,15 @@ _Anything an agent wasn't sure about. Answer or delete once resolved._
 
 _Newest first. One entry per unit of work, not per file._
 
+### 2026-08-15 · Claude · finance-v10.6 — the entry-type picker explains itself
+Owner feedback: the buttons at the top of Log "do nothing" and look like filters. Investigated rather than assumed, and he was right about the experience. They are the entry-type picker, not a filter — but **Expense and Refund share every single field**, so switching between them changed exactly one thing: the word on the Save button, below the form. Payment, Income and Goal do reveal different fields, but the two a person tries first look inert.
+
+Compounding it, the same page carries a *real* type filter in Recent activity that looks similar, so the screen had two similar controls, one of which filters and one of which does not.
+
+Fix, no behaviour change: the picker is headed **"What are you logging?"**, and a line beneath it states each type's effect on the money the moment it is selected — plan, cash left now, card or goal balance. The activity filters now say they search what is already logged and do not change the form. A design contract asserts every type has an effect line, so a future type cannot be added silently.
+
+Worth keeping in mind for future work: this was invisible to the whole suite. Nothing was broken, so nothing failed — the design simply did not communicate. Only using the screen found it.
+
 ### 2026-08-15 · Claude · finance-v10.5 — the whole backlog cleared, with four owner decisions taken
 The owner asked for everything outstanding and answered the four questions that gated it. **Decisions recorded, since they change documented behaviour:** a reopened occurrence keeps a prior reschedule · "Next payment" means the rescheduled date when one is nearer · the laptop gets the full two-column composition from `HANDOFF.md` · the per-device data split gets a warning and an explicit transfer story.
 
