@@ -63,7 +63,8 @@ test("first run follows reminder-only copy and has no structural emoji",()=>{
   const first=html.match(/<div id="firstRun"[\s\S]*?<div id="shell"/)?.[0]||"";
   assert.doesNotMatch(first,/post themselves|posts automatically/i);
   assert.doesNotMatch(first,/[🌀-🫿]/u);
-  assert.match(first,/Restore from backup/i);
+  // wording may change; what must hold is that a restore path exists on first run
+  assert.match(first,/Restore (?:from|your) backup/i);
 });
 
 test("Overview follows the approved decision-first composition",()=>{
@@ -209,4 +210,30 @@ test("next payment prefers a rescheduled date over the next natural occurrence",
   const fn=html.match(/function nextOccurrence\([\s\S]*?\n\s*return[^\n]*\n?\}/)?.[0]||"";
   assert.match(fn,/rescheduled/,"nextOccurrence must consider rescheduled occurrences");
   assert.match(html,/nxt\.rescheduled|nxt&&nxt\.date/,"the reminder row must render the rescheduled date");
+});
+
+test("logging from a reminder offers an explicit update-future opt-in", () => {
+  assert.match(html, /id="updFutureRow"/, "the opt-in control exists");
+  assert.match(html, /function toggleUpdFuture/);
+  const draft = html.match(/function startReminderDraft\([\s\S]*?\n\}/)[0];
+  assert.match(draft, /updFutureRow[^\n]*display=""/, "shown only while drafting from a reminder");
+  assert.match(draft, /updFutureOn=false/, "defaults to off, so one occurrence stays one occurrence");
+  const submit = html.match(/function submitEntry\([\s\S]*?\n\}/s)[0];
+  assert.match(submit, /if\(updFutureOn\)/, "the template changes only on explicit opt-in");
+});
+
+test("the overview carries a month-over-month spending trend", () => {
+  assert.match(html, /id="overview-trend"/);
+  assert.match(html, /function renderSpendTrend/);
+  const fn = html.match(/function renderSpendTrend\([\s\S]*?\n\}/)[0];
+  assert.match(fn, /monthlyMoneySummary/, "the trend reuses the shared summary, never its own arithmetic");
+  assert.match(fn, /aria-label=/, "each bar is labelled for assistive technology");
+  assert.match(fn, /aria-current=/, "the selected month is marked without relying on colour");
+  assert.match(css, /\.trend button\{[^}]*min-height:\s*44px/, "bars meet the touch-target floor");
+});
+
+test("the device-scope warning and explicit transfer wording are present", () => {
+  assert.match(html, /id="deviceScopeNote"/);
+  assert.match(html, /does not sync/i);
+  assert.match(html, /Already using it on another device/i);
 });

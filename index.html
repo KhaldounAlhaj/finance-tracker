@@ -275,6 +275,14 @@
   .budget-status.on-track,.budget-status.refund{color:var(--pos-ink);background:var(--pos-soft)}
   .budget-status.close{color:var(--warn-ink);background:var(--warn-soft)}
   .budget-status.over{color:var(--bad-ink);background:var(--bad-soft)}
+  .trend{display:flex;align-items:flex-end;gap:8px;margin-top:12px}
+  .trend button{flex:1;min-width:0;background:none;border:0;padding:6px 0 0;cursor:pointer;font:inherit;color:var(--text);
+    display:flex;flex-direction:column;align-items:center;gap:6px;min-height:44px;border-radius:8px}
+  .trend .bar{width:100%;border-radius:6px 6px 0 0;background:var(--primary-weak);border:1px solid var(--border-strong)}
+  .trend button[aria-current="true"] .bar{background:var(--primary);border-color:var(--primary)}
+  .trend .tval{font-size:12px;font-variant-numeric:tabular-nums;color:var(--muted)}
+  .trend button[aria-current="true"] .tval{color:var(--text);font-weight:600}
+  .trend .tlab{font-size:12px;color:var(--muted)}
   /* month inputs carry a wide intrinsic minimum, so the tracks must be allowed to shrink */
   .phase-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   .phase-grid>*{min-width:0}
@@ -324,8 +332,8 @@
     </div>
     <div style="flex:1"></div>
     <button class="btn" onclick="exitFirstRun()">Get started</button>
-    <button class="btn-ghost" onclick="document.getElementById('restoreFile').click()">Restore from backup</button>
-    <div class="note">No account needed · works offline</div>
+    <button class="btn-ghost" onclick="document.getElementById('restoreFile').click()">Already using it on another device? Restore your backup</button>
+    <div class="note">No account needed · works offline · each device keeps its own copy</div>
   </div>
 
   <div id="shell" style="display:flex;flex-direction:column;min-height:100vh">
@@ -369,6 +377,11 @@
           <div id="dSpendSources" style="margin-top:8px"></div>
           <button class="money-source-row" type="button" onclick="openActivityDrill('payment','')"><strong>Debt payments</strong><span id="dDebtPayments">0 SAR</span></button>
           <button class="money-source-row" type="button" onclick="openActivityDrill('goal','')"><strong>Moved to goals</strong><span id="dGoalMoves">0 SAR</span></button>
+        </section>
+
+        <section class="wm-section overview-trend" id="overview-trend">
+          <div class="section-head"><div><div class="section-title">Spending trend</div><div class="hint">Net purchases over the last six months — tap a month to open it</div></div></div>
+          <div class="trend" id="dTrend"></div>
         </section>
 
         <section class="wm-section overview-attention" id="overview-attention">
@@ -508,6 +521,12 @@
           <span class="switch"></span>
         </button>
 
+        <button class="switchrow" id="updFutureRow" role="switch" aria-checked="false" onclick="toggleUpdFuture()" style="display:none">
+          <span><span style="display:block;font-weight:600;font-size:14px">Update future reminders</span>
+          <span class="hint">Also change this reminder's amount and day to match what you save</span></span>
+          <span class="switch"></span>
+        </button>
+
         <div class="fg" id="fUntil" style="display:none;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:13px">
           <label class="fl">How often</label>
           <div class="selwrap"><select class="sel" id="eFreq" style="background:var(--surface)">
@@ -622,8 +641,12 @@
           <div style="flex:1"><div style="font-weight:600;font-size:14px;color:var(--warning-ink)" id="backupNudgeT"></div><div class="hint" style="margin-top:1px">Export a copy so your plan is never lost.</div></div>
           <button class="btn2" style="width:auto;min-height:44px;padding:0 14px;background:var(--warning);color:#fff;border:none" onclick="backup()">Back up</button>
         </div>
+        <div class="note" id="deviceScopeNote" style="margin-top:12px;text-align:left;line-height:1.5">
+          <strong>This device keeps its own copy.</strong> Your data is stored in this browser only — it does not sync between your phone and your computer, and each one keeps a separate set of entries.
+          To move everything to another device, download a backup here and restore it there.
+        </div>
         <div class="listcard" style="margin-top:12px">
-          <button class="row" style="width:100%;background:none;border-left:none;border-right:none;border-bottom:none;cursor:pointer;text-align:left;font-family:var(--font);color:var(--text)" onclick="backup()"><span style="font-size:18px;width:24px;text-align:center">⬇︎</span><span style="flex:1;font-weight:600;font-size:14.5px">Download a backup</span><span style="color:var(--muted)">›</span></button>
+          <button class="row" style="width:100%;background:none;border-left:none;border-right:none;border-bottom:none;cursor:pointer;text-align:left;font-family:var(--font);color:var(--text)" onclick="backup()"><span style="font-size:18px;width:24px;text-align:center">⬇︎</span><span style="flex:1"><span style="display:block;font-weight:600;font-size:14.5px">Download a backup</span><span class="hint">Also how you move this data to another device</span></span><span style="color:var(--muted)">›</span></button>
           <button class="row" style="width:100%;background:none;border-left:none;border-right:none;border-bottom:none;cursor:pointer;text-align:left;font-family:var(--font);color:var(--text)" onclick="document.getElementById('restoreFile').click()"><span style="font-size:18px;width:24px;text-align:center">📥</span><span style="flex:1;font-weight:600;font-size:14.5px">Restore from a backup file</span><span style="color:var(--muted)">›</span></button>
           <button class="row" style="width:100%;background:none;border-left:none;border-right:none;border-bottom:none;cursor:pointer;text-align:left;font-family:var(--font);color:var(--negative)" onclick="resetAll()"><span style="font-size:18px;width:24px;text-align:center">⟲</span><span style="flex:1;font-weight:600;font-size:14.5px">Reset all data</span></button>
         </div>
@@ -1324,6 +1347,24 @@ function paymentSourceLabel(id){
 function paymentSourceKey(e){
   return classifyMoneyEntry(state,e).source;
 }
+function goToMonth(mm){ if(!/^\d{4}-\d{2}$/.test(mm)||mm>realMonth())return;
+  if(activityDrill)activityDrill.month=mm;
+  state.currentMonth=mm; save(); render(); }
+function renderSpendTrend(m){
+  const host=el("dTrend"); if(!host) return;
+  const months=[]; for(let i=5;i>=0;i--) months.push(shift(m,-i));
+  const data=months.map(mm=>({m:mm,v:monthlyMoneySummary(state,mm).spent}));
+  const max=Math.max(1,...data.map(d=>Math.abs(d.v)));
+  const anySpend=data.some(d=>Math.abs(d.v)>=.005);
+  host.innerHTML=anySpend?data.map(d=>{
+    const h=Math.max(4,Math.round(Math.abs(d.v)/max*70));
+    return `<button type="button" aria-current="${d.m===m}" onclick="goToMonth('${d.m}')"
+      aria-label="${esc(fmtMonth(d.m))}: ${esc(sar(d.v))}${d.m===m?" — currently shown":""}">
+      <span class="tval">${Math.abs(d.v)>=.005?esc(fmt(Math.round(d.v))):"—"}</span>
+      <span class="bar" style="height:${h}px"></span>
+      <span class="tlab">${MS[(+d.m.slice(5,7))-1]||""}</span></button>`;}).join("")
+    : `<div class="hint" style="padding:8px 0 12px">No spending recorded in the last six months.</div>`;
+}
 function moneySourceRows(money){
   const sources=Object.entries(money.bySource).filter(([,amount])=>Math.abs(amount)>=.005);
   return sources.length?sources.map(([source,amount])=>`<button class="money-source-row" type="button" data-source="${esc(source)}" onclick="openActivityDrill('spending',this.dataset.source)"><strong>${esc(paymentSourceLabel(source))}</strong><span style="color:${amount<0?'var(--positive-ink)':'var(--text)'}">${amount<0?'− ':''}${sar(Math.abs(amount))}</span></button>`).join(""):`<div class="hint" style="padding:8px 0 12px">No purchases or refunds logged this month.</div>`;
@@ -1483,6 +1524,7 @@ function renderDashboard(m,rm){
   setText("dCashBreakdown",sar(money.cashLeftNow)+" now − "+sar(metrics.cashObligationsLeft)+" obligations − "+sar(metrics.reservedForGoals)+" goals");
   setText("dSpendTotal",sar(money.spent));setText("dDebtPayments",sar(money.debtPayments));setText("dGoalMoves",sar(money.movedToGoals));
   el("dSpendSources").innerHTML=moneySourceRows(money);
+  renderSpendTrend(m);
   const income=metrics.incomeReceived, spent=metrics.actualSpending, planned=metrics.spendingPlan;
   setText("dSpent",sar(spent)); setText("dSpentSub","of "+sar(planned)+" expense plan");
   el("dSpentW").style.width=(planned>0?Math.min(100,Math.max(0,Math.round(spent/planned*100))):0)+"%";
@@ -1595,6 +1637,9 @@ function startReminderDraft(id,m,overrideDate){
   el("eAmt").value=r.amount; el("eDesc").value=r.name; el("eDate").value=localDateTime();
   if(["expense","goal"].includes(r.type))el("eCat").value=r.categoryId||"other";
   if(r.type==="payment")el("ePay").value=r.debtId||"";
+  // Editing this occurrence changes only this occurrence unless the owner opts in.
+  el("repRow").style.display="none";
+  updFutureOn=false; el("updFutureRow").setAttribute("aria-checked","false"); el("updFutureRow").style.display="";
   msg("logMsg","Draft from reminder — review date, time and amount, then save");
 }
 function renderBudget(m){
@@ -1806,6 +1851,9 @@ function setLogType(t){ logType=t;
 function toggleRepeat(){ repeatOn=!repeatOn;
   el("repRow").setAttribute("aria-checked",repeatOn?"true":"false");
   el("fUntil").style.display=repeatOn?"":"none"; }
+let updFutureOn=false;
+function toggleUpdFuture(){ updFutureOn=!updFutureOn;
+  el("updFutureRow").setAttribute("aria-checked",updFutureOn?"true":"false"); }
 function logResetForm(){
   editingId=null; repeatOn=false;
   ["eDesc","eAmt","eSms","eUntil"].forEach(id=>{ const x=el(id); if(x) x.value=""; });
@@ -1814,6 +1862,7 @@ function logResetForm(){
   el("eDate").value=localDateTime(); draftReminder=null;
   el("repRow").setAttribute("aria-checked","false"); el("fUntil").style.display="none";
   el("repRow").style.display="";
+  updFutureOn=false; el("updFutureRow").setAttribute("aria-checked","false"); el("updFutureRow").style.display="none";
   el("logCancelBtn").style.display="none";
   setLogType("expense");
 }
@@ -1848,7 +1897,9 @@ function submitEntry(){
     if(draftReminder){ entry.recurringId=draftReminder.id;entry.recurringOccurrenceKey=occurrenceKey(draftReminder.id,draftReminder.month);
       const priorOcc=state.occurrences[entry.recurringOccurrenceKey];
       state.occurrences[entry.recurringOccurrenceKey]={status:"logged",entryId:entry.id,
-        ...(priorOcc&&priorOcc.to?{to:priorOcc.to}:{}),updatedAt:new Date().toISOString()}; }
+        ...(priorOcc&&priorOcc.to?{to:priorOcc.to}:{}),updatedAt:new Date().toISOString()};
+      if(updFutureOn){ const tpl=state.recurring.find(x=>x.id===draftReminder.id);
+        if(tpl){ tpl.amount=entry.amount; tpl.dayOfMonth=Math.min(28,Math.max(1,parseInt(entry.date.slice(8,10))||tpl.dayOfMonth)); } } }
     state.entries.push(entry);
     if(repeatOn){
       const day=Math.min(28,Math.max(1,parseInt(date.slice(8,10))||1));
