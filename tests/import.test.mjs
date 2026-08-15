@@ -150,3 +150,24 @@ test("duplicate marking checks existing entries and earlier rows",()=>{
   const marked=markImportDuplicates(rows,new Set(["source:existing"]));
   assert.deepEqual(marked.map(r=>r.duplicate),[false,true,true]);
 });
+
+test("prose in notes about an earlier failed attempt does not block a valid row",()=>{
+  const row=normalizeImportRow({occurred_at:"2026-08-10 21:37",type:"expense",amount:"192",currency:"SAR",
+    description:"Amazon SA",category:"food",paid_with:"debit",source_ref:"a1",
+    notes:"Successful purchase after an earlier declined attempt at 21:34"});
+  assert.equal(row.blocked,false);
+});
+
+test("a declared declined marker in notes still blocks the row",()=>{
+  for(const note of ["declined","Rejected","status: declined","مرفوض"]){
+    const row=normalizeImportRow({occurred_at:"2026-08-10 21:34",type:"expense",amount:"192",currency:"SAR",
+      description:"Amazon SA",paid_with:"debit",source_ref:"a2",notes:note});
+    assert.equal(row.blocked,true,`note "${note}" must block`);
+  }
+});
+
+test("a declined transaction type is still blocked regardless of notes",()=>{
+  const row=normalizeImportRow({occurred_at:"2026-08-10 21:34",type:"declined",amount:"192",currency:"SAR",
+    description:"Amazon SA",source_ref:"a3",notes:"ordinary note"});
+  assert.equal(row.blocked,true);
+});

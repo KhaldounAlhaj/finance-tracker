@@ -275,6 +275,10 @@
   .budget-status.on-track,.budget-status.refund{color:var(--pos-ink);background:var(--pos-soft)}
   .budget-status.close{color:var(--warn-ink);background:var(--warn-soft)}
   .budget-status.over{color:var(--bad-ink);background:var(--bad-soft)}
+  /* month inputs carry a wide intrinsic minimum, so the tracks must be allowed to shrink */
+  .phase-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .phase-grid>*{min-width:0}
+  @media (max-width:420px){.phase-grid{grid-template-columns:1fr}}
   .money-source-row{width:100%;min-height:44px;border:0;border-top:1px solid var(--border);background:transparent;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;font:inherit;cursor:pointer;text-align:left}
   .money-source-row:first-child{border-top:0}.money-source-row strong{font-size:14px}.money-source-row span{font-size:13.5px;font-weight:600;white-space:nowrap}
   #p-budget .listcard,#p-goals .listcard{box-shadow:none;border-radius:16px}
@@ -957,7 +961,10 @@ function hashImportValue(value){let h=0x811c9dc5;for(const ch of String(value||"
 function normalizeImportRow(raw){
   const r=raw||{}, type=String(r.type||"").trim().toLowerCase(), amount=Number(String(r.amount||"").replace(/,/g,""));
   const stamp=String(r.occurred_at||r.occurredAt||"").trim().replace(" ","T").slice(0,16);
-  const blocked=["declined","rejected"].includes(type)||/declin|reject|مرفوض|رفض/i.test(String(r.notes||""));
+  // Notes are free-text review guidance, so only a declared status marker blocks a row —
+  // prose such as "after an earlier declined attempt" describes a *successful* purchase.
+  const noteMarker=/^\s*(?:status\s*[:=]\s*)?(?:(?:declin\w*|reject\w*)\b|مرفوض|رفض)/i.test(String(r.notes||""));
+  const blocked=["declined","rejected"].includes(type)||noteMarker;
   const validTypes=["expense","refund","payment","income","goal"];
   const errors=[];
   if(!validImportTimestamp(stamp))errors.push("Invalid date/time");
@@ -1408,7 +1415,9 @@ function chMonth(dir){ const next=shift(state.currentMonth,dir);
   if(next>realMonth()) return;
   if(activityDrill)activityDrill.month=next;
   state.currentMonth=next; save(); render(); }
-function resetToNow(doRender){ state.currentMonth=realMonth(); save(); if(doRender!==false) render(); }
+function resetToNow(doRender){ state.currentMonth=realMonth();
+  if(activityDrill) activityDrill.month=state.currentMonth;   // keep an open drill on the month being shown
+  save(); if(doRender!==false) render(); }
 function openOverlay(name){ document.querySelectorAll(".overlay").forEach(o=>o.classList.remove("open"));
   const o=el("ov-"+name); if(o){ o.classList.add("open"); fillOverlay(name); } }
 function closeOverlay(){ document.querySelectorAll(".overlay").forEach(o=>o.classList.remove("open")); }
@@ -2201,7 +2210,7 @@ function fillPhaseEditor(){
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <div style="font-weight:600">${esc(p.name)}</div>
         <button class="linkbtn" style="color:var(--negative)" onclick="delPhase(${i})">Delete</button></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="phase-grid">
         <div class="fg"><label class="fl">Name</label><input class="in" data-f="name" value="${esc(p.name)}" style="height:44px"></div>
         <div class="fg"><label class="fl">Title</label><input class="in" data-f="title" value="${esc(p.title)}" style="height:44px"></div>
         <div class="fg"><label class="fl">Start</label><input class="in" type="month" data-f="start" value="${esc(p.start)}" style="height:44px"></div>

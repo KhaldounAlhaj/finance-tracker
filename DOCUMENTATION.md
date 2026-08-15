@@ -1,6 +1,6 @@
 # Finance Tracker — App Documentation
 
-<!-- VERSION --> app **finance-v10.3** · docs synced **2026-08-15** <!-- /VERSION -->
+<!-- VERSION --> app **finance-v10.4** · docs synced **2026-08-15** <!-- /VERSION -->
 
 > **Living document.** The block between the `AUTO:GENERATED` markers in **§4** is rebuilt
 > from the app's source (`index.html`, `sw.js`, `manifest.json`) every time you commit, by
@@ -87,7 +87,7 @@ CSV account fields are review hints only. The preview requires explicit in-app s
 _Machine-generated from source on every commit — do not edit by hand._
 
 <!-- AUTO:GENERATED:START — produced by docs/generate-docs.mjs · DO NOT EDIT BY HAND -->
-_Synced **2026-08-15** · app version **finance-v10.3** · storage key `khaldoun_finance_v3`_
+_Synced **2026-08-15** · app version **finance-v10.4** · storage key `khaldoun_finance_v3`_
 
 ### Identity
 - **Finance Tracker** — Personal finance, debt and house-savings tracker
@@ -146,8 +146,8 @@ _0 seed reminder templates (salary planning is added on first run; nothing auto-
 ### Source file manifest (SHA-256, first 16 hex)
 | File | Bytes | Hash |
 |---|---|---|
-| `index.html` | 188,622 | `5dd487bbcb12d205` |
-| `sw.js` | 1,507 | `bf7d5505872f8b05` |
+| `index.html` | 189,345 | `599fab55a0eef385` |
+| `sw.js` | 1,456 | `ee4e926da7ee6dcf` |
 | `manifest.json` | 480 | `667075e74e294a37` |
 | `README.md` | 3,094 | `de851fd3d670ae60` |
 | `icon-180.png` | 23,893 | `de63b104b43ca1d0` |
@@ -203,6 +203,7 @@ tabular numerals everywhere; `prefers-reduced-motion` respected; system fonts on
 ## 8. Changelog
 | Version | Date | Changes |
 |---|---|---|
+| finance-v10.4 | 2026-08-15 | **Import and review fixes.** CSV rows are no longer blocked because their *notes* happen to mention a declined attempt — only a declared status marker at the start of the notes, or a declined/rejected transaction **type**, blocks a row. Free-text review guidance such as "successful purchase after an earlier declined attempt" now imports normally, where before it was silently rejected. An open activity drill now follows the month when the Overview tab resets to the current month, not only when the month arrows are used. The Roadmap phase editor collapses to a single column below 420px, so its month inputs no longer force sideways scrolling on a phone. No formula, storage-key, model-version or migration change. SW cache → finance-v10.4. |
 | finance-v10.3 | 2026-08-15 | **QA accounting corrections** — statement reconciliations no longer count as spending or cash movement; legacy goal-category expenses use the same classification in totals and drill-through; card-funded goal movement does not reduce current liquidity; closed months now show spending by source, liquidity, debt payments and goal movement; dashboard drills clear conflicting Log filters and follow month navigation. No migration or stored-data rewrite. SW cache → finance-v10.3. |
 | finance-v10.2 | 2026-08-14 | **Monthly spending and liquidity clarity** — Overview now separates Cash left now from After upcoming commitments, shows net purchases across every payment source, and keeps debt payments and goal contributions visible but outside spending to prevent double counting. Source, debt and goal rows drill into a clearable selected-month activity view. No migration or stored-data rewrite. SW cache → finance-v10.2. |
 | finance-v10.1 | 2026-08-14 | **Budget status badge fix** — the On track badge now uses a dedicated status class instead of inheriting the 6px progress-track style. This restores the full pill, border and text without changing budget calculations or stored data. SW cache → finance-v10.1. |

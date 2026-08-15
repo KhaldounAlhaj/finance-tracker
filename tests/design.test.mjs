@@ -188,3 +188,15 @@ test("laptop usability widens one shared shell without introducing desktop navig
   assert.match(css,/@media\s*\(min-width:\s*760px\)[\s\S]*main\s*\{[^}]*padding-left:\s*24px[^}]*padding-right:\s*24px/s);
   assert.doesNotMatch(css,/grid-template-columns:\s*(?:repeat\()?2fr\s+1fr|sidebar/i);
 });
+
+test("resetting to the current month keeps an active activity drill in sync",()=>{
+  const fn=html.match(/function resetToNow\([\s\S]*?\n\}/)?.[0]||html.match(/function resetToNow\([^\n]*\n?[^\n]*/)?.[0]||"";
+  assert.match(fn,/activityDrill/,"resetToNow must update the active drill month");
+});
+
+test("the roadmap phase editor collapses to one column at phone width",()=>{
+  assert.match(html,/class="phase-grid"/,"phase fields use a named responsive grid class");
+  assert.doesNotMatch(html,/grid-template-columns:1fr 1fr;gap:10px">\s*<div class="fg"><label class="fl">Name/,"no fixed inline two-column grid in the phase editor");
+  assert.match(css,/\.phase-grid\{[^}]*minmax\(0,\s*1fr\)/,"tracks must be allowed to shrink below intrinsic input width");
+  assert.match(css,/@media\s*\(max-width:\s*4[0-9]{2}px\)[\s\S]*\.phase-grid\{[^}]*grid-template-columns:\s*1fr/);
+});
