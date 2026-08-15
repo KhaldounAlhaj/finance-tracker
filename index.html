@@ -839,6 +839,7 @@ function repairOccurrenceState(input){
     const matching=out.entries.find(e=>entryFulfillsOccurrence(e,id,key,month));
     if(matching)occ[key]={...record,entryId:matching.id};
     else if(out.skips.includes(key))occ[key]={status:"skipped",updatedAt:record.updatedAt};
+    else if(record.to)occ[key]={status:"rescheduled",to:record.to,updatedAt:record.updatedAt};
     else delete occ[key];
   }
   return out;
@@ -848,7 +849,13 @@ function reopenOccurrenceForDeletedEntry(input,entry){
   out.occurrences=out.occurrences&&typeof out.occurrences==="object"&&!Array.isArray(out.occurrences)?out.occurrences:{};
   out.skips=Array.isArray(out.skips)?out.skips:[];
   const key=entry&&(entry.recurringOccurrenceKey||(entry.recurringId?occurrenceKey(entry.recurringId,coreMonth(entry.date||entry.occurredAt)):null));
-  if(key){const record=out.occurrences[key];if(record&&record.status==="logged")delete out.occurrences[key];out.skips=out.skips.filter(x=>x!==key);}
+  if(key){const record=out.occurrences[key];
+    // A deliberate reschedule survives the mistake: reopen on the moved date, not the natural one.
+    if(record&&record.status==="logged"){
+      if(record.to)out.occurrences[key]={status:"rescheduled",to:record.to,updatedAt:record.updatedAt};
+      else delete out.occurrences[key];
+    }
+    out.skips=out.skips.filter(x=>x!==key);}
   return out;
 }
 function entryDeltas(entry,cardId){
@@ -1224,12 +1231,20 @@ function normRec(r){ r=r||{}; return { id:r.id||uid(), name:r.name||"Recurring",
 function stepOk(r,m){ const d=monthsBetween(r.startMonth||m,m); return d>=0&&d%(Math.max(1,num(r.everyMonths)||1))===0; }
 function freqLabel(n){ return n<=1?"monthly":(n===12?"yearly":"every "+n+" months"); }
 function nextOccurrence(r){ if(recStatus(r)!=="active") return null;
+  // A rescheduled occurrence is when money is genuinely next due, so it outranks the natural date.
+  const moved=Object.entries(state.occurrences||{})
+    .filter(([k,o])=>o&&o.status==="rescheduled"&&o.to&&k.slice(0,k.lastIndexOf(":"))===r.id&&o.to>=today())
+    .map(([,o])=>o.to).sort();
   let m=realMonth()>r.startMonth?realMonth():r.startMonth;
   for(let i=0;i<40;i++){
-    if(stepOk(r,m)&&(!r.endMonth||m<=r.endMonth)&&resolveOccurrence(state,r.id,m).status==="upcoming") return m;
+    if(stepOk(r,m)&&(!r.endMonth||m<=r.endMonth)&&resolveOccurrence(state,r.id,m).status==="upcoming"){
+      const natural=reminderDate(r,m);
+      if(moved.length&&moved[0]<natural) return {month:monthOf(moved[0]),date:moved[0],rescheduled:true};
+      return {month:m,date:natural,rescheduled:false};
+    }
     m=shift(m,1);
   }
-  return null; }
+  return moved.length?{month:monthOf(moved[0]),date:moved[0],rescheduled:true}:null; }
 function normCommit(c){ c=c||{}; return { id:c.id||uid(), name:c.name||"Commitment", target:num(c.target),
   dueMonth:c.dueMonth||shift(realMonth(),12), categoryId:c.categoryId||null,
   fundedStart:num(c.fundedStart), createdFrom:c.createdFrom||realMonth() }; }
@@ -1830,7 +1845,10 @@ function submitEntry(){
     msg("logMsg","Entry updated ✓");
   } else {
     entry.id=uid();
-    if(draftReminder){ entry.recurringId=draftReminder.id;entry.recurringOccurrenceKey=occurrenceKey(draftReminder.id,draftReminder.month);state.occurrences[entry.recurringOccurrenceKey]={status:"logged",entryId:entry.id,updatedAt:new Date().toISOString()}; }
+    if(draftReminder){ entry.recurringId=draftReminder.id;entry.recurringOccurrenceKey=occurrenceKey(draftReminder.id,draftReminder.month);
+      const priorOcc=state.occurrences[entry.recurringOccurrenceKey];
+      state.occurrences[entry.recurringOccurrenceKey]={status:"logged",entryId:entry.id,
+        ...(priorOcc&&priorOcc.to?{to:priorOcc.to}:{}),updatedAt:new Date().toISOString()}; }
     state.entries.push(entry);
     if(repeatOn){
       const day=Math.min(28,Math.max(1,parseInt(date.slice(8,10))||1));
@@ -1900,10 +1918,11 @@ function renderRecurring(){
   el("recList").innerHTML = items.length? items.slice().sort((a,b)=>order[recStatus(a)]-order[recStatus(b)]).map(r=>{
     const st=recStatus(r), income=r.type==="income";
     const every=Math.max(1,num(r.everyMonths)||1);
-    const nxt=every>1?nextOccurrence(r):null;
+    const nxt=nextOccurrence(r);
+    const nextLabel=nxt?(nxt.rescheduled?(" (moved to "+nxt.date+")"):(every>1?(" (next "+fmtMonth(nxt.month)+")"):"")):"";
     const schedule = st==="ended" ? "Ended "+fmtMonth(r.endMonth)+" — no longer appears"
       : st==="paused" ? "Paused — won't appear"
-      : "Reminder on the "+ordinal(r.dayOfMonth)+" · "+freqLabel(every)+(nxt?(" (next "+fmtMonth(nxt)+")"):"")+" · "+(r.endMonth?("until "+fmtMonth(r.endMonth)):"forever");
+      : "Reminder on the "+ordinal(r.dayOfMonth)+" · "+freqLabel(every)+nextLabel+" · "+(r.endMonth?("until "+fmtMonth(r.endMonth)):"forever");
     return `<div class="dcard${st!=="active"?' dim':''}">
       <div style="display:flex;align-items:center;gap:11px">
         <div class="rowico" style="width:40px;height:40px;font-size:18px">${income?"💵":(r.type==="payment"?"💳":catIcon(r.categoryId))}</div>

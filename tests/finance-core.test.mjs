@@ -231,3 +231,30 @@ test("production migration path upgrades the v8.4 fixture and preserves its entr
   assert.equal(production.migratedState.modelVersion,9);assert.equal(production.migratedState.entries[0].id,"legacy-entry");assert.equal(production.migratedState.entries[0].amount,1);
   production.persist();assert.equal(JSON.parse(stored).modelVersion,9);
 });
+
+test("reopening a deleted entry restores the reschedule it was logged against",()=>{
+  const state={categories:[{id:"rent",kind:"committed"}],budgets:{rent:500},debts:[],skips:[],
+    recurring:[{id:"r1",type:"expense",amount:500,categoryId:"rent",dayOfMonth:1,startMonth:"2026-08",everyMonths:1,active:true}],
+    occurrences:{"r1:2026-08":{status:"logged",entryId:"e1",to:"2026-08-05"}},
+    entries:[{id:"e1",type:"expense",amount:500,date:"2026-08-05",category:"rent",recurringId:"r1",recurringOccurrenceKey:"r1:2026-08"}]};
+  const out=reopenOccurrenceForDeletedEntry(state,state.entries[0]);
+  assert.equal(out.occurrences["r1:2026-08"].status,"rescheduled");
+  assert.equal(out.occurrences["r1:2026-08"].to,"2026-08-05");
+  assert.equal(out.entries.length,0);
+});
+
+test("reopening an entry with no prior reschedule still clears the record",()=>{
+  const state={categories:[],budgets:{},debts:[],skips:[],recurring:[],
+    occurrences:{"r1:2026-08":{status:"logged",entryId:"e1"}},
+    entries:[{id:"e1",type:"expense",amount:500,date:"2026-08-01",recurringId:"r1",recurringOccurrenceKey:"r1:2026-08"}]};
+  const out=reopenOccurrenceForDeletedEntry(state,state.entries[0]);
+  assert.equal(out.occurrences["r1:2026-08"],undefined);
+});
+
+test("repair restores a reschedule when a logged record's entry is gone",()=>{
+  const state={modelVersion:9,entries:[],recurring:[],skips:[],debts:[],
+    occurrences:{"r1:2026-08":{status:"logged",entryId:"missing",to:"2026-08-05"}}};
+  const repaired=repairOccurrenceState(state);
+  assert.equal(repaired.occurrences["r1:2026-08"].status,"rescheduled");
+  assert.equal(repaired.occurrences["r1:2026-08"].to,"2026-08-05");
+});

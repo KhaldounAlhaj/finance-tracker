@@ -200,3 +200,13 @@ test("the roadmap phase editor collapses to one column at phone width",()=>{
   assert.match(css,/\.phase-grid\{[^}]*minmax\(0,\s*1fr\)/,"tracks must be allowed to shrink below intrinsic input width");
   assert.match(css,/@media\s*\(max-width:\s*4[0-9]{2}px\)[\s\S]*\.phase-grid\{[^}]*grid-template-columns:\s*1fr/);
 });
+
+test("logging a reminder keeps any rescheduled date on the occurrence record",()=>{
+  assert.match(html,/status:"logged"[^}]*to:/,"the logged record must carry the reschedule forward");
+});
+
+test("next payment prefers a rescheduled date over the next natural occurrence",()=>{
+  const fn=html.match(/function nextOccurrence\([\s\S]*?\n\s*return[^\n]*\n?\}/)?.[0]||"";
+  assert.match(fn,/rescheduled/,"nextOccurrence must consider rescheduled occurrences");
+  assert.match(html,/nxt\.rescheduled|nxt&&nxt\.date/,"the reminder row must render the rescheduled date");
+});
