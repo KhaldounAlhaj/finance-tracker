@@ -278,3 +278,56 @@ test("the activity drill variable is declared before anything reads it", () => {
   for (const fn of ["function goToMonth", "function chMonth", "function resetToNow"])
     assert.ok(decl < html.indexOf(fn), fn + " must not read activityDrill before it is initialised");
 });
+
+// ---- Closed accounts (2026-08-28-closed-accounts-design.md) ----
+
+test("an account can be closed and reopened without deleting its history", () => {
+  const editor = html.match(/function renderDebtEditor\([\s\S]*?\n\}/)[0];
+  assert.match(editor, /closeDebt\('/, "an open account offers Close");
+  assert.match(editor, /reopenDebt\('/, "a closed account offers Reopen");
+  assert.match(editor, /<details/, "closed accounts sit in a collapsed group");
+  assert.match(editor, /Closed accounts/, "the group is named");
+  assert.match(html, /function closeDebt\(/);
+  assert.match(html, /function reopenDebt\(/);
+});
+
+test("closing refuses to hide money that is still owed", () => {
+  const fn = html.match(/function closeDebt\([\s\S]*?\n\}/)[0];
+  assert.match(fn, /canCloseDebt\(/, "the core rule gates the action, not a second copy of it");
+  assert.match(fn, /alert\(/, "a refused close explains why");
+  assert.match(fn, /r\.active=false/, "closing pauses any linked planned payment");
+});
+
+test("deleting an account states what it costs", () => {
+  const fn = html.match(/function delDebt\([\s\S]*?\n\}/)[0];
+  assert.match(fn, /lose|loses/, "the confirm says past purchases lose the account name");
+});
+
+test("forward-looking figures read the active accounts, not every account", () => {
+  for (const name of ["totalDebt", "totalOriginal", "recPaymentFor"]) {
+    const fn = html.match(new RegExp("function " + name + "\\([\\s\\S]*?\\n\\}"))[0];
+    assert.match(fn, /activeDebts\(/, name + " excludes closed accounts");
+  }
+  const pickers = html.match(/function fillLogSelects\([\s\S]*?\n\}/)[0];
+  assert.match(pickers, /activeDebts\(/, "the Log pickers exclude closed accounts");
+  assert.doesNotMatch(
+    html.match(/function paymentSourceLabel\([\s\S]*?\n\}/)[0], /activeDebts\(/,
+    "history must still name a closed card");
+  // debtName is a one-liner, so scope the match to its own line rather than the next \n}.
+  assert.doesNotMatch(
+    html.match(/function debtName\([^\n]*/)[0], /activeDebts\(/,
+    "activity rows must still name a closed account");
+});
+
+test("the closed-account controls meet the touch floor", () => {
+  const editor = html.match(/function renderDebtEditor\([\s\S]*?\n\}/)[0];
+  const summaries = [...editor.matchAll(/<summary[^>]*style="([^"]*)"/g)].map(m => m[1]);
+  assert.ok(summaries.length, "the closed group has a summary");
+  for (const style of summaries)
+    assert.match(style, /min-height:44px/, "every summary meets 44px");
+  // Close/Reopen ride the linkbtn floor rather than a bespoke height.
+  for (const action of ["closeDebt", "reopenDebt"])
+    assert.match(editor, new RegExp('class="linkbtn"[^>]*onclick="' + action),
+      action + " uses the 44px linkbtn control");
+  assert.match(declarationsFor(".linkbtn"), /min-height:\s*44px/, ".linkbtn holds the touch floor");
+});

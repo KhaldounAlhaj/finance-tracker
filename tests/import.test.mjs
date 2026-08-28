@@ -171,3 +171,36 @@ test("a declined transaction type is still blocked regardless of notes",()=>{
     description:"Amazon SA",source_ref:"a3",notes:"ordinary note"});
   assert.equal(row.blocked,true);
 });
+
+// ---- Closed accounts (2026-08-28-closed-accounts-design.md) ----
+
+const closedImportContext={
+  categories:[{id:"food",kind:"flexible",archived:false}],
+  debts:[{id:"card1",kind:"card",name:"Visa"},{id:"card2",kind:"card",name:"Closed Visa",closed:true},
+    {id:"loan1",kind:"loan",name:"Car loan"},{id:"loan2",kind:"loan",name:"Settled loan",closed:true}]
+};
+
+test("CSV review never offers a closed account",()=>{
+  const paymentRow=normalizeImportRow({type:"payment",amount:100,date:"2026-08-02",
+    occurredAt:"2026-08-02T10:00",description:"Card payment",currency:"SAR"},closedImportContext);
+  const opts=importChoiceOptions(paymentRow,closedImportContext);
+  assert.deepEqual(opts.debts.map(d=>d.value),["card1","loan1"],"closed accounts leave the account picker");
+  const expenseRow=normalizeImportRow({type:"expense",amount:100,date:"2026-08-02",
+    occurredAt:"2026-08-02T10:00",description:"Groceries",currency:"SAR"},closedImportContext);
+  const paidWith=importChoiceOptions(expenseRow,closedImportContext).paidWith.map(p=>p.value);
+  assert.ok(paidWith.includes("card1"),"an open card is still selectable");
+  assert.ok(!paidWith.includes("card2"),"a closed card cannot fund a new purchase");
+  assert.deepEqual([...paidWith],["cash","debit","otherPay","card1"]);
+});
+
+test("a historical backfill naming a closed account is still importable",()=>{
+  // The pickers hide closed accounts; validation must not block a row that already names one,
+  // or re-importing the closed card's own history would be impossible.
+  const row=normalizeImportRow({type:"payment",amount:100,date:"2026-06-02",
+    occurredAt:"2026-06-02T10:00",description:"Final payment",currency:"SAR"},closedImportContext);
+  row.confirmedDebtId="card2";
+  assert.equal(validateImportDraft(row,closedImportContext).valid,true);
+  const built=buildImportEntries([{...row,include:true}],closedImportContext,"imp1",()=>"e1");
+  assert.equal(built.valid,true);
+  assert.equal(built.entries[0].debtId,"card2");
+});

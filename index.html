@@ -997,6 +997,24 @@ function debtMovement(state,debtId,month){
   for(const e of state.entries||[]){if(coreMonth(e.date)!==month)continue;if(e.paidWith===debtId&&e.type==="expense")purchases+=coreNum(e.amount);if(e.paidWith===debtId&&e.type==="refund")refunds+=coreNum(e.amount);if(e.debtId===debtId&&e.type==="payment")payments+=coreNum(e.amount);if(e.debtId===debtId&&e.type==="balance_adjustment")adjustments+=coreNum(e.amount);}
   const closing=opening+purchases-refunds-payments+adjustments; return {opening,purchases,refunds,payments,adjustments,closing,net:closing-opening};
 }
+function debtIsClosed(d){ return !!(d&&d.closed); }
+function activeDebts(state){ return ((state&&state.debts)||[]).filter(d=>!debtIsClosed(d)); }
+function coreDebtBalance(state,d){
+  if(!d) return 0;
+  const all=(state&&state.entries)||[];
+  const paid=all.filter(e=>e.type==="payment"&&e.debtId===d.id).reduce((a,e)=>a+coreNum(e.amount),0);
+  const charged=d.kind==="card"?all.filter(e=>e.type==="expense"&&e.paidWith===d.id).reduce((a,e)=>a+coreNum(e.amount),0):0;
+  const refunded=d.kind==="card"?all.filter(e=>e.type==="refund"&&e.paidWith===d.id).reduce((a,e)=>a+coreNum(e.amount),0):0;
+  const adjusted=all.filter(e=>e.type==="balance_adjustment"&&e.debtId===d.id).reduce((a,e)=>a+coreNum(e.amount),0);
+  return Math.max(0,coreNum(d.startingBalance)+charged-refunded-paid+adjusted);
+}
+// A closed account leaves the debt totals, so it may only be closed at a zero balance —
+// otherwise closing would hide money that is still owed. Formatting stays with the caller.
+function canCloseDebt(state,d){
+  const balance=coreDebtBalance(state,d);
+  return Math.abs(balance)<0.005?{ok:true,balance,reason:""}
+    :{ok:false,balance,reason:"still has an outstanding balance"};
+}
 /* CORE_V9_END */
 
 /* IMPORT_V9_START */
@@ -1089,7 +1107,7 @@ function importSummary(rows){
 }
 function importChoiceOptions(row,context){
   const categories=(context&&context.categories||[]).filter(c=>!c.archived&&((row&&row.type)==="goal"?c.kind==="goal":c.kind!=="goal"));
-  const debts=(context&&context.debts||[]);
+  const debts=(context&&context.debts||[]).filter(d=>!d.closed);
   return {categories:categories.map(c=>({value:c.id,label:c.name||c.id})),
     paidWith:[{value:"cash",label:"Cash / bank transfer"},{value:"debit",label:"Debit card"},{value:"otherPay",label:"Other"},...debts.filter(d=>d.kind==="card").map(d=>({value:d.id,label:d.name||d.id}))],
     debts:debts.map(d=>({value:d.id,label:d.name||d.id}))};
@@ -1271,7 +1289,8 @@ function normCat(c){ c=c||{}; return { id:c.id||uid(), name:c.name||"Category", 
   rollover:!!c.rollover, archived:!!c.archived }; }
 function normDebt(d){ d=d||{}; return { id:d.id||uid(), name:d.name||"Debt", bank:d.bank||"",
   startingBalance:num(d.startingBalance!=null?d.startingBalance:d.balance), original:num(d.original),
-  ratePerMonth:num(d.ratePerMonth!=null?d.ratePerMonth:d.rate), kind:d.kind==="card"?"card":"loan", category:d.category||"other" }; }
+  ratePerMonth:num(d.ratePerMonth!=null?d.ratePerMonth:d.rate), kind:d.kind==="card"?"card":"loan", category:d.category||"other",
+  closed:!!d.closed }; }
 function normEntry(e){ if(!e||typeof e!=="object") return null;
   const type=["expense","refund","payment","income","goal","balance_adjustment"].includes(e.type)?e.type:"expense";
   return { id:e.id||uid(), date:e.date||today(), amount:num(e.amount), category:e.category||"other", type,
@@ -1361,17 +1380,11 @@ function expectedSalary(m){ const ov=state.settings.salaryOverrides||{}; if(ov[m
   const steps=state.settings.salarySteps||{}; let best=null;
   for(const k in steps){ if(k<=m&&(best==null||k>best)) best=k; } // latest step at or before m carries forward
   return best?num(steps[best]):0; }
-function debtCurrent(d){
-  const all=state.entries||[];
-  const paid=all.filter(e=>e.type==="payment"&&e.debtId===d.id).reduce((a,e)=>a+num(e.amount),0);
-  const charged=d.kind==="card"?all.filter(e=>e.type==="expense"&&e.paidWith===d.id).reduce((a,e)=>a+num(e.amount),0):0;
-  const refunded=d.kind==="card"?all.filter(e=>e.type==="refund"&&e.paidWith===d.id).reduce((a,e)=>a+num(e.amount),0):0;
-  const adjusted=all.filter(e=>e.type==="balance_adjustment"&&e.debtId===d.id).reduce((a,e)=>a+num(e.amount),0);
-  return Math.max(0,num(d.startingBalance)+charged-refunded-paid+adjusted); }
+function debtCurrent(d){ return coreDebtBalance(state,d); }
 // Debt payments move cash and debt balances but are not new category spending.
 function isCardPayment(e){ if(e.type!=="payment") return false; const d=state.debts.find(x=>x.id===e.debtId); return !!(d&&d.kind==="card"); }
-function totalDebt(){ return state.debts.reduce((a,d)=>a+debtCurrent(d),0); }
-function totalOriginal(){ return state.debts.reduce((a,d)=>a+num(d.original),0); }
+function totalDebt(){ return activeDebts(state).reduce((a,d)=>a+debtCurrent(d),0); }
+function totalOriginal(){ return activeDebts(state).reduce((a,d)=>a+num(d.original),0); }
 function monthEntries(m){ return state.entries.filter(e=>monthOf(e.date)===m); }
 function paymentSourceLabel(id){
   if(id==="cash")return "Cash / bank";if(id==="debit")return "Debit card";if(id==="cashJOD")return "JOD cash";if(id==="otherPay")return "Other";
@@ -1455,7 +1468,8 @@ function houseStatus(){
   if(left<=0) lands=realMonth(); else if(pace>0) lands=shift(realMonth(),Math.ceil(left/pace));
   return { target:t, saved, left, req, pace, onTrack, lands, pct:t>0?Math.min(100,Math.round(saved/t*100)):0 };
 }
-function recPaymentFor(debtId){ return state.recurring.find(r=>r.active&&r.type==="payment"&&r.debtId===debtId&&!recEnded(r)); }
+function recPaymentFor(debtId){ if(!activeDebts(state).some(d=>d.id===debtId)) return undefined;
+  return state.recurring.find(r=>r.active&&r.type==="payment"&&r.debtId===debtId&&!recEnded(r)); }
 function projectDebt(d){
   const rp=recPaymentFor(d.id); const pay=rp?num(rp.amount):0;
   let bal=debtCurrent(d);
@@ -1586,9 +1600,10 @@ function renderDashboard(m,rm){
   const td=totalDebt(), to=totalOriginal();
   const paidPct=to>0?Math.max(0,Math.round((to-td)/to*100)):0;
   setText("dDebt",sar(td)); setText("dDebtPaid",paidPct+"% paid"); el("dDebtW").style.width=paidPct+"%";
-  const projections=state.debts.map(projectDebt).filter(p=>p&&p.close);
-  setText("dDebtNote", td<=0 ? (state.debts.length?"Everything is paid off. 🎉":"No accounts yet — add cards & loans in Settings.")
-    : (projections.length===state.debts.filter(d=>debtCurrent(d)>0).length&&projections.length
+  const openAccounts=activeDebts(state);
+  const projections=openAccounts.map(projectDebt).filter(p=>p&&p.close);
+  setText("dDebtNote", td<=0 ? (openAccounts.length?"Everything is paid off. 🎉":"No open accounts — add cards & loans in Settings.")
+    : (projections.length===openAccounts.filter(d=>debtCurrent(d)>0).length&&projections.length
       ? "On pace to be debt-free by "+fmtMonth(projections.map(p=>p.close).sort().pop())+"."
       : "Link a recurring payment to each account to see payoff dates."));
   setTimeout(()=>refreshPlannedViews(m),0);
@@ -1758,7 +1773,8 @@ function renderGoals(){
       </div></div>`;
   }).join("") : `<div class="empty"><div style="font-size:26px;margin-bottom:6px">🎓</div><div class="hint">School fees, trips, annual insurance — add a commitment and we'll work out the monthly set-aside.</div></div>`;
   // debts
-  el("gDebts").innerHTML = state.debts.length? state.debts.map(d=>{
+  const payoffAccounts=activeDebts(state);
+  el("gDebts").innerHTML = payoffAccounts.length? payoffAccounts.map(d=>{
     const bal=debtCurrent(d), orig=num(d.original), mv=debtMovement(state,d.id,state.currentMonth);
     const paidPct=orig>0?Math.max(0,Math.round((orig-bal)/orig*100)):0;
     const pr=projectDebt(d);
@@ -1785,7 +1801,7 @@ function renderGoals(){
         <span class="hint">${paidPct}% paid off${pr&&pr.interest?", ≈"+sar(Math.round(pr.interest))+" interest ahead":""}</span>
         <span class="badge ${verdict.cls}">${verdict.txt}</span>
       </div><button class="btn2" style="margin-top:10px" onclick="reconcileDebt('${d.id}')">Reconcile statement balance</button></div>`;
-  }).join("") : `<div class="empty"><div style="font-size:26px;margin-bottom:6px">💳</div><div class="hint">No cards or loans — add them in Settings → Cards &amp; loans.</div></div>`;
+  }).join("") : `<div class="empty"><div style="font-size:26px;margin-bottom:6px">💳</div><div class="hint">No open cards or loans — add them in Settings → Cards &amp; loans.</div></div>`;
   // roadmap
   const rm=realMonth();
   el("gRoadmap").innerHTML=`<div style="position:absolute;left:15px;top:6px;bottom:6px;width:2px;background:var(--border-strong)"></div>
@@ -1857,16 +1873,17 @@ function fillLogSelects(){
     liveCats().forEach(c=>{ if(!byG[c.group]){byG[c.group]=[];order.push(c.group);} byG[c.group].push(c); });
     order.forEach(g=>{ html+=`<optgroup label="${esc(g)}">`+byG[g].map(c=>`<option value="${c.id}">${c.icon} ${esc(c.name)}</option>`).join("")+`</optgroup>`; });
     cSel.innerHTML=html; if(cur&&state.categories.some(c=>c.id===cur&&!c.archived)) cSel.value=cur; }
+  const openAccounts=activeDebts(state);
   const pSel=el("ePay"); if(pSel){ const cur=pSel.value;
-    pSel.innerHTML=state.debts.length?state.debts.map(d=>`<option value="${d.id}">${esc(d.name)} — ${fmt(debtCurrent(d))} SAR left</option>`).join("")
-      :`<option value="">No accounts — add one in Settings</option>`;
-    if(cur&&state.debts.some(d=>d.id===cur)) pSel.value=cur; }
+    pSel.innerHTML=openAccounts.length?openAccounts.map(d=>`<option value="${d.id}">${esc(d.name)} — ${fmt(debtCurrent(d))} SAR left</option>`).join("")
+      :`<option value="">No open accounts — add one in Settings</option>`;
+    if(cur&&openAccounts.some(d=>d.id===cur)) pSel.value=cur; }
   const pw=el("ePayWith"); if(pw){ const cur=pw.value;
     let h=`<option value="">💵 Cash / bank transfer (SAR)</option><option value="cashJOD">💵 Cash (JOD)</option><option value="debit">💳 Debit card</option>`;
-    h+=state.debts.filter(d=>d.kind==="card").map(d=>`<option value="${d.id}">💳 ${esc(d.name)} — credit</option>`).join("");
+    h+=openAccounts.filter(d=>d.kind==="card").map(d=>`<option value="${d.id}">💳 ${esc(d.name)} — credit</option>`).join("");
     h+=`<option value="otherPay">Other</option>`;
     pw.innerHTML=h;
-    if(cur&&(["cashJOD","debit","otherPay"].includes(cur)||state.debts.some(d=>d.id===cur))) pw.value=cur;
+    if(cur&&(["cashJOD","debit","otherPay"].includes(cur)||openAccounts.some(d=>d.id===cur))) pw.value=cur;
     payWithChanged();
     pw.onchange=payWithChanged;
   }
@@ -2064,7 +2081,8 @@ function openRecSheet(id,prefill){
   order.forEach(g=>{ html+=`<optgroup label="${esc(g)}">`+byG[g].map(c=>`<option value="${c.id}">${c.icon} ${esc(c.name)}</option>`).join("")+`</optgroup>`; });
   catSel.innerHTML=html; catSel.value=r?r.categoryId:(prefill?prefill.categoryId:"rent");
   if(!catSel.value) catSel.selectedIndex=0;
-  el("rAcct").innerHTML=state.debts.length?state.debts.map(d=>`<option value="${d.id}">${esc(d.name)}</option>`).join(""):`<option value="">No accounts yet</option>`;
+  const rAcctOpen=activeDebts(state);
+  el("rAcct").innerHTML=rAcctOpen.length?rAcctOpen.map(d=>`<option value="${d.id}">${esc(d.name)}</option>`).join(""):`<option value="">No open accounts yet</option>`;
   if(r&&r.debtId) el("rAcct").value=r.debtId; else if(prefill&&prefill.debtId) el("rAcct").value=prefill.debtId;
   recSheetType();
   el("sh-rec").classList.add("open");
@@ -2135,7 +2153,7 @@ function renderSettingsList(){
     {icon:icon("income"),title:"Income plan & house goal",sub:salarySub(),ov:"salary"},
     {icon:icon("budget"),title:"Budgets",sub:fmt(planned)+" SAR planned across "+liveCats().length+" categories",ov:"budgets"},
     {icon:icon("category"),title:"Categories",sub:"Rename, re-icon, kind, rollover, archive",ov:"cats"},
-    {icon:icon("debt"),title:"Cards & loans",sub:state.debts.length?(state.debts.length+" accounts · "+fmt(td)+" SAR remaining"):"Add your cards and loans",ov:"debts"}
+    {icon:icon("debt"),title:"Cards & loans",sub:activeDebts(state).length?(activeDebts(state).length+" open · "+fmt(td)+" SAR remaining"):"Add your cards and loans",ov:"debts"}
   ];
   rows.unshift(
     {icon:icon("planned"),title:"Planned payments",sub:"Reminder only · log, reschedule, or skip",ov:"recurring"},
@@ -2275,13 +2293,17 @@ function deleteCat(id){
   if(confirm("Delete this category?")){ state.categories=state.categories.filter(c=>c.id!==id); delete state.budgets[id]; save(); render(); fillCatEditor(); }
 }
 function renderDebtEditor(){
-  el("setDebts").innerHTML = state.debts.length? state.debts.map(d=>{
+  const openAccounts=activeDebts(state), closed=(state.debts||[]).filter(debtIsClosed);
+  el("setDebts").innerHTML = (openAccounts.length? openAccounts.map(d=>{
     const catOpts=state.categories.map(c=>`<option value="${c.id}"${d.category===c.id?" selected":""}>${esc(c.name)}</option>`).join("");
     const rp=recPaymentFor(d.id);
     return `<div class="dcard" data-did="${d.id}">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <div style="font-weight:600;font-size:14.5px">${esc(d.name||"Debt")} · <span style="font-weight:600">${sar(debtCurrent(d))}</span> <span class="hint" style="display:inline">left</span></div>
-        <button class="linkbtn" style="color:var(--negative)" onclick="delDebt('${d.id}')">Delete</button>
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="linkbtn" onclick="closeDebt('${d.id}')">Close</button>
+          <button class="linkbtn" style="color:var(--negative)" onclick="delDebt('${d.id}')">Delete</button>
+        </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div class="fg" style="grid-column:1 / -1"><label class="fl">Name</label><input class="in" data-f="name" dir="auto" value="${esc(d.name||"")}" style="height:44px"></div>
@@ -2300,7 +2322,18 @@ function renderDebtEditor(){
       </details>
       <div class="hint" style="margin-top:8px">${rp?("↻ "+esc(rp.name)+" reminds you to pay "+sar(rp.amount)+" on the "+ordinal(rp.dayOfMonth)+" — the projection assumes you log it"):"No planned payment linked yet — add one in Planned payments to get a payoff date"}</div>
     </div>`;
-  }).join("") : `<div class="empty"><div style="font-size:26px;margin-bottom:6px">💳</div><div class="hint">No cards or loans yet.</div></div>`;
+  }).join("") : `<div class="empty"><div style="font-size:26px;margin-bottom:6px">💳</div><div class="hint">No open cards or loans yet.</div></div>`)
+  + (closed.length? `<details><summary style="font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;min-height:44px;display:flex;align-items:center">Closed accounts (${closed.length})</summary>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:6px">${closed.map(d=>`<div class="dcard">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+          <div style="font-weight:600;font-size:14.5px" dir="auto">${esc(d.name||"Debt")} <span class="hint" style="display:inline">· ${d.kind==="card"?"credit card":"loan"} · closed</span></div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <button class="linkbtn" onclick="reopenDebt('${d.id}')">Reopen</button>
+            <button class="linkbtn" style="color:var(--negative)" onclick="delDebt('${d.id}')">Delete</button>
+          </div>
+        </div>
+        <div class="hint" style="margin-top:8px">Out of your debt total and off every picker. Its past entries stay in the Log and still show this name.</div>
+      </div>`).join("")}</div></details>`:"");
 }
 function saveDebts(){
   document.querySelectorAll("#setDebts .dcard").forEach(card=>{
@@ -2313,12 +2346,24 @@ function saveDebts(){
   });
   save(); render(); renderDebtEditor(); msg("debtsMsg","Accounts saved ✓");
 }
-function addDebt(){ state.debts.push({ id:uid(), name:"New card / loan", bank:"", startingBalance:0, original:0, ratePerMonth:0, kind:"card", category:"other" });
+function addDebt(){ state.debts.push({ id:uid(), name:"New card / loan", bank:"", startingBalance:0, original:0, ratePerMonth:0, kind:"card", category:"other", closed:false });
   save(); renderDebtEditor(); }
-function delDebt(id){ if(confirm("Delete this account? Its past payment entries stay in your log; any recurring payment for it is paused.")){
+function delDebt(id){ if(confirm("Delete this account for good? Its entries stay in your log, but past purchases lose the account name and show as \"Other\". To keep the history readable, use Close instead. Any planned payment for it is paused.")){
   state.debts=state.debts.filter(d=>d.id!==id);
   state.recurring.forEach(r=>{ if(r.debtId===id) r.active=false; });
   save(); render(); renderDebtEditor(); } }
+// Closing keeps the account and its history but takes it out of the debt total and every
+// picker. Only a settled account may close, so the total can never understate what is owed.
+function closeDebt(id){ const d=state.debts.find(x=>x.id===id); if(!d) return;
+  const check=canCloseDebt(state,d);
+  if(!check.ok){ alert("“"+(d.name||"This account")+"” "+check.reason+" of "+fmt(check.balance)+" SAR, so it can't be closed yet.\n\nLog the final payment (Log → Card · loan), or correct the figure with Reconcile statement balance on the Goals page, then close it."); return; }
+  if(!confirm("Close “"+(d.name||"this account")+"”? It leaves your debt total and the Log pickers. Its entries stay in your log and keep this name, and you can reopen it any time. Any planned payment for it is paused.")) return;
+  d.closed=true;
+  state.recurring.forEach(r=>{ if(r.debtId===id) r.active=false; });
+  save(); render(); renderDebtEditor(); msg("debtsMsg","Account closed ✓"); }
+function reopenDebt(id){ const d=state.debts.find(x=>x.id===id); if(!d) return;
+  d.closed=false;
+  save(); render(); renderDebtEditor(); msg("debtsMsg","Account reopened ✓"); }
 
 // ── PHASES ──
 function fillPhaseEditor(){

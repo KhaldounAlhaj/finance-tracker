@@ -27,7 +27,7 @@ _Uncommitted work sitting in the local working tree, waiting for Codex to commit
 
 | Date | From | Handoff |
 |---|---|---|
-_None. The owner explicitly chose to publish finance-v10 before Claude's optional post-release QA._
+| 2026-08-28 | Claude | **finance-v10.8 — closed accounts.** Committed and pushed to `claude/repo-access-kttni4`, **not** to `main`, so GitHub Pages still serves v10.7 and nothing reaches the owner's phone until he merges. 112/112 tests pass. Codex must `git pull` before its next unit — `index.html` moved. |
 
 ## Open questions
 
@@ -41,6 +41,73 @@ _Anything an agent wasn't sure about. Answer or delete once resolved._
 ## History
 
 _Newest first. One entry per unit of work, not per file._
+
+### 2026-08-28 · Claude · finance-v10.8 — a card can be closed instead of deleted
+
+Owner report: he had paid off and shut two credit cards and could not find how to record
+that in the app. Investigated before building. **Both halves of what he needed already
+existed** — Log → **Card · loan** logs a payment against a card, and Manage → **Cards &
+loans** → Delete removes an account — so the immediate answer was a walkthrough, not code.
+
+But the question exposed a real gap, and he asked for it fixed. Deleting was the *only*
+way to retire an account, and it is destructive in a non-obvious way: `paymentSourceLabel`
+resolves a purchase's source by debt id, so once the account is gone every past purchase
+made with it relabels itself **"Other"** in the historical spending breakdown. The
+alternative — keeping it — leaves a dead 0 SAR account in the accounts list, in three
+pickers and in the payoff projection forever. Neither choice is right.
+
+`debts[].closed` now exists. Spec:
+`docs/superpowers/specs/2026-08-28-closed-accounts-design.md`, plan:
+`docs/superpowers/plans/2026-08-28-closed-accounts-implementation.md`.
+
+**The decision worth recording: closing requires a zero balance.** A closed account leaves
+`totalDebt()`, so allowing it at a non-zero balance would let the owner hide money he still
+owes from his own debt total. Closing is refused otherwise and points at logging the final
+payment or **Reconcile statement balance**. Reopening is always allowed. Closing pauses any
+linked planned payment, matching what Delete already did.
+
+The split that makes this safe is between *forward-looking* and *historical* reads.
+Excluded: `totalDebt`, `totalOriginal`, `recPaymentFor`, the Overview debt note and
+projections, the Goals payoff list, `ePay`, `ePayWith`, `rAcct`, the Manage row count and
+`importChoiceOptions`. **Deliberately not excluded:** `paymentSourceLabel`, `debtName`,
+`isCardPayment`, `classifyMoneyEntry` and `debtMovement` — if a closed card stopped
+resolving as a card, its past payments would reclassify as consumption spending and every
+closed month would silently change. A test asserts that non-exclusion directly, because it
+is the kind of thing a later refactor would "tidy up".
+
+`validateImportDraft` is also left permissive on purpose: the pickers hide closed accounts,
+but a row that already names one still validates, so re-importing the closed card's own
+history is not blocked.
+
+Structural cleanup that came with it: `debtCurrent` had a second copy of the balance
+formula outside the testable core block. It now delegates to a new `coreDebtBalance` in
+`CORE_V9`, so there is one formula and the closing rule (`canCloseDebt`) is exercised in
+the VM rather than asserted by regex.
+
+No `modelVersion` bump and no new migration step — `normDebt` defaults the field, so a
+v3-era payload loads with every account open. Storage key untouched.
+
+Verification: **112/112 tests** (up from 100; 12 added). `git diff --check` clean, no
+remote dependency. Live on an isolated origin in Chromium: closing a card with 1,000 SAR
+outstanding is refused with the balance named; closing a settled card drops it from the
+debt total, both Log pickers, the payoff list and the reminder picker, pauses its reminder,
+and leaves its May purchase still attributed to it by name with its June payoff still a
+debt payment and not spending; Reopen restores all of it. `Closed accounts (2)` renders as
+a collapsed 44px group at 390×844 and 1280×800 with no overflow (390/390 and 1180/1180) and
+no console errors. Cache `finance-v10.8`, changelog added, §4 regenerated through the
+generator.
+
+**Two of my own tests were wrong before the code was** — recording it because both failure
+modes will recur in this repo. A lazy `/function debtName\([\s\S]*?\n\}/` extraction
+silently swallowed the *next* function, because `debtName` is a one-liner with no `\n}` of
+its own, so the assertion tested the wrong body. And `assert.deepEqual` from
+`node:assert/strict` fails on reference-equality for any array or object built inside the
+`vm` context — the existing suite's `{...result.bySource}` spread is that workaround, not a
+style choice.
+
+**Still open and not touched:** the iOS Shortcut `#b64=` storage test, which needs the
+owner's phone, and the independent-QA gap on v10.4–v10.6 recorded in Open questions. This
+release is also Claude-authored and Claude-reviewed, so it joins that gap.
 
 ### 2026-08-15 · Claude · self-review of v10.4–v10.6 → finance-v10.7
 With the owner away and no second reviewer available, ran an adversarial pass over Claude's own three releases rather than leave them unreviewed. **Two real defects found and fixed, two suspected defects disproved.**

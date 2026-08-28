@@ -1,6 +1,6 @@
 # Finance Tracker — App Documentation
 
-<!-- VERSION --> app **finance-v10.7** · docs synced **2026-08-15** <!-- /VERSION -->
+<!-- VERSION --> app **finance-v10.8** · docs synced **2026-08-28** <!-- /VERSION -->
 
 > **Living document.** The block between the `AUTO:GENERATED` markers in **§4** is rebuilt
 > from the app's source (`index.html`, `sw.js`, `manifest.json`) every time you commit, by
@@ -66,7 +66,10 @@ A three-zone bottom bar keeps logging, reviewing, and configuration separate. Pl
 - `categories [ { id, name, icon, group, kind:"committed"|"flexible"|"goal", rollover, archived } ]`
   · `budgets { <categoryId>: plannedAmount }`
 - `commitments [ { id, name, target, dueMonth, categoryId, fundedStart, createdFrom } ]`
-- `debts [ { id, name, bank, startingBalance, original, ratePerMonth, kind, category } ]`
+- `debts [ { id, name, bank, startingBalance, original, ratePerMonth, kind, category, closed } ]`
+  — `closed:true` takes a settled account out of the debt total, the payoff projection and every
+  account picker while keeping its name on all of its historical entries; only a zero-balance
+  account may be closed, and reopening is always available
 - `recurring [ { id, name, amount, type, categoryId, debtId, paidWith, dayOfMonth, everyMonths, startMonth, endMonth, active, isSalary } ]`
   — reminder templates only; `everyMonths` sets cadence and `startMonth` anchors occurrences
   · `occurrences { "recurringId:YYYY-MM": { status, to?, entryId?, updatedAt } }`
@@ -87,7 +90,7 @@ CSV account fields are review hints only. The preview requires explicit in-app s
 _Machine-generated from source on every commit — do not edit by hand._
 
 <!-- AUTO:GENERATED:START — produced by docs/generate-docs.mjs · DO NOT EDIT BY HAND -->
-_Synced **2026-08-15** · app version **finance-v10.7** · storage key `khaldoun_finance_v3`_
+_Synced **2026-08-28** · app version **finance-v10.8** · storage key `khaldoun_finance_v3`_
 
 ### Identity
 - **Finance Tracker** — Personal finance, debt and house-savings tracker
@@ -104,9 +107,13 @@ _Synced **2026-08-15** · app version **finance-v10.7** · storage key `khaldoun
 | House saved before tracking | 0 SAR (entries to House savings add on top) |
 
 ### Cards & loans (seed) — total starting balance **0 SAR**
-| Name | Bank | Starting | Original | Rate | Kind | Linked |
-|---|---|---|---|---|---|---|
-| _(none in seed defaults)_ |  |  |  |  |  |  |
+| Name | Bank | Starting | Original | Rate | Kind | Linked | State |
+|---|---|---|---|---|---|---|---|
+| _(none in seed defaults)_ |  |  |  |  |  |  |  |
+
+An account's `closed` flag defaults to `false` and is additive — an account closed on the
+device leaves the debt total, the payoff projection and every account picker, but keeps its
+name on all of its historical entries. Only a zero-balance account may be closed.
 
 ### Categories & budgets (seed) — planned **0 SAR** · 20 categories
 | Category | Planned | Group | Kind |
@@ -146,14 +153,14 @@ _0 seed reminder templates (salary planning is added on first run; nothing auto-
 ### Source file manifest (SHA-256, first 16 hex)
 | File | Bytes | Hash |
 |---|---|---|
-| `index.html` | 198,571 | `781c849cefbff3c4` |
-| `sw.js` | 1,456 | `f8121e9456f6c682` |
+| `index.html` | 199,601 | `198c1e56da651e77` |
+| `sw.js` | 1,456 | `2c886b222b8397ed` |
 | `manifest.json` | 480 | `667075e74e294a37` |
-| `README.md` | 3,094 | `de851fd3d670ae60` |
+| `README.md` | 3,030 | `290744b5247db4d5` |
 | `icon-180.png` | 23,893 | `de63b104b43ca1d0` |
 | `icon-192.png` | 26,915 | `0cb0b374422b11ee` |
 | `icon-512.png` | 148,189 | `d68c4eae11e7ba8f` |
-| `docs/generate-docs.mjs` | 7,557 | `fbf11be01da45597` |
+| `docs/generate-docs.mjs` | 7,877 | `02075341b41cc951` |
 | `.githooks/pre-commit` | 483 | `4ce5d3c8a0750470` |
 | `.gitattributes` | 134 | `aa3e3144fa6a086d` |
 <!-- AUTO:GENERATED:END -->
@@ -203,6 +210,7 @@ tabular numerals everywhere; `prefers-reduced-motion` respected; system fonts on
 ## 8. Changelog
 | Version | Date | Changes |
 |---|---|---|
+| finance-v10.8 | 2026-08-28 | **Closed accounts.** A card or loan can now be **closed** instead of deleted. Reported by the owner after paying off and shutting two credit cards: the only available action was **Delete**, which removed the account and left every past purchase made with it labelled "Other", because the source name could no longer be resolved. A closed account leaves the debt total, the payoff projection, the **Pay towards** and **Paid with** pickers, the planned-payment account picker and the CSV review pickers, and pauses any planned payment linked to it — but keeps its name on every historical entry, source row and drill-through. Closing is allowed **only at a zero balance**, so it can never hide money still owed; the refusal points at logging the final payment or **Reconcile statement balance**. Reopening restores the account everywhere and is always available. `debts[].closed` is additive with a safe default, so no storage-key, model-version or migration change. SW cache → finance-v10.8. |
 | finance-v10.7 | 2026-08-15 | **Self-review corrections.** A month where refunds exceeded purchases was drawn in the spending trend exactly like a month of heavy spending — same colour, height set by magnitude — so a large refund read as a large outlay. Those months now use the positive treatment, show a `+` and say "returned to you" in their accessible label. Separately, `activityDrill` was declared below three functions that read it, which worked only because nothing called them during script evaluation; the declaration now sits above its consumers and a test enforces the order. No formula or data change. SW cache → finance-v10.7. |
 | finance-v10.6 | 2026-08-15 | **The entry-type picker now explains itself.** Reported as confusing: the buttons at the top of Log looked like filters and appeared to do nothing. They choose what you are about to log, but Expense and Refund share every field, so switching between them changed exactly one word on the Save button. The picker is now headed **"What are you logging?"** and each type states its effect on your money the moment you pick it — what it does to the plan, to cash left now, and to a card or goal balance. The Recent activity filters below say plainly that they search what you have already logged and do not change the form. No behaviour change to any entry type. SW cache → finance-v10.6. |
 | finance-v10.5 | 2026-08-15 | **The owed backlog, cleared.** Reminder semantics settled: logging a rescheduled occurrence now carries its moved date, so deleting that entry reopens on the date you moved it to, and **Next payment** reports a rescheduled date when one falls before the next natural occurrence. Logging from a reminder offers an explicit **Update future reminders** switch, off by default, so one occurrence stays one occurrence unless you opt in. The **bank-SMS parser** learned the transfer shape (`…من <account> لـ <service>`, which carries no balance line and had been losing whole transfers), captures the transaction time the bank prints, and refuses to fill the form from a declined message; a date without a time no longer vanishes into the datetime field. Overview gains a **six-month spending trend** with tappable months. Manage explains that **each device keeps its own copy** and that backup/restore is how you move between them. **Laptop composition** above 1100px: 1180px shell, top navigation, decisions left and reference figures right, 52px hero and a third "Free" reading on the plan bar — the phone layout is untouched below that width. No formula, storage-key, model-version or migration change. SW cache → finance-v10.5. |

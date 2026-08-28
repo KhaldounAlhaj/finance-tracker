@@ -8,8 +8,8 @@ const match = html.match(/\/\* CORE_V9_START \*\/([\s\S]*?)\/\* CORE_V9_END \*\/
 assert.ok(match, "production core-v9 block exists");
 const context = { console, structuredClone: globalThis.structuredClone };
 vm.createContext(context);
-vm.runInContext(`${match[1]};globalThis.coreV9={entryDeltas,classifyMoneyEntry,monthMetrics,monthlyMoneySummary,migrateV9,debtMovement,occurrenceKey,entryFulfillsOccurrence,resolveOccurrence,repairOccurrenceState,reopenOccurrenceForDeletedEntry};`, context);
-const { entryDeltas, classifyMoneyEntry, monthMetrics, monthlyMoneySummary, migrateV9, debtMovement, occurrenceKey, entryFulfillsOccurrence, resolveOccurrence, repairOccurrenceState, reopenOccurrenceForDeletedEntry } = context.coreV9;
+vm.runInContext(`${match[1]};globalThis.coreV9={entryDeltas,classifyMoneyEntry,monthMetrics,monthlyMoneySummary,migrateV9,debtMovement,occurrenceKey,entryFulfillsOccurrence,resolveOccurrence,repairOccurrenceState,reopenOccurrenceForDeletedEntry,debtIsClosed,coreDebtBalance,activeDebts,canCloseDebt};`, context);
+const { entryDeltas, classifyMoneyEntry, monthMetrics, monthlyMoneySummary, migrateV9, debtMovement, occurrenceKey, entryFulfillsOccurrence, resolveOccurrence, repairOccurrenceState, reopenOccurrenceForDeletedEntry,debtIsClosed,coreDebtBalance,activeDebts,canCloseDebt } = context.coreV9;
 
 test("statement reconciliation changes debt only, never spending or liquidity",()=>{
   assert.deepEqual({...entryDeltas({type:"balance_adjustment",amount:250,debtId:"card"},"card")},{spending:0,cash:0,card:0,loan:0,income:0,goal:0});
@@ -257,4 +257,96 @@ test("repair restores a reschedule when a logged record's entry is gone",()=>{
   const repaired=repairOccurrenceState(state);
   assert.equal(repaired.occurrences["r1:2026-08"].status,"rescheduled");
   assert.equal(repaired.occurrences["r1:2026-08"].to,"2026-08-05");
+});
+
+// ---- Closed accounts (2026-08-28-closed-accounts-design.md) ----
+
+const closedFixture=()=>({
+  debts:[
+    {id:"visa",kind:"card",name:"Visa",startingBalance:0,original:3000,category:"other",closed:true},
+    {id:"amex",kind:"card",name:"Amex",startingBalance:500,original:500,category:"other"},
+    {id:"carLoan",kind:"loan",name:"Car loan",startingBalance:8000,original:12000,category:"carLoan"}
+  ],
+  entries:[
+    {type:"expense",amount:1200,date:"2026-05-04",paidWith:"visa",category:"food"},
+    {type:"payment",amount:1200,date:"2026-06-01",debtId:"visa",category:"other"},
+    {type:"expense",amount:500,date:"2026-08-02",paidWith:"amex",category:"food"}
+  ]
+});
+
+test("a closed account is recognised and excluded from the active set",()=>{
+  const state=closedFixture();
+  assert.equal(debtIsClosed(state.debts[0]),true);
+  assert.equal(debtIsClosed(state.debts[1]),false);
+  assert.equal(debtIsClosed(undefined),false,"an absent debt is not closed");
+  assert.equal(debtIsClosed({id:"x"}),false,"a debt with no flag defaults to open");
+  assert.deepEqual(activeDebts(state).map(d=>d.id),["amex","carLoan"]);
+  assert.equal(activeDebts({}).length,0,"no debts is an empty active set");
+});
+
+test("the closed balance formula matches the live one, including the zero floor",()=>{
+  const state=closedFixture();
+  // visa: 0 starting + 1200 charged - 1200 paid = 0
+  assert.equal(coreDebtBalance(state,state.debts[0]),0);
+  // amex: 500 starting + 500 charged = 1000
+  assert.equal(coreDebtBalance(state,state.debts[1]),1000);
+  assert.equal(coreDebtBalance(state,state.debts[2]),8000,"a loan ignores card purchases");
+  const over={debts:[{id:"c",kind:"card",startingBalance:100}],
+    entries:[{type:"payment",amount:400,date:"2026-08-01",debtId:"c"}]};
+  assert.equal(coreDebtBalance(over,over.debts[0]),0,"overpayment floors at zero, never negative");
+  const adjusted={debts:[{id:"c",kind:"card",startingBalance:100}],
+    entries:[{type:"balance_adjustment",amount:250,date:"2026-08-01",debtId:"c"}]};
+  assert.equal(coreDebtBalance(adjusted,adjusted.debts[0]),350,"reconciliation moves the balance");
+});
+
+test("an account can be closed only at a zero balance",()=>{
+  const state=closedFixture();
+  const paidOff=canCloseDebt(state,state.debts[0]);
+  assert.equal(paidOff.ok,true);
+  assert.equal(paidOff.balance,0);
+  const owing=canCloseDebt(state,state.debts[1]);
+  assert.equal(owing.ok,false,"1,000 SAR outstanding cannot be closed away");
+  assert.equal(owing.balance,1000);
+  assert.match(owing.reason,/\S/,"a refusal explains itself");
+  const rounding={debts:[{id:"c",kind:"card",startingBalance:0.004}],entries:[]};
+  assert.equal(canCloseDebt(rounding,rounding.debts[0]).ok,true,"sub-half-fils residue still closes");
+});
+
+test("closing an account never rewrites its history",()=>{
+  const state=closedFixture();
+  // The closed Visa's May purchase is still attributed to the Visa, not to "Other".
+  const may=monthlyMoneySummary(state,"2026-05");
+  assert.equal(may.spent,1200);
+  assert.deepEqual({...may.bySource},{visa:1200},"a closed card still owns its past purchases");
+  // Its June payoff is a debt payment, not consumption spending.
+  const june=monthlyMoneySummary(state,"2026-06");
+  assert.equal(june.spent,0,"paying off a closed card is not spending");
+  assert.equal(june.debtPayments,1200);
+  assert.equal(classifyMoneyEntry(state,state.entries[1]).kind,"payment");
+  // And the ledger over it is unchanged.
+  assert.deepEqual({...debtMovement(state,"visa","2026-06")},
+    {opening:1200,purchases:0,refunds:0,payments:1200,adjustments:0,closing:0,net:-1200});
+});
+
+test("the closed flag is additive — old payloads load open, and it survives a round trip",()=>{
+  const src=html.match(/function normDebt\([\s\S]*?\n\}/);
+  assert.ok(src,"production normDebt exists");
+  const sandbox={};vm.createContext(sandbox);
+  vm.runInContext(`function uid(){return "generated";}
+    function num(v){return Number.isFinite(+v)?+v:0;}
+    ${src[0]};globalThis.normDebt=normDebt;`,sandbox);
+  const normDebt=sandbox.normDebt;
+  // A v3-era account carries no flag at all.
+  assert.equal(normDebt({id:"old",name:"Visa",balance:1500,rate:1.5}).closed,false);
+  assert.equal(normDebt({}).closed,false);
+  assert.equal(normDebt(undefined).closed,false);
+  // An account closed on the device stays closed across save/load.
+  const closed=normDebt({id:"visa",name:"Visa",startingBalance:0,kind:"card",closed:true});
+  assert.equal(closed.closed,true);
+  assert.equal(normDebt(JSON.parse(JSON.stringify(closed))).closed,true);
+  // Truthy junk normalizes to a real boolean rather than leaking through.
+  assert.equal(normDebt({closed:"yes"}).closed,true);
+  assert.equal(normDebt({closed:0}).closed,false);
+  // No model-version change rides along with this field.
+  assert.match(html,/modelVersion:\s*9\b/,"the model version stays at 9");
 });

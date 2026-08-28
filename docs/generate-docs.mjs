@@ -106,9 +106,13 @@ _Synced **${today}** · app version **${cache}** · storage key \`${key}\`_
 | House saved before tracking | ${nf(settings.houseSavedStart)} SAR (entries to House savings add on top) |
 
 ### Cards & loans (seed) — total starting balance **${nf(debtTotal)} SAR**
-| Name | Bank | Starting | Original | Rate | Kind | Linked |
-|---|---|---|---|---|---|---|
-${debts.map((d) => `| ${d.name} | ${d.bank || ""} | ${nf(d.startingBalance)} | ${nf(d.original)} | ${(+d.ratePerMonth) > 0 ? d.ratePerMonth + "%/mo" : "0%"} | ${d.kind || ""} | ${d.category || ""} |`).join("\n") || "| _(none in seed defaults)_ |  |  |  |  |  |  |"}
+| Name | Bank | Starting | Original | Rate | Kind | Linked | State |
+|---|---|---|---|---|---|---|---|
+${debts.map((d) => `| ${d.name} | ${d.bank || ""} | ${nf(d.startingBalance)} | ${nf(d.original)} | ${(+d.ratePerMonth) > 0 ? d.ratePerMonth + "%/mo" : "0%"} | ${d.kind || ""} | ${d.category || ""} | ${d.closed ? "closed" : "open"} |`).join("\n") || "| _(none in seed defaults)_ |  |  |  |  |  |  |  |"}
+
+An account's \`closed\` flag defaults to \`false\` and is additive — an account closed on the
+device leaves the debt total, the payoff projection and every account picker, but keeps its
+name on all of its historical entries. Only a zero-balance account may be closed.
 
 ### Categories & budgets (seed) — planned **${nf(plannedTotal)} SAR** · ${categories.length} categories
 | Category | Planned | Group | Kind |

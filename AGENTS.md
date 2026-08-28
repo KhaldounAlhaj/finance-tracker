@@ -65,6 +65,7 @@ Live: https://khaldounalhaj.github.io/finance-tracker/
 - Top-level state: `settings`, `categories`, `budgets`, `debts`, `entries`, `recurring`, `occurrences`, `imports`, `commitments`, `currentMonth`
 - Categories carry a `kind` (`committed` / `flexible` / `goal`) plus an optional `rollover` flag — these drive Safe-to-spend-today
 - Debts have a `kind` of `card` or `loan`. **Cards are revolving**: a purchase raises the balance, a payment lowers it, and card payments are excluded from spending totals (see `isCardPayment`) so nothing is double-counted
+- Debts also carry `closed`. A **closed** account is settled and shut: it leaves `totalDebt()`, the payoff projection and every account picker, but `paymentSourceLabel`, `debtName`, `isCardPayment` and `debtMovement` must keep resolving it or its history loses the account name. `canCloseDebt` allows closing only at a zero balance — never let a closed account hide an outstanding amount. Delete still exists for a mistaken entry
 - Recurring items are reminder templates only. They support `everyMonths` of 1 / 3 / 6 / 12 with a first-payment anchor; `until` is optional and empty means forever. Never materialize them automatically.
 
 ## Hard rules
