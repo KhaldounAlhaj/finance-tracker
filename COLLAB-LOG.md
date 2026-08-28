@@ -27,7 +27,7 @@ _Uncommitted work sitting in the local working tree, waiting for Codex to commit
 
 | Date | From | Handoff |
 |---|---|---|
-| 2026-08-28 | Claude | **finance-v10.8 — closed accounts.** Committed and pushed to `claude/repo-access-kttni4`, **not** to `main`, so GitHub Pages still serves v10.7 and nothing reaches the owner's phone until he merges. 112/112 tests pass. Codex must `git pull` before its next unit — `index.html` moved. |
+_None. finance-v10.8 is merged to `main` and live on GitHub Pages at the owner's instruction. Codex must `git pull` before its next unit — `index.html` moved._
 
 ## Open questions
 
@@ -86,6 +86,9 @@ the VM rather than asserted by regex.
 
 No `modelVersion` bump and no new migration step — `normDebt` defaults the field, so a
 v3-era payload loads with every account open. Storage key untouched.
+
+Released to `main` on the owner's instruction, so this went straight to GitHub Pages rather
+than waiting for a review — worth noting given the QA gap recorded at the end of this entry.
 
 Verification: **112/112 tests** (up from 100; 12 added). `git diff --check` clean, no
 remote dependency. Live on an isolated origin in Chromium: closing a card with 1,000 SAR
