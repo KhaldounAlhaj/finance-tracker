@@ -153,7 +153,7 @@ _0 seed reminder templates (salary planning is added on first run; nothing auto-
 ### Source file manifest (SHA-256, first 16 hex)
 | File | Bytes | Hash |
 |---|---|---|
-| `index.html` | 199,601 | `198c1e56da651e77` |
+| `index.html` | 199,625 | `70bb1b7049f81676` |
 | `sw.js` | 1,456 | `2c886b222b8397ed` |
 | `manifest.json` | 480 | `667075e74e294a37` |
 | `README.md` | 3,030 | `290744b5247db4d5` |
