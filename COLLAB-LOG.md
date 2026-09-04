@@ -27,7 +27,7 @@ _Uncommitted work sitting in the local working tree, waiting for Codex to commit
 
 | Date | From | Handoff |
 |---|---|---|
-_None. finance-v10.8 is merged to `main` and live on GitHub Pages at the owner's instruction. Codex must `git pull` before its next unit — `index.html` moved._
+| 2026-09-04 | Claude | **finance-v10.9 — app renamed to Budget Tracker.** Committed and pushed to `claude/repo-access-kttni4` only. `main` still serves v10.8, so the rename is not live until the owner says to merge. Codex must `git pull` before its next unit — `index.html` and `manifest.json` moved. |
 
 ## Open questions
 
@@ -41,6 +41,56 @@ _Anything an agent wasn't sure about. Answer or delete once resolved._
 ## History
 
 _Newest first. One entry per unit of work, not per file._
+
+### 2026-09-04 · Claude · finance-v10.9 — the app is now Budget Tracker
+
+Owner asked to rename "finance tracker" to "budget tracker" **on GitHub**. Asked which name
+he meant before touching anything, because three different things carry it and they have very
+different consequences: the repository and its Pages URL, the app's own display name, or a file
+inside the repo. He chose **the app name only** — the repository stays `finance-tracker` and the
+live URL is unchanged.
+
+Four surfaces name the app, and a rename that misses one ships a split identity:
+
+| Surface | Was | Now |
+|---|---|---|
+| `index.html` `<title>` | Finance Tracker | Budget Tracker |
+| `index.html` `apple-mobile-web-app-title` | Finance | Budget |
+| `index.html` first-run footer | Finance Tracker · private & offline | Budget Tracker · private & offline |
+| `manifest.json` `name` / `short_name` | Finance Tracker / Finance | Budget Tracker / Budget |
+
+A new release test pins all four together and asserts no user-facing string still reads the old
+name — mutation-checked by reverting one string and confirming it fails, rather than trusting a
+green run. `DOCUMENTATION.md` §4 picks the new name up from the manifest through the generator.
+
+**Deliberately not renamed**, and worth stating so nobody "finishes the job" later:
+
+- `localStorage["khaldoun_finance_v3"]` — frozen in `AGENTS.md`. Renaming it orphans every
+  byte of the owner's data.
+- `sw.js` `CACHE = "finance-vN"` — an internal cache key, not a product name. The `finance-vN`
+  series is the documented release convention; breaking it would desync the changelog, the
+  release test and `AGENTS.md` for no user-visible gain.
+- `manifest.json` `description` ("Personal finance, debt and house-savings tracker") — still
+  accurate English, and the owner asked for the name, not the description. Flagged to him
+  rather than changed.
+- Repository name, Pages URL, and every `finance-tracker` reference in `README.md`,
+  `DOCUMENTATION.md` and `AGENTS.md` — out of the scope he chose.
+
+**Checked and worth recording, because the instinct is to fear it:** a repository rename would
+*not* have lost his data. `localStorage` is scoped to the origin `https://khaldounalhaj.github.io`,
+and the path is not part of an origin, so `/finance-tracker/` and `/budget-tracker/` read the same
+store. The same fact is a latent footgun in the other direction — every GitHub Pages project under
+that account shares one `localStorage`, which is why the frozen, account-specific key matters.
+
+**The one thing this release cannot fix by itself:** iOS snapshots a home-screen icon's label at
+add-time, so the owner's installed icon keeps saying "Finance" until he removes and re-adds it —
+and on iOS, deleting an installed web app clears its local storage. So that must go
+backup → remove icon → re-add → restore, exactly as the v8.3 icon change did. Recorded in the
+changelog next to the release rather than only here.
+
+Verification: **113/113 tests** (one added). `git diff --check` clean, no remote dependency, no
+storage-key, model-version or migration change. Cache `finance-v10.9`, changelog added, §4
+regenerated through the generator.
 
 ### 2026-08-28 · Claude · finance-v10.8 — a card can be closed instead of deleted
 

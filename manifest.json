@@ -1,6 +1,6 @@
 {
-  "name": "Finance Tracker",
-  "short_name": "Finance",
+  "name": "Budget Tracker",
+  "short_name": "Budget",
   "description": "Personal finance, debt and house-savings tracker",
   "start_url": "./",
   "scope": "./",

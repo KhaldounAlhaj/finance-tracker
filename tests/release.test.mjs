@@ -4,6 +4,7 @@ import fs from "node:fs";
 
 const html=fs.readFileSync(new URL("../index.html",import.meta.url),"utf8");
 const sw=fs.readFileSync(new URL("../sw.js",import.meta.url),"utf8");
+const manifest=JSON.parse(fs.readFileSync(new URL("../manifest.json",import.meta.url),"utf8"));
 
 test("production navigation exposes exactly three primary zones",()=>{
   const nav=html.match(/<nav class="nav"[\s\S]*?<\/nav>/)?.[0]||"";
@@ -16,8 +17,8 @@ test("production has no remote runtime dependency",()=>{
   assert.doesNotMatch(html,/fonts\.googleapis|material-symbols/i);
 });
 
-test("release cache is v10.8 and includes every app asset",()=>{
-  assert.match(sw,/CACHE = "finance-v10.8"/);
+test("release cache is v10.9 and includes every app asset",()=>{
+  assert.match(sw,/CACHE = "finance-v10.9"/);
   for(const asset of ["index.html","manifest.json","icon-180.png","icon-192.png","icon-512.png","examples/finance-import-template.csv"])assert.match(sw,new RegExp(asset.replace(".","\\.")));
 });
 
@@ -44,4 +45,17 @@ test("migration failure preserves the original serialized value",()=>{
   assert.match(html,/migrationRecovery=raw/);
   assert.match(html,/function save\(\)\{ if\(migrationRecovery\)return/);
   assert.match(html,/original local data was preserved/);
+});
+
+test("the app calls itself the same thing everywhere it is named",()=>{
+  // Four separate surfaces name the app; a rename that misses one ships a split identity.
+  assert.equal(manifest.name,"Budget Tracker","install prompt and gallery name");
+  assert.equal(manifest.short_name,"Budget","launcher label");
+  assert.match(html,/<title>Budget Tracker<\/title>/,"browser tab");
+  assert.match(html,/<meta name="apple-mobile-web-app-title" content="Budget">/,"iOS home-screen name");
+  assert.match(html,/Budget Tracker · private/,"first-run footer");
+  // Nothing user-facing still says the old name.
+  const visible=html.replace(/<style>[\s\S]*?<\/style>/g,"");
+  assert.doesNotMatch(visible,/Finance Tracker/,"no stale product name in markup or script");
+  assert.doesNotMatch(JSON.stringify(manifest),/Finance Tracker/,"no stale product name in the manifest");
 });

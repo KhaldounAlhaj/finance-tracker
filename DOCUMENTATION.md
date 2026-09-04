@@ -1,6 +1,6 @@
 # Finance Tracker — App Documentation
 
-<!-- VERSION --> app **finance-v10.8** · docs synced **2026-08-28** <!-- /VERSION -->
+<!-- VERSION --> app **finance-v10.9** · docs synced **2026-09-04** <!-- /VERSION -->
 
 > **Living document.** The block between the `AUTO:GENERATED` markers in **§4** is rebuilt
 > from the app's source (`index.html`, `sw.js`, `manifest.json`) every time you commit, by
@@ -90,10 +90,10 @@ CSV account fields are review hints only. The preview requires explicit in-app s
 _Machine-generated from source on every commit — do not edit by hand._
 
 <!-- AUTO:GENERATED:START — produced by docs/generate-docs.mjs · DO NOT EDIT BY HAND -->
-_Synced **2026-08-28** · app version **finance-v10.8** · storage key `khaldoun_finance_v3`_
+_Synced **2026-09-04** · app version **finance-v10.9** · storage key `khaldoun_finance_v3`_
 
 ### Identity
-- **Finance Tracker** — Personal finance, debt and house-savings tracker
+- **Budget Tracker** — Personal finance, debt and house-savings tracker
 - **Display:** standalone · **Theme:** #1f7a63
 - **Tabs:** dashboard · log · settings
 - **Categories:** 20 seed, fully editable in-app (rename / icon / group / kind / rollover / archive / add)
@@ -153,9 +153,9 @@ _0 seed reminder templates (salary planning is added on first run; nothing auto-
 ### Source file manifest (SHA-256, first 16 hex)
 | File | Bytes | Hash |
 |---|---|---|
-| `index.html` | 199,625 | `70bb1b7049f81676` |
-| `sw.js` | 1,456 | `2c886b222b8397ed` |
-| `manifest.json` | 480 | `667075e74e294a37` |
+| `index.html` | 199,622 | `b6eae0a5074568ef` |
+| `sw.js` | 1,456 | `d233d42bd23eb9fa` |
+| `manifest.json` | 478 | `554109b829335300` |
 | `README.md` | 3,030 | `290744b5247db4d5` |
 | `icon-180.png` | 23,893 | `de63b104b43ca1d0` |
 | `icon-192.png` | 26,915 | `0cb0b374422b11ee` |
@@ -210,6 +210,7 @@ tabular numerals everywhere; `prefers-reduced-motion` respected; system fonts on
 ## 8. Changelog
 | Version | Date | Changes |
 |---|---|---|
+| finance-v10.9 | 2026-09-04 | **Renamed to Budget Tracker.** The app now calls itself **Budget Tracker** on all four surfaces that name it: the browser tab, the iOS home-screen label (`Budget`), the install prompt (`manifest.json` name and short_name) and the first-run footer. A release test pins all four together and fails if any user-facing string still reads the old name, so the identity cannot drift again. No repository, URL, storage-key, model-version or migration change — the app is unchanged apart from what it is called. **iOS note:** an already-installed home-screen icon keeps its old label, because iOS snapshots the name at add-time; renaming the icon needs backup → remove icon → re-add → restore, since deleting an installed web app clears its local storage. SW cache → finance-v10.9. |
 | finance-v10.8 | 2026-08-28 | **Closed accounts.** A card or loan can now be **closed** instead of deleted. Reported by the owner after paying off and shutting two credit cards: the only available action was **Delete**, which removed the account and left every past purchase made with it labelled "Other", because the source name could no longer be resolved. A closed account leaves the debt total, the payoff projection, the **Pay towards** and **Paid with** pickers, the planned-payment account picker and the CSV review pickers, and pauses any planned payment linked to it — but keeps its name on every historical entry, source row and drill-through. Closing is allowed **only at a zero balance**, so it can never hide money still owed; the refusal points at logging the final payment or **Reconcile statement balance**. Reopening restores the account everywhere and is always available. `debts[].closed` is additive with a safe default, so no storage-key, model-version or migration change. SW cache → finance-v10.8. |
 | finance-v10.7 | 2026-08-15 | **Self-review corrections.** A month where refunds exceeded purchases was drawn in the spending trend exactly like a month of heavy spending — same colour, height set by magnitude — so a large refund read as a large outlay. Those months now use the positive treatment, show a `+` and say "returned to you" in their accessible label. Separately, `activityDrill` was declared below three functions that read it, which worked only because nothing called them during script evaluation; the declaration now sits above its consumers and a test enforces the order. No formula or data change. SW cache → finance-v10.7. |
 | finance-v10.6 | 2026-08-15 | **The entry-type picker now explains itself.** Reported as confusing: the buttons at the top of Log looked like filters and appeared to do nothing. They choose what you are about to log, but Expense and Refund share every field, so switching between them changed exactly one word on the Save button. The picker is now headed **"What are you logging?"** and each type states its effect on your money the moment you pick it — what it does to the plan, to cash left now, and to a card or goal balance. The Recent activity filters below say plainly that they search what you have already logged and do not change the form. No behaviour change to any entry type. SW cache → finance-v10.6. |
